@@ -1,16 +1,34 @@
+import { otr_sdk } from './tracing';
+// Start SDK before everything else
+otr_sdk.start();
+
 import { Logger, ValidationPipe, VersioningType } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import express, { Request, Response } from 'express';
 import helmet from 'helmet';
+import { WinstonModule } from 'nest-winston';
+import * as winston from 'winston';
 
 import { AppModule } from './app/app.module';
 import { setupSwagger } from './swagger';
 
 async function bootstrap() {
     const expressInstance = express();
-    const app = await NestFactory.create(AppModule, new ExpressAdapter(expressInstance));
+    const app = await NestFactory.create(AppModule, new ExpressAdapter(expressInstance), {
+        logger: WinstonModule.createLogger({
+            transports: [
+                new winston.transports.Console({
+                    format: winston.format.combine(
+                        winston.format.timestamp(),
+                        winston.format.ms(),
+                        winston.format.json(),
+                    ),
+                }),
+            ],
+        }),
+    });
 
     const configService = app.get(ConfigService);
     const logger = app.get(Logger);

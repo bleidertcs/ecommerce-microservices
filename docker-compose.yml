@@ -40,15 +40,25 @@ services:
     ports:
       - "9001:9001"    # HTTP API
       - "50051:50051"  # gRPC
+      - "9464:9464"    # Metrics
     env_file:
       - ./auth/.env.docker
+    environment:
+      - OTEL_SERVICE_NAME=auth-service
+      - OTEL_EXPORTER_OTLP_ENDPOINT=tempo:4317
+      - OTEL_EXPORTER_OTLP_INSECURE=true
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+      tempo:
+        condition: service_started
     networks:
       - bw-network
+    labels:
+      logging: "promtail"
+      logging_jobname: "auth-service"
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:9001/health || exit 1"]
       interval: 30s
@@ -66,8 +76,13 @@ services:
     ports:
       - "9002:9002"    # HTTP API
       - "50052:50052"  # gRPC
+      - "9465:9464"    # Metrics (Host:9465 -> Port:9464)
     env_file:
       - ./post/.env.docker
+    environment:
+      - OTEL_SERVICE_NAME=post-service
+      - OTEL_EXPORTER_OTLP_ENDPOINT=tempo:4317
+      - OTEL_EXPORTER_OTLP_INSECURE=true
     depends_on:
       auth-service:
         condition: service_healthy
@@ -75,8 +90,13 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      tempo:
+        condition: service_started
     networks:
       - bw-network
+    labels:
+      logging: "promtail"
+      logging_jobname: "post-service"
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:9002/health || exit 1"]
       interval: 30s
@@ -123,6 +143,98 @@ services:
       timeout: 5s
       retries: 3
 
+  # Grafana - Visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: bw-grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - grafana_data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    networks:
+      - bw-network
+    depends_on:
+      - loki
+      - tempo
+      - mimir
+
+  # Loki - Logs Storage
+  loki:
+    image: grafana/loki:latest
+    container_name: bw-loki
+    restart: unless-stopped
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./monitoring/loki/config.yaml:/etc/loki/local-config.yaml
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - bw-network
+
+  # Promtail - Logs Collector
+  promtail:
+    image: grafana/promtail:latest
+    container_name: bw-promtail
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./monitoring/promtail/config.yaml:/etc/promtail/config.yaml
+    command: -config.file=/etc/promtail/config.yaml
+    networks:
+      - bw-network
+    depends_on:
+      - loki
+
+  # Tempo - Tracing Storage
+  tempo:
+    image: grafana/tempo:latest
+    container_name: bw-tempo
+    restart: unless-stopped
+    command: [ "-config.file=/etc/tempo.yaml" ]
+    volumes:
+      - ./monitoring/tempo/config.yaml:/etc/tempo.yaml
+    ports:
+      - "3200:3200"   # Tempo
+      - "4317:4317"   # OTLP gRPC
+    networks:
+      - bw-network
+
+  # Mimir - Metrics Storage
+  mimir:
+    image: grafana/mimir:latest
+    container_name: bw-mimir
+    restart: unless-stopped
+    command: [ "-config.file=/etc/mimir.yaml", "-target=all" ]
+    volumes:
+      - ./monitoring/mimir/config.yaml:/etc/mimir.yaml
+    ports:
+      - "9009:9009"
+    networks:
+      - bw-network
+
+  # Prometheus - Metrics Scraper
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: bw-prometheus
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --enable-feature=remote-write-receiver
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - bw-network
+    depends_on:
+      - mimir
+
 networks:
   bw-network:
     driver: bridge
@@ -130,3 +242,5 @@ networks:
 volumes:
   postgres_data:
   redis_data:
+  grafana_data:
+  prometheus_data:
