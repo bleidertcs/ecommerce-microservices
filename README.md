@@ -387,7 +387,16 @@ docker-compose restart kong
 - **Equipo de Prisma**: Por la moderna gestión de BD.
 - **Equipo de Kong**: Por el robusto API Gateway.
 - **Docker**: Por la tecnología de contenedores.
+- **Backend Works**: Por el desarrollo de la arquitectura.
 
 ## 📄 Licencia
 
 Este proyecto está bajo la Licencia **MIT**.
+
+## 📚 Repo Original
+
+https://github.com/BackendWorks/nestjs-microservices
+
+https://github.com/BackendWorks/auth
+
+https://github.com/BackendWorks/post
