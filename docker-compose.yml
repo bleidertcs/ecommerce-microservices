@@ -231,6 +231,7 @@ services:
       - --enable-feature=remote-write-receiver
     volumes:
       - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./monitoring/prometheus/rules:/etc/prometheus/rules
       - prometheus_data:/prometheus
     ports:
       - "9090:9090"
@@ -238,6 +239,23 @@ services:
       - bw-network
     depends_on:
       - mimir
+      - alertmanager
+
+  # Alertmanager - Alert Handling
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: bw-alertmanager
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+      - --storage.path=/alertmanager
+    volumes:
+      - ./monitoring/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml
+      - alertmanager_data:/alertmanager
+    ports:
+      - "9093:9093"
+    networks:
+      - bw-network
 
   # Pyroscope - Continuous Profiling
   pyroscope:
@@ -258,3 +276,4 @@ volumes:
   redis_data:
   grafana_data:
   prometheus_data:
+  alertmanager_data:

@@ -4,15 +4,16 @@ Este repositorio ha sido integrado con un stack completo de observabilidad basad
 
 ## Componentes del Stack
 
-| Componente     | Puerto     | Descripción                                |
-| -------------- | ---------- | ------------------------------------------ |
-| **Grafana**    | 3000       | Visualización de logs, métricas y trazas   |
-| **Loki**       | 3100       | Almacenamiento centralizado de logs        |
-| **Promtail**   | -          | Agente recolector de logs de Docker        |
-| **Tempo**      | 3200, 4317 | Almacenamiento de trazas distribuidas      |
-| **Mimir**      | 9009       | Almacenamiento de métricas a largo plazo   |
-| **Prometheus** | 9090       | Scraper de métricas (remote-write a Mimir) |
-| **Pyroscope**  | 4040       | Continuous profiling (CPU, memoria)        |
+| Componente       | Puerto     | Descripción                                |
+| ---------------- | ---------- | ------------------------------------------ |
+| **Grafana**      | 3000       | Visualización de logs, métricas y trazas   |
+| **Loki**         | 3100       | Almacenamiento centralizado de logs        |
+| **Promtail**     | -          | Agente recolector de logs de Docker        |
+| **Tempo**        | 3200, 4317 | Almacenamiento de trazas distribuidas      |
+| **Mimir**        | 9009       | Almacenamiento de métricas a largo plazo   |
+| **Prometheus**   | 9090       | Scraper de métricas (remote-write a Mimir) |
+| **Pyroscope**    | 4040       | Continuous profiling (CPU, memoria)        |
+| **Alertmanager** | 9093       | Gestión y enrutamiento de alertas          |
 
 ## Cómo levantar el stack
 
@@ -177,3 +178,40 @@ Pyroscope.init({
 });
 Pyroscope.start();
 ```
+
+## Alertas con Alertmanager
+
+### Reglas de alertas configuradas
+
+Las reglas de alertas se encuentran en `monitoring/prometheus/rules/alerts.yml`:
+
+| Alerta                    | Severidad | Descripción                                  |
+| ------------------------- | --------- | -------------------------------------------- |
+| `ServiceDown`             | critical  | Un servicio está caído por más de 1 minuto   |
+| `HighErrorRate`           | critical  | Tasa de errores HTTP 5xx superior al 5%      |
+| `HighResponseTime`        | warning   | Tiempo de respuesta p95 superior a 1 segundo |
+| `LowRequestRate`          | warning   | El servicio recibe muy pocas peticiones      |
+| `TempoNotReceivingTraces` | warning   | Tempo no recibe trazas                       |
+| `LokiNotReceivingLogs`    | warning   | Loki no recibe logs                          |
+
+### Ver alertas activas
+
+1. **En Prometheus**: `http://localhost:9090/alerts`
+2. **En Alertmanager**: `http://localhost:9093`
+3. **En Grafana**: Alerting → Alert rules
+
+### Configurar notificaciones
+
+Edita `monitoring/alertmanager/alertmanager.yml` para configurar:
+
+- **Email**: Descomenta y configura `smtp_smarthost`, `smtp_from`, etc.
+- **Slack**: Configura `slack_api_url` con tu webhook
+- **Webhook**: Cambia las URLs en los receivers
+
+### Silenciar alertas
+
+En Alertmanager (`http://localhost:9093`):
+
+1. Ve a "Silences" → "New Silence"
+2. Configura los matchers (ej. `alertname=LowRequestRate`)
+3. Define la duración del silencio

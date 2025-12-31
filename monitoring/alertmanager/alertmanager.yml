@@ -1,0 +1,87 @@
+# Alertmanager Configuration
+# See: https://prometheus.io/docs/alerting/latest/configuration/
+
+global:
+  # The smarthost and SMTP sender used for mail notifications.
+  # smtp_smarthost: 'smtp.gmail.com:587'
+  # smtp_from: 'alertmanager@example.com'
+  # smtp_auth_username: 'alertmanager@example.com'
+  # smtp_auth_password: 'password'
+
+  # The auth token for Opsgenie.
+  # opsgenie_api_key: ''
+
+  # The host:port for connecting to Slack.
+  # slack_api_url: 'https://hooks.slack.com/services/XXX/YYY/ZZZ'
+
+  resolve_timeout: 5m
+
+# The directory from which notification templates are read.
+templates:
+  - '/etc/alertmanager/templates/*.tmpl'
+
+# The root route on which each incoming alert enters.
+route:
+  # Default receiver
+  receiver: 'default-receiver'
+  
+  # Group by alertname and severity
+  group_by: ['alertname', 'severity', 'service']
+  
+  # Wait before sending grouped alerts
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+
+  # Child routes for specific alert handling
+  routes:
+    # Critical alerts - send immediately
+    - match:
+        severity: critical
+      receiver: 'critical-receiver'
+      group_wait: 10s
+      repeat_interval: 1h
+
+    # Warning alerts
+    - match:
+        severity: warning
+      receiver: 'warning-receiver'
+      repeat_interval: 4h
+
+    # Info alerts - less urgent
+    - match:
+        severity: info
+      receiver: 'default-receiver'
+      repeat_interval: 12h
+
+# Receivers define ways to send notifications
+receivers:
+  - name: 'default-receiver'
+    # Webhook receiver (for development/testing)
+    webhook_configs:
+      - url: 'http://localhost:5001/webhook'
+        send_resolved: true
+
+  - name: 'critical-receiver'
+    # Webhook for critical alerts
+    webhook_configs:
+      - url: 'http://localhost:5001/webhook/critical'
+        send_resolved: true
+    # Uncomment to enable email notifications
+    # email_configs:
+    #   - to: 'oncall@example.com'
+    #     send_resolved: true
+
+  - name: 'warning-receiver'
+    webhook_configs:
+      - url: 'http://localhost:5001/webhook/warning'
+        send_resolved: true
+
+# Inhibition rules allow to mute a set of alerts given that another alert is firing.
+inhibit_rules:
+  # If a critical alert is firing, mute warning alerts for the same service
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'service']
