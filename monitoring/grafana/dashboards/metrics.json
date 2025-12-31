@@ -56,6 +56,7 @@
               "mode": "off"
             }
           },
+          "unit": "reqps",
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -78,8 +79,8 @@
       "id": 1,
       "options": {
         "legend": {
-          "calcs": [],
-          "displayMode": "list",
+          "calcs": ["mean", "max"],
+          "displayMode": "table",
           "placement": "bottom"
         },
         "tooltip": {
@@ -94,8 +95,8 @@
             "uid": "Prometheus"
           },
           "editorMode": "code",
-          "expr": "rate(http_request_duration_seconds_count{job=~\"$service\"}[5m])",
-          "legendFormat": "{{method}} {{path}}",
+          "expr": "sum(rate(http_server_duration_count{job=~\"$service\"}[5m])) by (http_route, http_method)",
+          "legendFormat": "{{http_method}} {{http_route}}",
           "range": true,
           "refId": "A"
         }
@@ -108,6 +109,36 @@
         "type": "prometheus",
         "uid": "Prometheus"
       },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "s",
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "showPoints": "auto",
+            "spanNulls": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 0.5},
+              {"color": "red", "value": 1}
+            ]
+          }
+        },
+        "overrides": []
+      },
       "gridPos": {
         "h": 8,
         "w": 12,
@@ -115,6 +146,17 @@
         "y": 0
       },
       "id": 2,
+      "options": {
+        "legend": {
+          "calcs": ["mean", "max"],
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
       "targets": [
         {
           "datasource": {
@@ -122,19 +164,186 @@
             "uid": "Prometheus"
           },
           "editorMode": "code",
-          "expr": "process_resident_memory_bytes{job=~\"$service\"}",
-          "legendFormat": "{{job}}",
+          "expr": "histogram_quantile(0.95, sum(rate(http_server_duration_bucket{job=~\"$service\"}[5m])) by (le, http_route))",
+          "legendFormat": "p95 {{http_route}}",
           "refId": "A"
         }
       ],
-      "title": "Memory Usage",
+      "title": "HTTP Response Time (p95)",
       "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null}
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 8
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "editorMode": "code",
+          "expr": "sum(increase(http_server_duration_count{job=~\"$service\"}[1h]))",
+          "legendFormat": "Total Requests",
+          "refId": "A"
+        }
+      ],
+      "title": "Total Requests (Last Hour)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 1},
+              {"color": "red", "value": 5}
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 8
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "editorMode": "code",
+          "expr": "sum(rate(http_server_duration_count{job=~\"$service\", http_status_code=~\"5..\"}[5m])) / sum(rate(http_server_duration_count{job=~\"$service\"}[5m])) * 100 or vector(0)",
+          "legendFormat": "Error Rate",
+          "refId": "A"
+        }
+      ],
+      "title": "Error Rate (5xx)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null}
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 8
+      },
+      "id": 5,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "editorMode": "code",
+          "expr": "count(up{job=~\"$service\"} == 1)",
+          "legendFormat": "Healthy Services",
+          "refId": "A"
+        }
+      ],
+      "title": "Healthy Services",
+      "type": "stat"
     }
   ],
-  "refresh": "5s",
+  "refresh": "10s",
   "schemaVersion": 36,
   "style": "dark",
-  "tags": ["observability", "metrics"],
+  "tags": ["observability", "metrics", "opentelemetry"],
   "templating": {
     "list": [
       {
@@ -147,15 +356,15 @@
           "type": "prometheus",
           "uid": "Prometheus"
         },
-        "definition": "label_values(up, job)",
+        "definition": "label_values(http_server_duration_count, job)",
         "hide": 0,
         "includeAll": true,
         "label": "Servicio",
         "multi": true,
         "name": "service",
         "options": [],
-        "query": "label_values(up, job)",
-        "refresh": 1,
+        "query": "label_values(http_server_duration_count, job)",
+        "refresh": 2,
         "regex": "",
         "skipUrlSync": false,
         "sort": 1,
@@ -167,6 +376,6 @@
     "from": "now-1h",
     "to": "now"
   },
-  "title": "NestJS Metrics (Prometheus/Mimir)",
+  "title": "NestJS Metrics (OpenTelemetry)",
   "uid": "metrics-dashboard"
 }

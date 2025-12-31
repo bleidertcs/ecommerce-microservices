@@ -11,7 +11,7 @@ distributor:
           endpoint: 0.0.0.0:4318
 
 ingester:
-  max_block_duration: 5m
+  max_block_duration: 360m
   lifecycler:
     ring:
       kvstore:
@@ -22,6 +22,10 @@ compactor:
   compaction:
     block_retention: 48h
 
+querier:
+  search:
+    query_timeout: 60s
+
 metrics_generator:
   registry:
     external_labels:
@@ -31,6 +35,17 @@ metrics_generator:
     remote_write:
       - url: http://mimir:9009/api/v1/push
         send_exemplars: true
+  processor:
+    local_blocks:
+      max_live_traces: 100000
+      flush_check_period: 30s
+      trace_idle_period: 2m
+      complete_block_timeout: 5m
+      max_block_duration: 30m
+      filter_server_spans: false
+      flush_to_storage: true
+  traces_storage:
+    path: /tmp/tempo/generator/traces
 
 storage:
   trace:
@@ -40,5 +55,14 @@ storage:
     local:
       path: /tmp/tempo/blocks
 
+query_frontend:
+  search:
+    max_duration: 0
+  metrics:
+    max_duration: 3h
+    concurrent_jobs: 8
+    target_bytes_per_job: 1.25e+09
+
+# Legacy format for overrides (required for some Tempo versions)
 overrides:
-  metrics_generator_processors: [service-graphs, span-metrics]
+  metrics_generator_processors: [service-graphs, span-metrics, local-blocks]
