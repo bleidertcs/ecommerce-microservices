@@ -1,47 +1,109 @@
+import { Test, TestingModule } from '@nestjs/testing';
 import { DatabaseService } from '../../src/common/services/database.service';
 
 describe('DatabaseService', () => {
     let service: DatabaseService;
-    let mockLogger: any;
-    let mockPrisma: any;
 
-    beforeEach(() => {
-        mockLogger = { log: jest.fn(), error: jest.fn() };
-        mockPrisma = { $connect: jest.fn(), $disconnect: jest.fn() };
-        service = new DatabaseService(mockPrisma as any, mockLogger);
+    beforeEach(async () => {
+        const module: TestingModule = await Test.createTestingModule({
+            providers: [DatabaseService],
+        }).compile();
+
+        service = module.get<DatabaseService>(DatabaseService);
+
+        // Mock the PrismaClient methods
+        service.$connect = jest.fn();
+        service.$disconnect = jest.fn();
+        service['logger'] = {
+            log: jest.fn(),
+            error: jest.fn(),
+            warn: jest.fn(),
+            debug: jest.fn(),
+            verbose: jest.fn(),
+        } as any;
+    });
+
+    afterEach(() => {
+        jest.clearAllMocks();
     });
 
     it('should be defined', () => {
         expect(service).toBeDefined();
     });
 
-    it('should call onModuleInit and log success', async () => {
-        mockPrisma.$connect.mockResolvedValue(undefined);
-        await service.onModuleInit();
-        expect(mockPrisma.$connect).toHaveBeenCalled();
-        expect(mockLogger.log).toHaveBeenCalledWith('Database connection established');
-    });
+    describe('onModuleInit', () => {
+        it('should connect to database and log success', async () => {
+            (service.$connect as jest.Mock).mockResolvedValue(undefined);
 
-    it('should call onModuleInit and log error', async () => {
-        const error = new Error('fail');
-        mockPrisma.$connect.mockRejectedValue(error);
-        try {
             await service.onModuleInit();
-        } catch (e) {}
-        expect(mockLogger.error).toHaveBeenCalledWith('Failed to connect to database', error);
+
+            expect(service.$connect).toHaveBeenCalled();
+            expect(service['logger'].log).toHaveBeenCalledWith('Database connection established');
+        });
+
+        it('should log error and throw when connection fails', async () => {
+            const error = new Error('Connection failed');
+            (service.$connect as jest.Mock).mockRejectedValue(error);
+
+            await expect(service.onModuleInit()).rejects.toThrow('Connection failed');
+
+            expect(service['logger'].error).toHaveBeenCalledWith(
+                'Failed to connect to database',
+                error,
+            );
+        });
     });
 
-    it('should call onModuleDestroy and log success', async () => {
-        mockPrisma.$disconnect.mockResolvedValue(undefined);
-        await service.onModuleDestroy();
-        expect(mockPrisma.$disconnect).toHaveBeenCalled();
-        expect(mockLogger.log).toHaveBeenCalledWith('Database connection closed');
+    describe('onModuleDestroy', () => {
+        it('should disconnect from database and log success', async () => {
+            (service.$disconnect as jest.Mock).mockResolvedValue(undefined);
+
+            await service.onModuleDestroy();
+
+            expect(service.$disconnect).toHaveBeenCalled();
+            expect(service['logger'].log).toHaveBeenCalledWith('Database connection closed');
+        });
+
+        it('should log error when disconnect fails', async () => {
+            const error = new Error('Disconnect failed');
+            (service.$disconnect as jest.Mock).mockRejectedValue(error);
+
+            await service.onModuleDestroy();
+
+            expect(service['logger'].error).toHaveBeenCalledWith(
+                'Error closing database connection',
+                error,
+            );
+        });
     });
 
-    it('should call onModuleDestroy and log error', async () => {
-        const error = new Error('fail');
-        mockPrisma.$disconnect.mockRejectedValue(error);
-        await service.onModuleDestroy();
-        expect(mockLogger.error).toHaveBeenCalledWith('Error closing database connection', error);
+    describe('isHealthy', () => {
+        it('should return healthy status when database is reachable', async () => {
+            service.$queryRaw = jest.fn().mockResolvedValue([{ '?column?': 1 }]);
+
+            const result = await service.isHealthy();
+
+            expect(result).toEqual({
+                database: {
+                    status: 'up',
+                    connection: 'active',
+                },
+            });
+        });
+
+        it('should return unhealthy status when database is unreachable', async () => {
+            const error = new Error('Database unreachable');
+            service.$queryRaw = jest.fn().mockRejectedValue(error);
+
+            const result = await service.isHealthy();
+
+            expect(result).toEqual({
+                database: {
+                    status: 'down',
+                    connection: 'failed',
+                    error: 'Database unreachable',
+                },
+            });
+        });
     });
 });

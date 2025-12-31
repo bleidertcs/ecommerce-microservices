@@ -49,3 +49,9 @@ datasources:
         datasourceUid: 'Loki'
         query: '{container="$${__span.tags.service_name}"} |= "$${__span.traceId}"'
         tags: [{key: 'service.name', value: 'service_name'}] 
+
+  - name: Pyroscope
+    type: grafana-pyroscope-datasource
+    access: proxy
+    url: http://pyroscope:4040
+    uid: pyroscope

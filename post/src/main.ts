@@ -2,6 +2,10 @@ import { otr_sdk } from './tracing';
 // Start SDK before everything else
 otr_sdk.start();
 
+import { initProfiling } from './profiling';
+// Start profiling
+initProfiling();
+
 import { Logger, ValidationPipe, VersioningType } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';

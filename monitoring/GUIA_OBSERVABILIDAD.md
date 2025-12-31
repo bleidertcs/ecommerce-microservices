@@ -12,6 +12,7 @@ Este repositorio ha sido integrado con un stack completo de observabilidad basad
 | **Tempo**      | 3200, 4317 | Almacenamiento de trazas distribuidas      |
 | **Mimir**      | 9009       | Almacenamiento de métricas a largo plazo   |
 | **Prometheus** | 9090       | Scraper de métricas (remote-write a Mimir) |
+| **Pyroscope**  | 4040       | Continuous profiling (CPU, memoria)        |
 
 ## Cómo levantar el stack
 
@@ -149,3 +150,30 @@ Asegúrate de usar comillas dobles en valores con caracteres especiales:
 ### Mimir muestra "connection refused"
 
 Asegúrate de que Mimir esté iniciado con el flag `-target=all` para modo all-in-one.
+
+## Profiling con Pyroscope
+
+### Cómo usar Pyroscope
+
+1. En Grafana, ve a **Explore** → selecciona **Pyroscope**.
+2. Selecciona el servicio (ej. `auth-service` o `post-service`).
+3. Elige el tipo de profile:
+   - **CPU**: Analiza qué funciones consumen más tiempo de CPU.
+   - **Wall**: Tiempo total de ejecución (incluye I/O).
+   - **Heap**: Uso de memoria.
+4. Navega por los flame graphs para identificar cuellos de botella.
+
+### Configuración en microservicios
+
+El profiling se inicializa automáticamente en `src/profiling.ts`:
+
+```typescript
+import Pyroscope from "@pyroscope/nodejs";
+
+Pyroscope.init({
+  serverAddress: process.env.PYROSCOPE_SERVER_ADDRESS,
+  appName: process.env.PYROSCOPE_APPLICATION_NAME,
+  wall: { collectCpuTime: true },
+});
+Pyroscope.start();
+```
