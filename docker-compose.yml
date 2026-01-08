@@ -1,34 +1,54 @@
 services:
-  # Kong API Gateway
-  kong:
-    image: kong:latest
-    container_name: bw-kong
+  # Tyk API Gateway
+  tyk-gateway:
+    image: tykio/tyk-gateway:v5.0.0
+    container_name: bw-tyk-gateway
     restart: unless-stopped
     ports:
-      - "8000:8000"    # HTTP API
-      - "8443:8443"    # HTTPS API
-      - "8001:8001"    # Admin API
+      - "8080:8080" # Proxy
     environment:
-      KONG_DATABASE: "off"
-      KONG_DECLARATIVE_CONFIG: /var/lib/kong/kong.yml
-      KONG_PROXY_ACCESS_LOG: /dev/stdout
-      KONG_ADMIN_ACCESS_LOG: /dev/stdout
-      KONG_PROXY_ERROR_LOG: /dev/stderr
-      KONG_ADMIN_ERROR_LOG: /dev/stderr
-      KONG_ADMIN_LISTEN: 0.0.0.0:8001
-      KONG_PROXY_LISTEN: 0.0.0.0:8000
+      - TYK_GW_SECRET=352d20ee67be67f6340b4c0605b044b7
+      - TYK_GW_LISTENPORT=8080
     volumes:
-      - ./kong/config.yml:/var/lib/kong/kong.yml:ro
+      - ./tyk/tyk.conf:/opt/tyk-gateway/tyk.conf
+      - ./tyk/apps:/opt/tyk-gateway/apps
+      - ./tyk/policies/policies.json:/opt/tyk-gateway/policies/policies.json
     networks:
       - bw-network
     depends_on:
+      - redis
       - auth-service
       - post-service
-    healthcheck:
-      test: ["CMD", "kong", "health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+
+  # Tyk Pump (Analytics)
+  tyk-pump:
+    image: tykio/tyk-pump-docker-pub:v1.8.0
+    container_name: bw-tyk-pump
+    restart: unless-stopped
+    depends_on:
+      - redis
+      - mongo
+    environment:
+      - TYK_PMP_ANALYTICSSTORAGECONFIG_TYPE=redis
+      - TYK_PMP_ANALYTICSSTORAGECONFIG_HOST=redis
+      - TYK_PMP_ANALYTICSSTORAGECONFIG_PORT=6379
+      - TYK_PMP_PUMPS_MONGOAGGREGATE_TYPE=mongo-pump-aggregate
+      - TYK_PMP_PUMPS_MONGOAGGREGATE_META_MONGOURL=mongodb://mongo:27017/tyk_analytics
+      - TYK_PMP_PUMPS_MONGOAGGREGATE_META_USEMIXEDCOLLECTION=true
+    networks:
+      - bw-network
+
+  # MongoDB (Required for Tyk Dashboard)
+  mongo:
+    image: mongo:5.0
+    container_name: bw-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - bw-network
 
   # Authentication Service
   auth-service:
@@ -273,6 +293,7 @@ networks:
 
 volumes:
   postgres_data:
+  mongo_data:
   redis_data:
   grafana_data:
   prometheus_data:

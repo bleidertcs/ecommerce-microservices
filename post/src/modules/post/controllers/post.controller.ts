@@ -95,4 +95,9 @@ export class PostController {
     ): Promise<PostBulkResponseDto> {
         return this.postService.softDeletePosts(user.id, body.ids);
     }
+    @Get('health')
+    @ApiOperation({ summary: 'Health check' })
+    health(): { status: string } {
+        return { status: 'healthy' };
+    }
 }

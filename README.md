@@ -5,7 +5,7 @@
 [![Docker](https://img.shields.io/badge/Docker-20.0.0-blue.svg)](https://docker.com/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-Una arquitectura de microservicios lista para producción construida con **NestJS**, **gRPC**, **PostgreSQL**, **Redis** y **Kong API Gateway**. Este proyecto demuestra un patrón escalable y mantenible con comunicación entre servicios, autenticación centralizada, limitación de tasa (rate limiting) y monitoreo integral.
+Una arquitectura de microservicios lista para producción construida con **NestJS**, **gRPC**, **PostgreSQL**, **Redis** y **Tyk API Gateway**. Este proyecto demuestra un patrón escalable y mantenible con comunicación entre servicios, autenticación centralizada, limitación de tasa (rate limiting) y monitoreo integral.
 
 ## 📋 Tabla de Contenidos
 
@@ -32,9 +32,9 @@ Una arquitectura de microservicios lista para producción construida con **NestJ
 
 ```mermaid
 graph TB
-    Client[Aplicaciones Cliente] --> Kong[Kong API Gateway<br/>Puerto: 8000]
-    Kong --> Auth[Servicio Auth<br/>Puerto: 9001]
-    Kong --> Post[Servicio Post<br/>Puerto: 9002]
+    Client[Aplicaciones Cliente] --> Tyk[Tyk API Gateway<br/>Puerto: 8080]
+    Tyk --> Auth[Servicio Auth<br/>Puerto: 9001]
+    Tyk --> Post[Servicio Post<br/>Puerto: 9002]
     Auth --> PostgreSQL[(PostgreSQL<br/>Puerto: 5432)]
     Post --> PostgreSQL
     Auth --> Redis[(Redis<br/>Puerto: 6379)]
@@ -47,7 +47,7 @@ graph TB
 
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Kong Gateway  │    │   Auth Service  │    │   Post Service  │
+│   Tyk Gateway  │    │   Auth Service  │    │   Post Service  │
 │   (API Gateway) │◄──►│   (Port: 9001)  │◄──►│   (Port: 9002)  │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
          │                       │                       │
@@ -64,7 +64,7 @@ graph TB
 ```mermaid
 sequenceDiagram
     participant C as Cliente
-    participant K as Kong Gateway
+    participant K as Tyk Gateway
     participant P as Post Service
     participant A as Auth Service
     participant DB as PostgreSQL
@@ -91,7 +91,7 @@ sequenceDiagram
 
 - **🔐 Servicio de Auth**: Autenticación de usuarios, autorización y gestión de tokens JWT.
 - **📝 Servicio de Post**: Gestión de publicaciones de blog con integración de usuarios.
-- **🌐 Kong API Gateway**: Enrutamiento centralizado y gestión de APIs.
+- **🌐 Tyk API Gateway**: Enrutamiento centralizado y gestión de APIs.
 - **🗄️ PostgreSQL**: Base de datos principal para persistencia de datos (Prisma ORM).
 - **⚡ Redis**: Capa de caché para optimización del rendimiento y sesiones.
 
@@ -100,7 +100,7 @@ sequenceDiagram
 - **🚀 Comunicación gRPC**: Comunicación entre servicios de alto rendimiento.
 - **🔑 Autenticación JWT**: Sistema seguro basado en tokens (Access/Refresh).
 - **👥 Autorización por Roles**: Soporte para roles ADMIN y USER.
-- **🛡️ Rate Limiting**: Limitación de tasa basada en Kong con umbrales configurables.
+- **🛡️ Rate Limiting**: Limitación de tasa basada en Tyk con umbrales configurables.
 - **📝 Soft Delete**: Seguimiento de auditoría e integridad de datos.
 - **📄 Paginación**: Paginación eficiente para grandes conjuntos de datos.
 - **🔍 Búsqueda y Filtrado**: Capacidades avanzadas de búsqueda y ordenación.
@@ -190,12 +190,12 @@ docker-compose exec post-service npm run prisma:generate
 # Verificar contenedores
 docker-compose ps
 
-# Probar rutas en Kong
-curl http://localhost:8000/auth
-curl http://localhost:8000/post
+# Probar rutas en Tyk
+curl http://localhost:8080/auth
+curl http://localhost:8080/post
 
 # Verificar headers de Rate Limit
-curl -I http://localhost:8000/auth | grep RateLimit
+curl -I http://localhost:8080/auth | grep RateLimit
 
 # Endpoints de salud
 curl http://localhost:9001/health
@@ -206,13 +206,12 @@ curl http://localhost:9002/health
 
 ## 🔧 Configuración
 
-### Kong API Gateway
+### Tyk API Gateway
 
-Protección mediante límites de tasa (Rate Limiting) en `kong/config.yml`:
+Protección mediante límites de tasa (Rate Limiting) en `tyk/apps/*.json`:
 
-- **Rutas de Auth**: 100 req/min, 1000/hora.
-- **Rutas de Post**: 200 req/min, 2000/hora.
-- **Global**: 300 req/min, 3000/hora.
+- **Rutas de Auth**: 100 req/min.
+- **Rutas de Post**: 200 req/min.
 
 **Cabeceras de Rate Limit:**
 
@@ -224,7 +223,7 @@ Protección mediante límites de tasa (Rate Limiting) en `kong/config.yml`:
 
 ```bash
 for i in {1..105}; do
-  curl -s -w "Request $i: %{http_code}\n" -o /dev/null http://localhost:8000/auth
+  curl -s -w "Request $i: %{http_code}\n" -o /dev/null http://localhost:8080/auth
 done
 ```
 
@@ -232,10 +231,62 @@ done
 
 ## 📡 Endpoints de la API
 
-### 🌐 Kong API Gateway (Externo)
+### 🌐 Tyk API Gateway (Externo)
 
-- **URL Base**: `http://localhost:8000`
-- **Admin API**: `http://localhost:8001`
+- **URL Base**: `http://localhost:8080`
+
+### 🚦 Verificación de Traffic Management (Rate Limiting)
+
+El sistema incluye pruebas automatizadas para verificar que las políticas de límite de tasa funcionan correctamente.
+
+**Configurar Límite de Prueba:**
+Para probar rápidamente, reduce el límite en `tyk/policies/policies.json` a:
+
+```json
+"rate": 10,
+"per": 60
+```
+
+Reinicia Tyk: `docker compose restart tyk-gateway`
+
+**Ejecutar Pruebas E2E:**
+
+```bash
+# Auth Service
+cd auth
+npx jest test/gateway.e2e-spec.ts --config test/jest.json --testMatch "**/gateway.e2e-spec.ts"
+
+# Post Service
+cd post
+npx jest test/gateway.e2e-spec.ts --config test/jest.json --testMatch "**/gateway.e2e-spec.ts"
+```
+
+El resultado esperado es que las pruebas pasen confirmando que el gateway responde con **429 Too Many Requests** al exceder el límite.
+
+### 📚 Cómo usar Tyk Gateway
+
+#### 1. Agregar una Nueva API
+
+Crea un archivo `.json` en `tyk/apps/` (ej. `nuevo-servicio.json`). Asegúrate de configurar:
+
+- `target_url`: La URL interna del microservicio (usando nombre de servicio Docker).
+- `listen_path`: La ruta pública en el gateway.
+- `jwt_signing_method`: "hmac" (si requiere auth).
+- `jwt_default_policies`: ["default_policy"].
+
+#### 2. Modificar Políticas (Rate Limits)
+
+Edita `tyk/policies/policies.json`.
+
+- `rate`: Número de peticiones permitidas.
+- `per`: Ventana de tiempo en segundos.
+- Puedes crear múltiples políticas (ej. `silver_policy`, `gold_policy`) y asignarlas a diferentes claves.
+
+#### 3. Dashboard (Opcional)
+
+Si habilitas el Tyk Dashboard (requiere licencia), puedes gestionar todo visualmente en `http://localhost:3000`. En esta versión Open Source, usamos configuración basada en archivos.
+
+---
 
 ### 🔐 Autenticación (`/auth`)
 
@@ -288,7 +339,7 @@ npm run prisma:studio  # GUI para la base de datos
 
 - **Auth Service**: `http://localhost:9001/health`
 - **Post Service**: `http://localhost:9002/health`
-- **Kong Gateway**: `http://localhost:8001/status`
+- **Tyk Gateway**: `http://localhost:8080/auth/health`
 
 ### Docker Health Checks
 
@@ -326,7 +377,7 @@ docker-compose up --scale auth-service=3 --scale post-service=3
 2.  **Entorno**: Configura el puerto HTTP y gRPC en `.env.docker`.
 3.  **Proto**: Define el contrato en `src/protos/nuevo-servicio.proto`.
 4.  **Generación**: Ejecuta `npm run proto:generate` y `npm run prisma:generate`.
-5.  **Kong**: Registra la nueva ruta y el servicio en `kong/config.yml`.
+5.  **Tyk**: Agrega la definición de la nueva API en `tyk/apps/`.
 6.  **Docker**: Añade la definición del servicio en `docker-compose.yml`.
 7.  **Auth**: Utiliza el `AuthJwtAccessGuard` para validar tokens contra el Auth Service vía gRPC.
 
@@ -358,13 +409,11 @@ docker-compose exec redis redis-cli ping
 # Asegúrate de que los contenedores estén en la misma red 'bw-network'
 ```
 
-#### Problemas con Kong
+#### Problemas con Tyk
 
 ```bash
-# Listar servicios registrados
-curl http://localhost:8001/services
-# Reiniciar Kong
-docker-compose restart kong
+# Reiniciar Tyk
+docker-compose restart tyk-gateway
 ```
 
 ---
@@ -385,7 +434,7 @@ docker-compose restart kong
 
 - **Equipo de NestJS**: Por el excelente framework.
 - **Equipo de Prisma**: Por la moderna gestión de BD.
-- **Equipo de Kong**: Por el robusto API Gateway.
+- **Equipo de Tyk**: Por el robusto API Gateway.
 - **Docker**: Por la tecnología de contenedores.
 - **Backend Works**: Por el desarrollo de la arquitectura.
 

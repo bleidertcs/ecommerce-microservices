@@ -66,4 +66,10 @@ export class AuthPublicController {
     refreshTokens(@AuthUser() user: IAuthPayload): Promise<AuthRefreshResponseDto> {
         return this.authService.generateTokens(user);
     }
+    @PublicRoute()
+    @Get('health')
+    @ApiOperation({ summary: 'Health check' })
+    health(): { status: string } {
+        return { status: 'healthy' };
+    }
 }
