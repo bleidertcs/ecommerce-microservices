@@ -3,6 +3,7 @@ import { TerminusModule } from '@nestjs/terminus';
 
 import { CommonModule } from 'src/common/common.module';
 import { PostModule } from '../modules/post/post.module';
+import { HealthModule } from '../modules/health/health.module';
 import { AppController } from './app.controller';
 import { PostGrpcController } from './post.grpc.controller';
 import { GrpcModule } from 'nestjs-grpc';
@@ -13,7 +14,7 @@ import { join } from 'path';
     imports: [
         CommonModule,
         PostModule,
-        TerminusModule,
+        HealthModule,
         GrpcModule.forProviderAsync({
             inject: [ConfigService],
             useFactory: (configService: ConfigService) => ({

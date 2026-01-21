@@ -63,14 +63,18 @@ receivers:
         send_resolved: true
 
   - name: 'critical-receiver'
-    # Webhook for critical alerts
-    webhook_configs:
-      - url: 'http://localhost:5001/webhook/critical'
-        send_resolved: true
-    # Uncomment to enable email notifications
-    # email_configs:
-    #   - to: 'oncall@example.com'
-    #     send_resolved: true
+    # Email Config
+    email_configs:
+      - to: 'admin@example.com'
+        from: 'alertmanager@example.com'
+        smarthost: 'smtp.gmail.com:587'
+        auth_username: 'example@gmail.com'
+        auth_identity: 'example@gmail.com'
+        auth_password: 'password'
+    # Telegram Config
+    telegram_configs:
+      - bot_token: '123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11'
+        chat_id: 123456789
 
   - name: 'warning-receiver'
     webhook_configs:

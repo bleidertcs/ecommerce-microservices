@@ -3,6 +3,7 @@ import { TerminusModule } from '@nestjs/terminus';
 
 import { CommonModule } from 'src/common/common.module';
 import { AuthModule } from 'src/modules/auth/auth.module';
+import { HealthModule } from 'src/modules/health/health.module';
 import { UserModule } from 'src/modules/user/user.module';
 
 import { AppController } from './app.controller';
@@ -13,8 +14,8 @@ import { AuthGrpcController } from './auth.grpc.controller';
 
 @Module({
     imports: [
-        TerminusModule,
         CommonModule,
+        HealthModule,
         UserModule,
         AuthModule,
         GrpcModule.forProviderAsync({

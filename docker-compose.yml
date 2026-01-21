@@ -7,8 +7,8 @@ services:
     ports:
       - "8080:8080" # Proxy
     environment:
-      - TYK_GW_SECRET=352d20ee67be67f6340b4c0605b044b7
-      - TYK_GW_LISTENPORT=8080
+      - TYK_GW_SECRET=${TYK_GW_SECRET}
+      - TYK_GW_LISTENPORT=${TYK_GW_LISTENPORT}
     volumes:
       - ./tyk/tyk.conf:/opt/tyk-gateway/tyk.conf
       - ./tyk/apps:/opt/tyk-gateway/apps
@@ -69,6 +69,9 @@ services:
       - OTEL_EXPORTER_OTLP_INSECURE=true
       - PYROSCOPE_SERVER_ADDRESS=http://pyroscope:4040
       - PYROSCOPE_APPLICATION_NAME=auth-service
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
+      - ACCESS_TOKEN_SECRET_KEY=${ACCESS_TOKEN_SECRET_KEY}
+      - REFRESH_TOKEN_SECRET_KEY=${REFRESH_TOKEN_SECRET_KEY}
     depends_on:
       postgres:
         condition: service_healthy
@@ -107,6 +110,9 @@ services:
       - OTEL_EXPORTER_OTLP_INSECURE=true
       - PYROSCOPE_SERVER_ADDRESS=http://pyroscope:4040
       - PYROSCOPE_APPLICATION_NAME=post-service
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
+      - ACCESS_TOKEN_SECRET_KEY=${ACCESS_TOKEN_SECRET_KEY}
+      - REFRESH_TOKEN_SECRET_KEY=${REFRESH_TOKEN_SECRET_KEY}
     depends_on:
       auth-service:
         condition: service_healthy
@@ -136,15 +142,15 @@ services:
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: master123
-      POSTGRES_DB: postgres
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - bw-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U admin -d postgres"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -178,7 +184,7 @@ services:
       - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
       - grafana_data:/var/lib/grafana
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
       - GF_USERS_ALLOW_SIGN_UP=false
     networks:
       - bw-network
