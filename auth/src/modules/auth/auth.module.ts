@@ -4,6 +4,7 @@ import { PassportModule } from '@nestjs/passport';
 
 import { CommonModule } from 'src/common/common.module';
 import { AuthPublicController } from './controllers/auth.public.controller';
+import { EventsController } from './controllers/events.controller';
 import { AuthService } from './services/auth.service';
 import { UserModule } from '../user/user.module';
 
@@ -14,7 +15,7 @@ import { UserModule } from '../user/user.module';
         CommonModule,
         UserModule,
     ],
-    controllers: [AuthPublicController],
+    controllers: [AuthPublicController, EventsController],
     providers: [AuthService],
     exports: [AuthService],
 })

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 
 import { PostCreateDto } from '../dtos/post-create.dto';
@@ -11,6 +11,7 @@ import { PostMappingService } from './post-mapping.service';
 
 import { DatabaseService } from '../../../common/services/database.service';
 import { QueryBuilderService } from '../../../common/services/query-builder.service';
+import { EventsService } from './events.service';
 import { ApiBaseQueryDto } from '../../../common/dtos/api-query.dto';
 import { PaginatedApiResponseDto } from '../../../common/dtos/api-response.dto';
 import { PaginatedResult } from '../../../common/interfaces/query-builder.interface';
@@ -21,7 +22,9 @@ export class PostService implements IPostService {
         private readonly databaseService: DatabaseService,
         private readonly postMappingService: PostMappingService,
         private readonly queryBuilderService: QueryBuilderService,
+        private readonly eventsService: EventsService,
     ) {}
+    private readonly logger = new Logger(PostService.name);
 
     async create(createPostDto: PostCreateDto, userId: string): Promise<PostResponseDto> {
         const post = await this.databaseService.post.create({
@@ -35,16 +38,28 @@ export class PostService implements IPostService {
     }
 
     async createPost(createPostDto: PostCreateDto, userId: string): Promise<PostResponseDto> {
-        const post = await this.databaseService.post.create({
-            data: {
-                title: createPostDto.title,
-                content: createPostDto.content,
-                images: createPostDto.images ?? [],
-                createdBy: userId,
-            },
-        });
+        try {
+            this.logger.log(`Creating post for user: ${userId}`);
+            const post = await this.databaseService.post.create({
+                data: {
+                    title: createPostDto.title,
+                    content: createPostDto.content,
+                    images: createPostDto.images ?? [],
+                    createdBy: userId,
+                },
+            });
 
-        return this.postMappingService.enrichPostData(post);
+            this.logger.log(`Post created in DB: ${post.id}`);
+            const response = await this.postMappingService.enrichPostData(post);
+            
+            this.logger.log(`Publishing event to RabbitMQ...`);
+            this.eventsService.publish('post.created', response);
+            
+            return response;
+        } catch (error) {
+            this.logger.error(`Error in createPost: ${error.message}`, error.stack);
+            throw error;
+        }
     }
 
     async findAll(queryParams: ApiBaseQueryDto): Promise<PaginatedApiResponseDto<PostResponseDto>> {

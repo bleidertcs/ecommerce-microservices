@@ -9,6 +9,7 @@ initProfiling();
 import { Logger, ValidationPipe, VersioningType } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
+import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import express, { Request, Response } from 'express';
 import helmet from 'helmet';
@@ -101,6 +102,21 @@ async function bootstrap() {
         logger.log('Received SIGINT, shutting down gracefully');
         app.close();
     });
+
+    // Connect to RabbitMQ
+    app.connectMicroservice<MicroserviceOptions>({
+        transport: Transport.RMQ,
+        options: {
+            urls: ['amqp://guest:guest@rabbitmq:5672'],
+            queue: 'auth_queue',
+            queueOptions: {
+                durable: false,
+            },
+        },
+    });
+
+    await app.startAllMicroservices();
+    logger.log(`📥 RabbitMQ consumer started for auth_queue`);
 
     // Start server
     await app.listen(port, host);

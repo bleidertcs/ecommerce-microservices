@@ -267,6 +267,27 @@ services:
     networks:
       - bw-network
 
+  # RabbitMQ - Message Broker
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: bw-rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5672:5672"   # AMQP
+      - "15672:15672" # Management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - bw-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
 networks:
   bw-network:
     driver: bridge
@@ -275,5 +296,7 @@ volumes:
   postgres_data:
   redis_data:
   grafana_data:
+  loader_data:
   prometheus_data:
   alertmanager_data:
+  rabbitmq_data:

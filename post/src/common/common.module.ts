@@ -16,8 +16,9 @@ import { QueryBuilderService } from './services/query-builder.service';
 import Joi from 'joi';
 import { CacheModule } from '@nestjs/cache-manager';
 import { createKeyv, Keyv } from '@keyv/redis';
-import { CacheableMemory } from 'cacheable';
 import { GrpcAuthModule } from '@/services/auth/grpc.auth.module';
+import { ResilienceModule } from './resilience.module';
+import { CacheableMemory } from 'cacheable';
 
 @Module({
     imports: [
@@ -93,6 +94,7 @@ import { GrpcAuthModule } from '@/services/auth/grpc.auth.module';
             resolvers: [{ use: QueryResolver, options: ['lang'] }, AcceptLanguageResolver],
         }),
         GrpcAuthModule,
+        ResilienceModule,
     ],
     providers: [
         // Core Services
@@ -122,7 +124,7 @@ import { GrpcAuthModule } from '@/services/auth/grpc.auth.module';
             useClass: RolesGuard,
         },
     ],
-    exports: [DatabaseService, HashService, QueryBuilderService],
+    exports: [DatabaseService, HashService, QueryBuilderService, ResilienceModule],
 })
 export class CommonModule implements NestModule {
     configure(consumer: MiddlewareConsumer): void {

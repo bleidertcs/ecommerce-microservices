@@ -1,12 +1,14 @@
 import { Module } from '@nestjs/common';
 import { GrpcAuthService } from './grpc.auth.service';
 import { GrpcModule } from 'nestjs-grpc';
+import { ResilienceModule } from '../../common/resilience.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { join } from 'path';
 
 @Module({
     imports: [
         ConfigModule,
+        ResilienceModule,
         GrpcModule.forConsumerAsync({
             imports: [ConfigModule],
             useFactory: (configService: ConfigService) => ({

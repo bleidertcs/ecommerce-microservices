@@ -22,7 +22,7 @@ export class AppController {
         summary: 'Check application health',
         description: 'Returns the health status of the application',
     })
-    public async getHealth() {
+    public getHealth() {
         return this.healthCheckService.check([() => this.databaseService.isHealthy()]);
     }
 }

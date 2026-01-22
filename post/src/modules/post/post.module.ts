@@ -3,12 +3,13 @@ import { Module } from '@nestjs/common';
 import { PostController } from './controllers/post.controller';
 import { PostService } from './services/post.service';
 import { PostMappingService } from './services/post-mapping.service';
+import { EventsService } from './services/events.service';
 import { CommonModule } from '../../common/common.module';
 
 @Module({
     imports: [CommonModule],
     controllers: [PostController],
-    providers: [PostService, PostMappingService],
-    exports: [PostService, PostMappingService],
+    providers: [PostService, PostMappingService, EventsService],
+    exports: [PostService, PostMappingService, EventsService],
 })
 export class PostModule {}

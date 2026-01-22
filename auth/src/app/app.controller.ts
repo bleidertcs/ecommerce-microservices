@@ -19,7 +19,7 @@ export class AppController {
     @Get('/health')
     @HealthCheck()
     @PublicRoute()
-    public async getHealth() {
+    public getHealth() {
         return this.healthCheckService.check([() => this.databaseService.isHealthy()]);
     }
 }
