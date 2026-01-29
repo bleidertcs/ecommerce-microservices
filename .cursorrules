@@ -1,0 +1,35 @@
+# Workspace Rules for NestJS Microservices
+
+## General Principles
+- Use **TypeScript** for all backend logic.
+- Follow **NestJS** best practices (DI, Modules, Controllers, Services).
+- Maintain a **Microservices** architecture: services should be decoupled.
+- All code must be linted with **ESLint** and formatted with **Prettier**.
+
+## File Naming Conventions
+- Controllers: `*.controller.ts`
+- Services: `*.service.ts`
+- Modules: `*.module.ts`
+- DTOs: `*.dto.ts`
+- Entities/Schemas: `*.entity.ts` or Prisma models.
+- Protos: `*.proto`
+
+## Communication
+- **Synchronous**: Use **gRPC**. Protocols in `src/protos/`.
+- **Asynchronous**: Use **RabbitMQ**. Event patterns should be documented.
+
+## Database
+- Use **Prisma ORM**.
+- Schemas per service in `prisma/schema.prisma`.
+- No manual SQL unless strictly necessary for performance.
+
+## Observability
+- Integrate **Sentry** for errors.
+- Use **OpenTelemetry** for tracing.
+- Use **Pyroscope** for profiling.
+- Expose Prometheus metrics via `@opentelemetry/exporter-prometheus`.
+
+## Git & Workflow
+- Use descriptive commit messages.
+- Husky hooks are enabled for pre-commit linting.
+- Use Yarn for dependency management (Corepack enabled).

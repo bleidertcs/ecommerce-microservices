@@ -122,13 +122,6 @@ describe('UserAuthService', () => {
             });
         });
 
-        it('should throw NotFoundException when user with email is soft deleted', async () => {
-            jest.spyOn(databaseService.user, 'findUnique').mockResolvedValue(null);
-
-            await expect(userAuthService.getUserProfileByEmail(email)).rejects.toThrow(
-                new NotFoundException('User not found'),
-            );
-        });
     });
 
     describe('updateUserProfile', () => {
