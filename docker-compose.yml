@@ -22,51 +22,12 @@ services:
     networks:
       - bw-network
     depends_on:
-      - auth-service
       - post-service
     healthcheck:
       test: ["CMD", "kong", "health"]
       interval: 30s
       timeout: 10s
       retries: 3
-
-  # Authentication Service
-  auth-service:
-    build:
-      context: ./auth
-      dockerfile: Dockerfile
-    container_name: bw-auth-service
-    restart: unless-stopped
-    ports:
-      - "9001:9001"    # HTTP API
-      - "50051:50051"  # gRPC
-      - "9464:9464"    # Metrics
-    env_file:
-      - ./auth/.env.docker
-    environment:
-      - OTEL_SERVICE_NAME=auth-service
-      - OTEL_EXPORTER_OTLP_ENDPOINT=tempo:4317
-      - OTEL_EXPORTER_OTLP_INSECURE=true
-      - PYROSCOPE_SERVER_ADDRESS=http://pyroscope:4040
-      - PYROSCOPE_APPLICATION_NAME=auth-service
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      tempo:
-        condition: service_started
-    networks:
-      - bw-network
-    labels:
-      logging: "promtail"
-      logging_jobname: "auth-service"
-    healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:9001/health || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
 
   # Post Service
   post-service:
@@ -88,8 +49,6 @@ services:
       - PYROSCOPE_SERVER_ADDRESS=http://pyroscope:4040
       - PYROSCOPE_APPLICATION_NAME=post-service
     depends_on:
-      auth-service:
-        condition: service_healthy
       postgres:
         condition: service_healthy
       redis:
@@ -267,6 +226,90 @@ services:
     networks:
       - bw-network
 
+  # Authentik - Identity Provider
+  authentik-postgresql:
+    image: postgres:15-alpine
+    container_name: bw-authentik-db
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d $${AUTHENTIK_POSTGRESQL__NAME} -U $${AUTHENTIK_POSTGRESQL__USER}"]
+      start_period: 20s
+      interval: 30s
+      retries: 5
+      timeout: 5s
+    networks:
+      - bw-network
+    volumes:
+      - authentik_database:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: ${AUTHENTIK_POSTGRESQL__PASSWORD:?error}
+      POSTGRES_USER: ${AUTHENTIK_POSTGRESQL__USER:?error}
+      POSTGRES_DB: ${AUTHENTIK_POSTGRESQL__NAME:?error}
+
+  authentik-redis:
+    image: redis:7-alpine
+    container_name: bw-authentik-redis
+    command: --save 60 1 --loglevel warning
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      start_period: 20s
+      interval: 30s
+      retries: 5
+      timeout: 3s
+    networks:
+      - bw-network
+
+  authentik-server:
+    image: ghcr.io/goauthentik/server:latest
+    container_name: bw-authentik-server
+    restart: unless-stopped
+    command: server
+    environment:
+      AUTHENTIK_REDIS__HOST: authentik-redis
+      AUTHENTIK_POSTGRESQL__HOST: authentik-postgresql
+      AUTHENTIK_POSTGRESQL__USER: ${AUTHENTIK_POSTGRESQL__USER:?error}
+      AUTHENTIK_POSTGRESQL__NAME: ${AUTHENTIK_POSTGRESQL__NAME:?error}
+      AUTHENTIK_POSTGRESQL__PASSWORD: ${AUTHENTIK_POSTGRESQL__PASSWORD:?error}
+      AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY:?error}
+    volumes:
+      - ./authentik/media:/media
+      - ./authentik/templates:/templates
+    networks:
+      - bw-network
+    ports:
+      - "9000:9000"
+      - "9443:9443"
+    depends_on:
+      authentik-postgresql:
+        condition: service_healthy
+      authentik-redis:
+        condition: service_healthy
+
+  authentik-worker:
+    image: ghcr.io/goauthentik/server:latest
+    container_name: bw-authentik-worker
+    restart: unless-stopped
+    command: worker
+    environment:
+      AUTHENTIK_REDIS__HOST: authentik-redis
+      AUTHENTIK_POSTGRESQL__HOST: authentik-postgresql
+      AUTHENTIK_POSTGRESQL__USER: ${AUTHENTIK_POSTGRESQL__USER:?error}
+      AUTHENTIK_POSTGRESQL__NAME: ${AUTHENTIK_POSTGRESQL__NAME:?error}
+      AUTHENTIK_POSTGRESQL__PASSWORD: ${AUTHENTIK_POSTGRESQL__PASSWORD:?error}
+      AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY:?error}
+    volumes:
+      - ./authentik/media:/media
+      - ./authentik/templates:/templates
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - bw-network
+    depends_on:
+      authentik-postgresql:
+        condition: service_healthy
+      authentik-redis:
+        condition: service_healthy
+
   # RabbitMQ - Message Broker
   rabbitmq:
     image: rabbitmq:3-management-alpine
@@ -300,3 +343,5 @@ volumes:
   prometheus_data:
   alertmanager_data:
   rabbitmq_data:
+  authentik_database:
+  authentik_media:

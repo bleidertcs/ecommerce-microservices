@@ -1,14 +1,10 @@
 import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { GrpcAuthService } from '../../services/auth/grpc.auth.service';
 import { PUBLIC_ROUTE_KEY } from '../constants/request.constant';
 
 @Injectable()
 export class AuthJwtAccessGuard implements CanActivate {
-    constructor(
-        private reflector: Reflector,
-        private grpcAuthService: GrpcAuthService,
-    ) {}
+    constructor(private reflector: Reflector) {}
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
         const isPublic = this.reflector.getAllAndOverride<boolean>(PUBLIC_ROUTE_KEY, [
@@ -21,32 +17,18 @@ export class AuthJwtAccessGuard implements CanActivate {
         }
 
         const request = context.switchToHttp().getRequest();
-        const token = this.extractTokenFromHeader(request);
+        const userId = request.headers['x-user-id'];
+        const userRole = request.headers['x-user-role'];
 
-        if (!token) {
-            throw new UnauthorizedException('Token not found');
+        if (!userId) {
+            throw new UnauthorizedException('User ID not found in headers. Did you go through Kong?');
         }
 
-        try {
-            const response = await this.grpcAuthService.validateToken(token);
+        request.user = {
+            id: userId,
+            role: userRole || 'USER',
+        };
 
-            if (!response.success || !response.payload) {
-                throw new UnauthorizedException('Invalid token');
-            }
-
-            request.user = {
-                id: response.payload.id,
-                role: response.payload.role,
-            };
-
-            return true;
-        } catch (error) {
-            throw new UnauthorizedException('Token validation failed');
-        }
-    }
-
-    private extractTokenFromHeader(request: any): string | undefined {
-        const [type, token] = request.headers.authorization?.split(' ') ?? [];
-        return type === 'Bearer' ? token : undefined;
+        return true;
     }
 }

@@ -16,7 +16,6 @@ import { QueryBuilderService } from './services/query-builder.service';
 import Joi from 'joi';
 import { CacheModule } from '@nestjs/cache-manager';
 import { createKeyv, Keyv } from '@keyv/redis';
-import { GrpcAuthModule } from '@/services/auth/grpc.auth.module';
 import { ResilienceModule } from './resilience.module';
 import { CacheableMemory } from 'cacheable';
 
@@ -60,10 +59,6 @@ import { CacheableMemory } from 'cacheable';
                 // GRPC Configuration
                 GRPC_URL: Joi.string().required(),
                 GRPC_PACKAGE: Joi.string().default('post'),
-
-                // Auth Service GRPC Configuration
-                GRPC_AUTH_URL: Joi.string().required(),
-                GRPC_AUTH_PACKAGE: Joi.string().default('auth'),
             }),
         }),
         CacheModule.registerAsync({
@@ -93,7 +88,6 @@ import { CacheableMemory } from 'cacheable';
             },
             resolvers: [{ use: QueryResolver, options: ['lang'] }, AcceptLanguageResolver],
         }),
-        GrpcAuthModule,
         ResilienceModule,
     ],
     providers: [
