@@ -1,34 +1,39 @@
 apiVersion: 1
 
 datasources:
-  - name: Prometheus
-    type: prometheus
-    access: proxy
-    url: http://prometheus:9090
-    isDefault: true
-    jsonData:
-      httpMethod: POST
-      exemplarTraceIdDest:
-        datasourceUid: tempo
-        name: traceId
-
   - name: Mimir
     type: prometheus
     access: proxy
     url: http://mimir:9009/prometheus
+    isDefault: true
+    uid: mimir
     jsonData:
       httpMethod: POST
+      timeInterval: 15s
+      # Link to Tempo for exemplars
+      exemplarTraceIdDestinations:
+        - datasourceUid: tempo
+          name: traceID
+      # Custom query timeout
+      queryTimeout: 300s
 
   - name: Loki
     type: loki
     access: proxy
     url: http://loki:3100
+    uid: loki
     jsonData:
+      maxLines: 1000
+      # Link logs to traces
       derivedFields:
         - datasourceUid: tempo
           matcherRegex: '"trace_id":"([^"]+)"'
-          name: traceId
-          url: "$${__value.raw}"
+          name: TraceID
+          url: '$${__value.raw}'
+        - datasourceUid: tempo
+          matcherRegex: 'trace_id=([0-9a-fA-F]+)'
+          name: TraceID
+          url: '$${__value.raw}'
 
   - name: Tempo
     type: tempo
@@ -36,25 +41,52 @@ datasources:
     url: http://tempo:3200
     uid: tempo
     jsonData:
-      httpMethod: POST
+      httpMethod: GET
+      # Service graph from Mimir
       serviceMap:
-        datasourceUid: 'Prometheus'
+        datasourceUid: mimir
+      # Enable node graph visualization
       nodeGraph:
         enabled: true
+      # Search configuration
       search:
         hide: false
+      # Link to Loki logs
       lokiSearch:
-        datasourceUid: 'Loki'
+        datasourceUid: loki
+      # Trace to logs
       tracesToLogsV2:
-        datasourceUid: 'Loki'
-        query: '{container="$${__span.tags.service_name}"} |= "$${__span.traceId}"'
-        tags: [{key: 'service.name', value: 'service_name'}] 
-
-  - name: Pyroscope
-    type: grafana-pyroscope-datasource
-    access: proxy
-    url: http://pyroscope:4040
-    uid: pyroscope
+        datasourceUid: loki
+        # Extend time window for log search
+        spanStartTimeShift: '-1h'
+        spanEndTimeShift: '1h'
+        tags:
+          - key: 'service.name'
+            value: 'service_name'
+        filterByTraceID: true
+        filterBySpanID: false
+        customQuery: false
+      # Trace to metrics
+      tracesToMetrics:
+        datasourceUid: mimir
+        tags:
+          - key: 'service.name'
+            value: 'service'
+          - key: 'http.method'
+            value: 'method'
+          - key: 'http.status_code'
+            value: 'status_code'
+        queries:
+          - name: 'Request Rate'
+            query: 'rate(traces_spanmetrics_calls_total{$$__tags}[5m])'
+          - name: 'Error Rate'
+            query: 'rate(traces_spanmetrics_calls_total{$$__tags,status_code=~"5.."}[5m])'
+          - name: 'Duration'
+            query: 'histogram_quantile(0.95, sum(rate(traces_spanmetrics_latency_bucket{$$__tags}[5m])) by (le))'
+      # Span bar label
+      spansBar:
+        type: 'Tag'
+        tag: 'http.path'
 
   - name: Alertmanager
     type: alertmanager
@@ -63,3 +95,4 @@ datasources:
     uid: alertmanager
     jsonData:
       implementation: prometheus
+      handleGrafanaManagedAlerts: false
