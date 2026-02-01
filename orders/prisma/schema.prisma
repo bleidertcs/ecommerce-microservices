@@ -1,0 +1,76 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Order {
+  id        String      @id @default(uuid())
+  
+  // User Reference (cross-service)
+  userId    String      // Reference to User in Users service
+  
+  // Order Items
+  items     OrderItem[]
+  
+  // Pricing
+  subtotal     Float    // Sum of all items
+  shippingCost Float    @default(0)
+  tax          Float    @default(0)
+  total        Float    // subtotal + shippingCost + tax
+  
+  // Shipping Information
+  shippingAddress Json  // { street, city, state, zipCode, country, recipientName, recipientPhone }
+  
+  // Payment
+  paymentMethod   String // e.g., "Credit Card", "PayPal", "Bank Transfer"
+  paymentStatus   PaymentStatus @default(PENDING)
+  
+  // Order Status
+  status    OrderStatus @default(PENDING)
+  
+  // Tracking
+  trackingNumber String?
+  
+  // Timestamps
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  isDeleted Boolean     @default(false)
+  deletedAt DateTime?
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id          String  @id @default(uuid())
+  orderId     String
+  productId   String  // Reference to Product in Products service
+  productName String  // Snapshot of product name at purchase time
+  quantity    Int
+  price       Float   // Price per unit at time of purchase
+  order       Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  isDeleted   Boolean @default(false)
+
+  @@map("order_items")
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  PAID
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  AUTHORIZED
+  PAID
+  FAILED
+  REFUNDED
+}

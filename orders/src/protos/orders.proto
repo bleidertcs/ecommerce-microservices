@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package orders;
+
+service OrdersService {
+  rpc FindByUser (OrderByUserRequest) returns (OrderListResponse) {}
+}
+
+message OrderByUserRequest {
+  string userId = 1;
+}
+
+message OrderListResponse {
+  repeated string orderIds = 1;
+}
