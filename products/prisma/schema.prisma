@@ -1,0 +1,42 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id          String   @id @default(uuid())
+  
+  // Basic Information
+  name        String
+  description String?
+  sku         String   @unique  // Stock Keeping Unit
+  brand       String?
+  
+  // Pricing & Inventory
+  price       Float
+  stock       Int      @default(0)
+  category    String?
+  
+  // Media
+  images      Json?    // Array of image URLs
+  
+  // Ratings & Reviews
+  rating      Float    @default(0)  // Average rating (0-5)
+  reviewCount Int      @default(0)  // Number of reviews
+  
+  // Additional Metadata
+  tags        String[] // Array of tags for filtering
+  featured    Boolean  @default(false)
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  isDeleted   Boolean  @default(false)
+  deletedAt   DateTime?
+
+  @@map("products")
+}
