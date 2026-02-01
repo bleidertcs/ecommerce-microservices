@@ -1,0 +1,42 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  CUSTOMER
+  ADMIN
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  username  String   @unique
+  password  String   // Hashed password
+  role      UserRole @default(CUSTOMER)
+  
+  // Personal Information
+  firstName String
+  lastName  String
+  phone     String?
+  avatar    String?  // URL to avatar image
+  
+  // Addresses (stored as JSON)
+  shippingAddress Json?  // { street, city, state, zipCode, country }
+  billingAddress  Json?   // { street, city, state, zipCode, country }
+  
+  // Payment Methods (stored as JSON array)
+  paymentMethods Json?   // [{ type, last4, expiryMonth, expiryYear, isDefault }]
+  
+  // Metadata
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  isDeleted Boolean  @default(false)
+  deletedAt DateTime?
+
+  @@map("users")
+}
