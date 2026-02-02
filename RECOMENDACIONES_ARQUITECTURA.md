@@ -39,12 +39,12 @@ Este documento detalla las oportunidades de mejora identificadas para la arquite
 
 ## 📊 4. Observabilidad (Nivel Avanzado)
 
-| Área                           | Estado Actual                        | Mejora Propuesta                                                                                                      |
-| ------------------------------ | ------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
-| **Dashboards Grafana**         | Vacíos / por defecto                 | Crear dashboards personalizados con el **método RED** (Rate, Errors, Duration).                                       |
-| **Alertas Proactivas**         | Alertmanager configurado, sin reglas | Definir reglas de alerta (ej. "Latencia P99 > 500ms", "Tasa de Errores > 5%").                                        |
-| **Log Correlation (Trace ID)** | No implementado                      | Inyectar `trace_id` en cada línea de log de Winston para poder saltar de un log a su traza en Tempo.                  |
-| **Profiling Continuo**         | Pyroscope eliminado                  | Re-evaluar si necesitas profiling de memoria/CPU. Si lo haces, el OTel Collector puede recolectar datos de Pyroscope. |
+| Área                           | Estado Actual                     | Mejora Propuesta                                                                                  |
+| ------------------------------ | --------------------------------- | ------------------------------------------------------------------------------------------------- |
+| **Dashboards Grafana**         | Dashboard RED inicial configurado | Crear dashboards más profundos con desglose por endpoint y comparación de versiones.              |
+| **Alertas Proactivas**         | Alertmanager activo, sin reglas   | Definir reglas de alerta (ej. "Latencia P99 > 500ms", "Tasa de Errores > 5%").                    |
+| **Log Correlation (Trace ID)** | ✅ Implementado                   | Correlación logs ↔ traces activa vía Winston y TraceID inyectado.                                 |
+| **Profiling Continuo**         | ✅ Implementado (Pyroscope)       | Uso de Flamegraphs activo para identificar cuellos de botella en CPU/Memoria de manera proactiva. |
 
 ---
 
@@ -77,10 +77,11 @@ URGENCIA │ zados    │ ment     │
 
 ## Próximos Pasos Recomendados
 
-1. **Inmediato**: Migrar secrets a Docker Secrets o variables de entorno seguras.
-2. **Corto Plazo**: Configurar un pipeline básico de CI/CD con tests automatizados.
-3. **Medio Plazo**: Centralizar la gestión de archivos `.proto`.
-4. **Largo Plazo**: Evaluar la migración a Kubernetes para orquestación de producción.
+1. **Inmediato**: Migrar secrets a Docker Secrets o variables de entorno seguras (no versionadas).
+2. **Corto Plazo**: Definir reglas de alerta en Prometheus/Alertmanager para latencia y errores.
+3. **Corto Plazo**: Implementar rate limiting avanzado por `user_id` en Kong.
+4. **Medio Plazo**: Centralizar la gestión de archivos `.proto` en un paquete compartido.
+5. **Largo Plazo**: Evaluación de migración a Kubernetes (K8s).
 
 ---
 

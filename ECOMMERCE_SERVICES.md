@@ -24,52 +24,48 @@ Sistema de microservicios para e-commerce construido con NestJS, PostgreSQL, Rab
 - **Base de Datos**: PostgreSQL (una DB por servicio)
 - **Message Queue**: RabbitMQ para comunicación asíncrona
 - **RPC**: gRPC para comunicación síncrona entre servicios
-- **API Gateway**: Kong para enrutamiento y autenticación
+- **API Gateway**: Kong para enrutamiento, validación JWT y Rate Limiting
 - **Cache**: Redis
-- **Monitoring**: Grafana Stack (Loki, Tempo, Mimir)
-- **Autenticación**: Authentik (OAuth2/OIDC)
+- **Monitoring**: Grafana Stack (Loki, Tempo, Mimir, Pyroscope)
+- **Autenticación**: Authentik (OIDC Provider) configurado con Kong
 
 ---
 
 ## Arquitectura
 
-```
-┌─────────────┐
-│   Cliente   │
-└──────┬──────┘
-       │
-       ▼
-┌─────────────────────────────────────┐
-│      Kong API Gateway (:8000)       │
-│  ┌──────────┐  ┌─────────────────┐ │
-│  │   JWT    │  │ Rate Limiting   │ │
-│  │ AuthN/Z  │  │  100 req/min    │ │
-│  └──────────┘  └─────────────────┘ │
-└──────────┬──────────────────────────┘
-           │
-    ┌──────┴───────┬───────────┐
-    │              │           │
-    ▼              ▼           ▼
-┌────────┐   ┌───────────┐  ┌────────┐
-│ Users  │   │ Products  │  │ Orders │
-│ :9001  │   │  :9002    │  │ :9003  │
-│        │   │           │  │        │
-│ ┌────┐ │   │  ┌────┐   │  │ ┌────┐│
-│ │ DB │ │   │  │ DB │   │  │ │ DB │││
-│ └────┘ │   │  └────┘   │  │ └────┘││
-└────┬───┘   └─────┬─────┘  └───┬────┘
-     │             │            │
-     │      ┌──────┴────────┐   │
-     └──────►   RabbitMQ    ◄───┘
-            │   (:5672)     │
-            └───────────────┘
-                   │
-            ┌──────┴──────┐
-            ▼             ▼
-       ┌────────┐   ┌────────┐
-       │  Loki  │   │ Tempo  │
-       │ (Logs) │   │(Traces)│
-       └────────┘   └────────┘
+```mermaid
+graph TD
+    Client[Cliente] --> Kong[Kong Gateway :8000]
+
+    subgraph "Seguridad"
+        Kong --> |JWT Auth| AK[Authentik IDP :9000]
+    end
+
+    subgraph "Microservicios"
+        Kong --> Users[Users :9001]
+        Kong --> Products[Products :9002]
+        Kong --> Orders[Orders :9003]
+    end
+
+    subgraph "Comunicación"
+        Orders --> |gRPC| Users
+        Orders --> |gRPC| Products
+        Orders -.-> |Events| RMQ[RabbitMQ]
+    end
+
+    subgraph "Observabilidad"
+        OTEL[OTel Collector]
+        Loki[Loki - Logs]
+        Tempo[Tempo - Traces]
+        Mimir[Mimir - Metrics]
+        Pyro[Pyroscope - Profiles]
+        Grafana[Grafana :3000]
+
+        Users & Products & Orders --> OTEL
+        OTEL --> Loki & Tempo & Mimir
+        Users & Products & Orders --> Pyro
+        Loki & Tempo & Mimir & Pyro --> Grafana
+    end
 ```
 
 ---
@@ -336,9 +332,42 @@ curl -H "Authorization: Bearer <TOKEN>" \
 
 ### Servicios Protegidos
 
-- ✅ **Users Service**: Requiere JWT
-- ✅ **Orders Service**: Requiere JWT
-- ❌ **Products Service**: Público (con rate limiting)
+- ✅ **Users Service**: Requiere JWT (Validado por Kong)
+- ✅ **Orders Service**: Requiere JWT (Validado por Kong)
+- ❌ **Products Service**: Público (Configurado con Rate Limiting)
+
+### Flujo Técnico de Autenticación
+
+1.  **Authentik**: Emite tokens firmados con una clave privada RSA.
+2.  **Kong**: Importa la clave pública RSA de Authentik en el plugin `jwt`.
+3.  **Validación**: Kong verifica la firma y el campo `exp` del token.
+4.  **Inyección**: El plugin `request-transformer` extrae el `sub` (User ID) del JWT y lo inyecta en el header `x-user-id` antes de pasar la petición al microservicio.
+
+---
+
+## 📊 Observabilidad Completa
+
+El sistema implementa el **Grafana LGTM Stack** extendido con Pyroscope.
+
+### 1. Logs (Loki)
+
+- Los logs son generados en formato JSON por los servicios NestJS.
+- **Promtail** los recolecta de Docker y extrae labels como `service_name`, `level` y `context`.
+
+### 2. Traces (Tempo)
+
+- El **OpenTelemetry Collector** centraliza los traces de todos los servicios.
+- Tempo genera métricas automáticas a partir de los spans (RED metrics y Service Graph).
+
+### 3. Metrics (Mimir)
+
+- Almacena métricas de sistema y métricas generadas por Tempo.
+- Permite consultas de alta resolución y largo plazo.
+
+### 4. Continuous Profiling (Pyroscope)
+
+- Los servicios utilizan el agent de `@pyroscope/nodejs`.
+- Permite visualizar **Flamegraphs** en Grafana para identificar cuellos de botella en CPU y memoria sin impacto en el rendimiento.
 
 ---
 
