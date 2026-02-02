@@ -38,14 +38,40 @@ graph TD
 
 ---
 
-## 📦 2. Paso 1: Levantamiento del Ambiente
+---
 
-### Requisitos
+## 🚀 2. Guía de Iniciación paso a paso
 
-- Docker y Docker Compose V2.
-- Puertos libres: 8000, 9000, 3000, 5672, 15672.
+1.  **Preparar Infraestructura**:
+    ```bash
+    docker-compose up -d users-db products-db orders-db redis rabbitmq
+    ```
+2.  **Configurar Variables de Entorno**:
+    Asegúrate de que cada microservicio (`/users`, `/products`, `/orders`) tenga un archivo `.env` con la `DATABASE_URL` apuntando a los puertos mapeados (`15431`, `15432`, `15433` respectivamente) para poder correr migraciones desde el host:
+    - **Users**: `DATABASE_URL="postgresql://admin:master123@localhost:15431/users?schema=public"`
+    - **Products**: `DATABASE_URL="postgresql://admin:master123@localhost:15432/products?schema=public"`
+    - **Orders**: `DATABASE_URL="postgresql://admin:master123@localhost:15433/orders?schema=public"`
 
-### Ejecución
+3.  **Migraciones y Seeding**:
+    Ejecuta lo siguiente en la raíz del proyecto para inicializar las bases de datos:
+
+    ```bash
+    # Usuarios
+    cd users; npx prisma migrate dev --name init; npx prisma db seed; cd ..
+    # Productos
+    cd products; npx prisma migrate dev --name init; npx prisma db seed; cd ..
+    # Órdenes
+    cd orders; npx prisma migrate dev --name init; npx prisma db seed; cd ..
+    ```
+
+4.  **Levantar el Resto del Ecosistema**:
+    ```bash
+    docker-compose up -d
+    ```
+
+---
+
+## 📦 3. Paso 1: Levantamiento del Ambiente
 
 1.  **Levantar infraestructura básica**:
     ```bash

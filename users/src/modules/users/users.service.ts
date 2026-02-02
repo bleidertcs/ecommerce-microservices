@@ -16,13 +16,25 @@ export class UsersService implements OnModuleInit {
     const count = await this.databaseService.user.count();
     if (count === 0) {
       this.logger.log('Seeding users...');
-      const users = Array.from({ length: 10 }).map(() => ({
-        email: faker.internet.email(),
-        firstName: faker.person.firstName(),
-        lastName: faker.person.lastName(),
-        address: faker.location.streetAddress(),
-        phone: faker.phone.number(),
-      }));
+      const users = Array.from({ length: 10 }).map(() => {
+        const firstName = faker.person.firstName();
+        const lastName = faker.person.lastName();
+        return {
+          email: faker.internet.email(),
+          username: faker.internet.username({ firstName, lastName }),
+          password: 'hashed_password_placeholder', // Should use bcrypt in real scenario
+          firstName,
+          lastName,
+          shippingAddress: {
+            street: faker.location.streetAddress(),
+            city: faker.location.city(),
+            state: faker.location.state(),
+            zipCode: faker.location.zipCode(),
+            country: faker.location.country(),
+          },
+          phone: faker.phone.number(),
+        };
+      });
       await this.databaseService.user.createMany({ data: users });
       this.logger.log('Users seeded successfully');
     }
