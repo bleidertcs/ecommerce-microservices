@@ -143,13 +143,22 @@ Kong está configurado en modo DB-less. Para aplicar cambios, edita `kong/config
 
 ---
 
-## 📊 5. Paso 4: Guía de Observabilidad
+## 📊 5. Paso 4: Guía de Observabilidad (OpenTelemetry)
+
+El sistema utiliza un enfoque **OTel-first**. Todos los microservicios envían Traces, Métricas y Logs directamente al **OpenTelemetry Collector** usando el protocolo **OTLP** (gRPC).
+
+### Flujo de Datos:
+
+- **Microservicios** -> OTLP (Logs/Traces/Metrics) -> **OTel Collector** -> Específicos (Loki/Tempo/Mimir).
+- Se ha eliminado **Promtail**, ya que los logs no se extraen de Docker, sino que se envían desde la aplicación para una mejor correlación.
+
+### Acceso a Grafana:
 
 Acceso: `http://localhost:3000` (User: `admin`, Pass: `admin`).
 
-1.  **Logs (Loki)**: Explora logs estructurados en JSON. Filtra por `service_name="orders-service"`.
-2.  **Traces (Tempo)**: Busca por `Trace ID`. Verás el recorrido desde Kong -> Gateway -> Microservicio -> gRPC -> DB.
-3.  **Continuous Profiling (Pyroscope)**: En el menú lateral de Grafana, busca **Explore** > **Pyroscope**. Podrás ver **Flamegraphs** de CPU y Memoria en tiempo real para cada microservicio.
+1.  **Logs (Loki)**: Explora logs estructurados enviados vía OTLP. Filtra por `service_name="orders-service"`.
+2.  **Traces (Tempo)**: Los logs y las trazas están correlacionados mediante `trace_id`.
+3.  **Continuous Profiling (Pyroscope)**: Disponible en **Explore** > **Pyroscope**.
 
 ---
 
