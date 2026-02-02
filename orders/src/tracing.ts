@@ -2,10 +2,13 @@ import { Resource } from '@opentelemetry/resources';
 import { ATTR_SERVICE_NAME } from '@opentelemetry/semantic-conventions';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-grpc';
 import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-grpc';
-import { PeriodicExportingMetricReader, MeterProvider } from '@opentelemetry/sdk-metrics';
+import { PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
-import { diag, DiagConsoleLogger, DiagLogLevel, metrics } from '@opentelemetry/api';
+import { diag, DiagConsoleLogger, DiagLogLevel } from '@opentelemetry/api';
 import { NodeSDK } from '@opentelemetry/sdk-node';
+import { OTLPLogExporter } from '@opentelemetry/exporter-logs-otlp-grpc';
+import { BatchLogRecordProcessor } from '@opentelemetry/sdk-logs';
+import { WinstonInstrumentation } from '@opentelemetry/instrumentation-winston';
 
 // Enable OpenTelemetry debug logging
 diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.INFO);
@@ -16,16 +19,18 @@ const resource = new Resource({
 
 const traceExporter = new OTLPTraceExporter();
 const metricExporter = new OTLPMetricExporter();
+const logExporter = new OTLPLogExporter();
 
 const metricReader = new PeriodicExportingMetricReader({
   exporter: metricExporter,
-  exportIntervalMillis: 15000, // Reduced to 15 seconds for faster updates
+  exportIntervalMillis: 15000,
 });
 
 export const otr_sdk = new NodeSDK({
   resource,
   traceExporter,
   metricReader,
+  logRecordProcessors: [new BatchLogRecordProcessor(logExporter)],
   instrumentations: [
     getNodeAutoInstrumentations({
       '@opentelemetry/instrumentation-fs': {
@@ -39,6 +44,7 @@ export const otr_sdk = new NodeSDK({
         enabled: true,
       },
     }),
+    new WinstonInstrumentation(),
   ],
 });
 
