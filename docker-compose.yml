@@ -326,6 +326,8 @@ services:
       - users_data:/var/lib/postgresql/data
     networks:
       - bw-network
+    ports:
+      - "15431:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U admin -d users"]
       interval: 10s
@@ -378,6 +380,8 @@ services:
       - products_data:/var/lib/postgresql/data
     networks:
       - bw-network
+    ports:
+      - "15432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U admin -d products"]
       interval: 10s
@@ -432,6 +436,8 @@ services:
       - orders_data:/var/lib/postgresql/data
     networks:
       - bw-network
+    ports:
+      - "15433:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U admin -d orders"]
       interval: 10s

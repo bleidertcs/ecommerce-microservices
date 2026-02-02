@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TerminusModule } from '@nestjs/terminus';
+import { ScheduleModule } from '@nestjs/schedule';
 
 import { CommonModule } from '../common/common.module';
 import { OrdersModule } from '../modules/orders/orders.module';
@@ -14,6 +15,7 @@ import { join } from 'path';
         CommonModule,
         OrdersModule,
         TerminusModule,
+        ScheduleModule.forRoot(),
         // Server registration
         GrpcModule.forProviderAsync({
             inject: [ConfigService],

@@ -21,6 +21,14 @@ services:
               add:
                 headers:
                   - x-user-id:$(jwt_claim_sub)
+          - name: rate-limiting
+            config:
+              minute: 60
+              policy: redis
+              limit_by: header
+              header_name: x-user-id
+              redis_host: redis
+              redis_port: 6379
 
   - name: products-service
     url: http://bw-products-service:9002
@@ -36,7 +44,10 @@ services:
           - name: rate-limiting
             config:
               minute: 100
-              policy: local
+              policy: redis
+              limit_by: ip
+              redis_host: redis
+              redis_port: 6379
 
   - name: orders-service
     url: http://bw-orders-service:9003
@@ -57,6 +68,14 @@ services:
               add:
                 headers:
                   - x-user-id:$(jwt_claim_sub)
+          - name: rate-limiting
+            config:
+              minute: 30
+              policy: redis
+              limit_by: header
+              header_name: x-user-id
+              redis_host: redis
+              redis_port: 6379
 
 consumers:
   - username: test-user

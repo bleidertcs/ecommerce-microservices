@@ -10,7 +10,7 @@ Este documento detalla las oportunidades de mejora identificadas para la arquite
 | ------------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
 | **Secrets Management**          | Contraseñas en `docker-compose.yml` y `.env` | Usar **HashiCorp Vault** o **Docker Secrets** para no exponer credenciales en texto plano.                    |
 | **mTLS (Mutual TLS)**           | Comunicación interna en texto plano          | Habilitar TLS entre servicios, especialmente para gRPC. El **Kong Gateway** puede actuar como terminador TLS. |
-| **Rate Limiting Avanzado**      | Básico por IP en Kong                        | Implementar rate limiting por usuario autenticado (usando claims del JWT).                                    |
+| **Rate Limiting Avanzado**      | ✅ Implementado (Redis)                      | Limitación por `x-user-id` (header) para servicios autenticados y por IP para públicos.                       |
 | **Escaneo de Vulnerabilidades** | No configurado                               | Añadir **Trivy** o **Snyk** al flujo de CI/CD para escanear imágenes Docker.                                  |
 
 ---
@@ -20,7 +20,7 @@ Este documento detalla las oportunidades de mejora identificadas para la arquite
 | Área                         | Estado Actual             | Mejora Propuesta                                                                                                      |
 | ---------------------------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------- |
 | **Políticas de Reinicio**    | `restart: unless-stopped` | Configurar **Kubernetes** o **Docker Swarm** para orquestación real, con réplicas y auto-healing.                     |
-| **Circuit Breaker**          | `opossum` implementado    | Integrar con el **OTel Collector** para que las aperturas del circuito generen alertas automáticas en Alertmanager.   |
+| **Circuit Breaker**          | ✅ Implementado (Opossum) | Integrado en `OrdersService` para llamadas gRPC a `Users` y `Products`.                                               |
 | **Pruebas de Caos**          | No configurado            | Introducir **Chaos Monkey** o **Litmus** para simular fallos de red/contenedores en staging.                          |
 | **Backups de Base de Datos** | No configurado            | Añadir un contenedor de backup (ej. `prodrigestivill/postgres-backup-local`) para respaldos automáticos a S3 o MinIO. |
 
@@ -79,9 +79,11 @@ URGENCIA │ zados    │ ment     │
 
 1. **Inmediato**: Migrar secrets a Docker Secrets o variables de entorno seguras (no versionadas).
 2. **Corto Plazo**: Definir reglas de alerta en Prometheus/Alertmanager para latencia y errores.
-3. **Corto Plazo**: Implementar rate limiting avanzado por `user_id` en Kong.
-4. **Medio Plazo**: Centralizar la gestión de archivos `.proto` en un paquete compartido.
-5. **Largo Plazo**: Evaluación de migración a Kubernetes (K8s).
+3. **Finalizado**: ✅ Rate Limiting avanzado (por usuario + Redis) implementado en Kong.
+4. **Finalizado**: ✅ Circuit Breaker implementado en servicios críticos.
+5. **Finalizado**: ✅ Transactional Outbox implementado para consistencia de eventos.
+6. **Medio Plazo**: Centralizar la gestión de archivos `.proto` en un paquete compartido.
+7. **Largo Plazo**: Evaluación de migración a Kubernetes (K8s).
 
 ---
 

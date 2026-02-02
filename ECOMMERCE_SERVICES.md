@@ -371,6 +371,32 @@ El sistema implementa el **Grafana LGTM Stack** extendido con Pyroscope.
 
 ---
 
+## 🛡️ Resiliencia y Consistencia (Alta Disponibilidad)
+
+El sistema utiliza patrones avanzados de arquitectura para asegurar la fiabilidad de los datos.
+
+### 🔄 Advanced Rate Limiting (Seguridad)
+
+- **Servicios Públicos**: Limitados por IP para evitar ataques de denegación de servicio (DoS).
+- **Servicios Protegidos**: Limitados por `x-user-id` (usuario específico) para asegurar un uso justo de los recursos.
+- **Persistencia con Redis**: El estado de los límites se comparte entre todas las instancias de Kong para una protección global coherente.
+
+### 🔄 Circuit Breaker (Resiliencia)
+
+- Implementado con **Opossum** en `OrdersService`.
+- Protege las llamadas gRPC a `Users` y `Products`.
+- Si un servicio dependiente falla o responde lento, el circuito se abre para evitar fallos en cascada.
+
+### 📥 Transactional Outbox (Consistencia)
+
+- Asegura que los eventos de RabbitMQ nunca se pierdan.
+- **Flujo**:
+  1. La orden y el evento se guardan en la DB en la **misma transacción**.
+  2. Un **Outbox Worker** (cron) publica eventos pendientes en RabbitMQ.
+- Esto garantiza **at-least-once delivery**.
+
+---
+
 ## Configuración
 
 ### Variables de Entorno

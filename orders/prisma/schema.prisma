@@ -44,6 +44,18 @@ model Order {
   @@map("orders")
 }
 
+model Outbox {
+  id          String   @id @default(uuid())
+  type        String   // Event type: e.g., "order.created"
+  payload     Json     // Event data
+  status      String   @default("PENDING") // PENDING, PROCESSED, FAILED
+  error       String?
+  createdAt   DateTime @default(now())
+  processedAt DateTime?
+
+  @@map("outbox")
+}
+
 model OrderItem {
   id          String  @id @default(uuid())
   orderId     String

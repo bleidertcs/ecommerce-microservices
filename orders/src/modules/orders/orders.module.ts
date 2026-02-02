@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { OrdersController } from './orders.controller';
 import { OrdersService } from './orders.service';
+import { OutboxWorker } from './outbox.worker';
 import { ConfigService } from '@nestjs/config';
 import { join } from 'path';
 
@@ -47,7 +48,7 @@ import { join } from 'path';
     ]),
   ],
   controllers: [OrdersController],
-  providers: [OrdersService],
+  providers: [OrdersService, OutboxWorker],
   exports: [OrdersService],
 })
 export class OrdersModule {}
