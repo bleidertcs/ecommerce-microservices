@@ -127,7 +127,48 @@ Acceso: `http://localhost:3000` (User: `admin`, Pass: `admin`).
 
 ---
 
-## 🔌 6. Paso 5: Guía de Uso (cURLs)
+## 🧪 6. Paso 6: Guía de Pruebas (Testing)
+
+Las pruebas están diseñadas para ejecutarse dentro de los contenedores para asegurar paridad con el entorno de ejecución, aunque también pueden correrse localmente.
+
+### A. Ejecución en Contenedores (Recomendado)
+
+Esta es la forma más fiable ya que usa las mismas dependencias y versiones de Node que la aplicación:
+
+```bash
+# Probar el servicio de Usuarios
+docker-compose exec users-service pnpm run test
+
+# Probar el servicio de Productos
+docker-compose exec products-service pnpm run test
+
+# Probar el servicio de Órdenes (Incluye Circuit Breaker y Outbox)
+docker-compose exec orders-service pnpm run test
+```
+
+> [!TIP]
+> Si deseas ejecutar solo un archivo específico para ahorrar tiempo:
+> `docker-compose exec orders-service pnpm jest test/unit/orders.service.spec.ts`
+
+### B. Cobertura de Código
+
+Para ver el reporte de cobertura completo (Coverage):
+
+```bash
+docker-compose exec orders-service pnpm run test --coverage
+```
+
+### C. Ejecución Local
+
+Si prefieres ejecutar las pruebas sin Docker (requiere `pnpm` instalado localmente):
+
+1.  Entra en la carpeta del servicio: `cd orders`.
+2.  Instala dependencias: `pnpm install`.
+3.  Corre los tests: `pnpm run test`.
+
+---
+
+## 🔌 7. Paso 7: Guía de Uso (cURLs)
 
 ### A. Obtener Token de Acceso
 

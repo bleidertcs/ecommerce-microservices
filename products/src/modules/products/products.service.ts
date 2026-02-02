@@ -19,6 +19,7 @@ export class ProductsService implements OnModuleInit {
       const products = Array.from({ length: 20 }).map(() => ({
         name: faker.commerce.productName(),
         description: faker.commerce.productDescription(),
+        sku: faker.string.alphanumeric(10).toUpperCase(),
         price: parseFloat(faker.commerce.price()),
         stock: faker.number.int({ min: 10, max: 100 }),
         category: faker.commerce.department(),
