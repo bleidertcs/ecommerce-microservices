@@ -7,6 +7,18 @@
 
 Una arquitectura de microservicios e-commerce avanzada construida con **NestJS**, **gRPC**, **RabbitMQ**, **Authentik** (Identity Provider) y **Kong API Gateway**. El sistema cuenta con un stack de observabilidad completo (Loki, Tempo, Mimir, Pyroscope).
 
+---
+
+## 📚 Documentación Maestra
+
+Para una guía detallada paso a paso sobre cómo configurar y usar todo el ecosistema, consulta:
+
+👉 **[MASTER_GUIDE.md](./MASTER_GUIDE.md)**
+
+Esta guía incluye configuración de **Authentik**, **Kong**, **Grafana** y ejemplos de **cURL** para todos los servicios.
+
+---
+
 ## 🏗️ Descripción General de la Arquitectura
 
 ### Diagrama de Infraestructura
