@@ -84,7 +84,6 @@ services:
     networks:
       - bw-network
 
-
   # Tempo - Tracing Storage
   tempo:
     image: grafana/tempo:latest
@@ -277,13 +276,15 @@ services:
       - "9001:9001" # HTTP API
       - "50051:50051" # gRPC (Standard for Identity)
     env_file:
-      - ./users/.env.docker
+      - ./users/.env
     environment:
       - OTEL_SERVICE_NAME=users-service
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
       - OTEL_EXPORTER_OTLP_INSECURE=true
       - PYROSCOPE_SERVER_ADDRESS=http://pyroscope:4040
       - PYROSCOPE_APPLICATION_NAME=users-service
+      - DATABASE_URL=postgresql://admin:master123@users-db:5432/users?schema=public
+      - REDIS_URL=redis://redis:6379
     depends_on:
       users-db:
         condition: service_healthy
@@ -331,13 +332,15 @@ services:
       - "9002:9002" # HTTP API
       - "50052:50052" # gRPC
     env_file:
-      - ./products/.env.docker
+      - ./products/.env
     environment:
       - OTEL_SERVICE_NAME=products-service
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
       - OTEL_EXPORTER_OTLP_INSECURE=true
       - PYROSCOPE_SERVER_ADDRESS=http://pyroscope:4040
       - PYROSCOPE_APPLICATION_NAME=products-service
+      - DATABASE_URL=postgresql://admin:master123@products-db:5432/products?schema=public
+      - REDIS_URL=redis://redis:6379
     depends_on:
       products-db:
         condition: service_healthy
@@ -385,13 +388,15 @@ services:
       - "9003:9003" # HTTP API
       - "50053:50053" # gRPC
     env_file:
-      - ./orders/.env.docker
+      - ./orders/.env
     environment:
       - OTEL_SERVICE_NAME=orders-service
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
       - OTEL_EXPORTER_OTLP_INSECURE=true
       - PYROSCOPE_SERVER_ADDRESS=http://pyroscope:4040
       - PYROSCOPE_APPLICATION_NAME=orders-service
+      - DATABASE_URL=postgresql://admin:master123@orders-db:5432/orders?schema=public
+      - REDIS_URL=redis://redis:6379
     depends_on:
       orders-db:
         condition: service_healthy

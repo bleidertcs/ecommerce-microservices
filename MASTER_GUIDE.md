@@ -52,16 +52,32 @@ graph TD
     - **Products**: `DATABASE_URL="postgresql://admin:master123@localhost:15432/products?schema=public"`
     - **Orders**: `DATABASE_URL="postgresql://admin:master123@localhost:15433/orders?schema=public"`
 
-3.  **Migraciones y Seeding**:
-    Ejecuta lo siguiente en la raíz del proyecto para inicializar las bases de datos:
+3.  **Migraciones y Seeding (Prisma)**:
+    Recomendamos ejecutar las migraciones dentro de los contenedores para asegurar paridad de entorno y evitar problemas de configuración local.
+
+    **Opción A: Vía Docker (Recomendado)**
 
     ```bash
     # Usuarios
-    cd users; npx prisma migrate dev --name init; npx prisma db seed; cd ..
+    docker-compose exec users-service npx prisma migrate dev --name init
+    docker-compose exec users-service npx prisma db seed
+
     # Productos
-    cd products; npx prisma migrate dev --name init; npx prisma db seed; cd ..
+    docker-compose exec products-service npx prisma migrate dev --name init
+    docker-compose exec products-service npx prisma db seed
+
     # Órdenes
-    cd orders; npx prisma migrate dev --name init; npx prisma db seed; cd ..
+    docker-compose exec orders-service npx prisma migrate dev --name init
+    docker-compose exec orders-service npx prisma db seed
+    ```
+
+    **Opción B: Local (Desarrollo rápido)**
+    Si tienes `pnpm` instalado localmente, puedes usar los archivos `.env` (que apuntan a `localhost` por defecto):
+
+    ```bash
+    cd users; pnpm run prisma:migrate; pnpm run prisma:seed; cd ..
+    cd products; pnpm run prisma:migrate; pnpm run prisma:seed; cd ..
+    cd orders; pnpm run prisma:migrate; pnpm run prisma:seed; cd ..
     ```
 
 4.  **Levantar el Resto del Ecosistema**:
