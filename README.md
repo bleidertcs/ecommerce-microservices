@@ -4,6 +4,7 @@
 [![Node.js](https://img.shields.io/badge/Node.js-18.0.0-green.svg)](https://nodejs.org/)
 [![Docker](https://img.shields.io/badge/Docker-20.0.0-blue.svg)](https://docker.com/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/bleidertcs/ecommerce-microservices)
 
 Una arquitectura de microservicios e-commerce avanzada construida con **NestJS**, **gRPC**, **RabbitMQ**, **Authentik** (Identity Provider) y **Kong API Gateway**. El sistema cuenta con un stack de observabilidad completo (Loki, Tempo, Mimir, Pyroscope).
 
