@@ -91,7 +91,6 @@ querier:
   
 frontend:
   log_queries_longer_than: 10s
-  max_outstanding_per_tenant: 1000
   
 frontend_worker:
   grpc_client_config:
