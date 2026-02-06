@@ -24,26 +24,56 @@ import { join } from 'path';
       {
         name: 'USERS_PACKAGE',
         inject: [ConfigService],
-        useFactory: (configService: ConfigService) => ({
-          transport: Transport.GRPC,
-          options: {
-            package: 'users',
-            protoPath: join(__dirname, '../../protos/users.proto'),
-            url: 'bw-users-service:50051',
-          },
-        }),
+        useFactory: (configService: ConfigService) => {
+          const transport = configService.get<string>('USERS_TRANSPORT', 'grpc');
+          if (transport === 'tcp') {
+            return {
+              transport: Transport.TCP,
+              options: { host: 'bw-users-service', port: 3001 },
+            };
+          }
+          if (transport === 'nats') {
+            return {
+              transport: Transport.NATS,
+              options: { servers: [configService.get<string>('NATS_URL')] },
+            };
+          }
+          return {
+            transport: Transport.GRPC,
+            options: {
+              package: 'users',
+              protoPath: join(__dirname, '../../protos/users.proto'),
+              url: 'bw-users-service:50051',
+            },
+          };
+        },
       },
       {
         name: 'PRODUCTS_PACKAGE',
         inject: [ConfigService],
-        useFactory: (configService: ConfigService) => ({
-          transport: Transport.GRPC,
-          options: {
-            package: 'products',
-            protoPath: join(__dirname, '../../protos/products.proto'),
-            url: 'bw-products-service:50052',
-          },
-        }),
+        useFactory: (configService: ConfigService) => {
+          const transport = configService.get<string>('PRODUCTS_TRANSPORT', 'grpc');
+          if (transport === 'tcp') {
+            return {
+              transport: Transport.TCP,
+              options: { host: 'bw-products-service', port: 3002 },
+            };
+          }
+          if (transport === 'nats') {
+            return {
+              transport: Transport.NATS,
+              options: { servers: [configService.get<string>('NATS_URL')] },
+            };
+          }
+          return {
+            transport: Transport.GRPC,
+            options: {
+              package: 'products',
+              protoPath: join(__dirname, '../../protos/products.proto'),
+              url: 'bw-products-service:50052',
+            },
+          };
+        },
       },
     ]),
   ],

@@ -5,31 +5,64 @@ import { firstValueFrom, Observable } from 'rxjs';
 import { DatabaseService } from '../../common/services/database.service';
 import { CircuitBreakerService } from '../../common/services/circuit-breaker.service';
 
-interface IUsersGrpcService {
-  findOne(data: { id: string }): Observable<any>;
+import { ConfigService } from '@nestjs/config';
+
+interface IUser {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
 }
 
-interface IProductsGrpcService {
-  findOne(data: { id: string }): Observable<any>;
+interface IProduct {
+  id: string;
+  name: string;
+  price: number;
+  stock: number;
+}
+
+interface IUsersService {
+  findOne(data: { id: string }): Observable<IUser>;
+}
+
+interface IProductsService {
+  findOne(data: { id: string }): Observable<IProduct>;
 }
 
 @Injectable()
 export class OrdersService implements OnModuleInit {
   private readonly logger = new Logger(OrdersService.name);
-  private usersService: IUsersGrpcService;
-  private productsService: IProductsGrpcService;
+  private usersService: IUsersService;
+  private productsService: IProductsService;
 
   constructor(
     private readonly databaseService: DatabaseService,
     private readonly circuitBreakerService: CircuitBreakerService,
-    @Inject('USERS_PACKAGE') private usersClient: ClientGrpc,
-    @Inject('PRODUCTS_PACKAGE') private productsClient: ClientGrpc,
+    private readonly configService: ConfigService,
+    @Inject('USERS_PACKAGE') private usersClient: any,
+    @Inject('PRODUCTS_PACKAGE') private productsClient: any,
     @Inject('RABBITMQ_SERVICE') private rmqClient: ClientProxy,
   ) {}
 
   async onModuleInit() {
-    this.usersService = this.usersClient.getService<IUsersGrpcService>('UsersService');
-    this.productsService = this.productsClient.getService<IProductsGrpcService>('ProductsService');
+    const usersTransport = this.configService.get<string>('USERS_TRANSPORT', 'grpc');
+    const productsTransport = this.configService.get<string>('PRODUCTS_TRANSPORT', 'grpc');
+
+    if (usersTransport === 'grpc') {
+      this.usersService = (this.usersClient as ClientGrpc).getService<IUsersService>('UsersService');
+    } else {
+      this.usersService = {
+        findOne: (data: { id: string }) => (this.usersClient as ClientProxy).send<IUser>('FindOne', data),
+      };
+    }
+
+    if (productsTransport === 'grpc') {
+      this.productsService = (this.productsClient as ClientGrpc).getService<IProductsService>('ProductsService');
+    } else {
+      this.productsService = {
+        findOne: (data: { id: string }) => (this.productsClient as ClientProxy).send<IProduct>('FindOne', data),
+      };
+    }
   }
 
   async createOrder(userId: string, items: { productId: string; quantity: number }[]) {

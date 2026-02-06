@@ -60,6 +60,10 @@ import { CacheableMemory } from 'cacheable';
                 // GRPC Configuration
                 GRPC_URL: Joi.string().required(),
                 GRPC_PACKAGE: Joi.string().default('users'),
+
+                // TCP/NATS Configuration
+                TCP_PORT: Joi.number().port().default(3001),
+                NATS_URL: Joi.string().uri().default('nats://localhost:4222'),
             }),
         }),
         CacheModule.registerAsync({

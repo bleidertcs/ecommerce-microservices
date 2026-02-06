@@ -9,6 +9,7 @@ initProfiling();
 import { Logger, ValidationPipe, VersioningType } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
+import { Transport } from '@nestjs/microservices';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import express, { Request, Response } from 'express';
 import helmet from 'helmet';
@@ -62,6 +63,24 @@ async function bootstrap() {
         }),
     );
 
+    // Microservices
+    app.connectMicroservice({
+        transport: Transport.TCP,
+        options: {
+            host: '0.0.0.0',
+            port: configService.get<number>('tcp.port'),
+        },
+    });
+
+    app.connectMicroservice({
+        transport: Transport.NATS,
+        options: {
+            servers: [configService.get<string>('nats.url')],
+        },
+    });
+
+    await app.startAllMicroservices();
+
     // API versioning
     if (configService.get<boolean>('app.versioning.enable')) {
         app.enableVersioning({
@@ -107,6 +126,8 @@ async function bootstrap() {
 
     logger.log(`🚀 ${appName} started at http://${host}:${port}`);
     logger.log(`🔌 gRPC server started at ${configService.get<string>('grpc.url')}`);
+    logger.log(`🔌 TCP server started at 0.0.0.0:${configService.get<number>('tcp.port')}`);
+    logger.log(`🔌 NATS server connected to ${configService.get<string>('nats.url')}`);
 
     if (env !== 'production') {
         logger.log(`📖 Swagger: http://${host}:${port}/docs`);

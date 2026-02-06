@@ -14,10 +14,15 @@ graph TD
         Kong --> |JWT Auth| AK[Authentik IDP :9000]
     end
 
-    subgraph "Microservicios (NestJS)"
+    subgraph "Microservicios (Hybrid: gRPC/TCP/NATS)"
         Kong --> Users[Users Service :9001]
         Kong --> Products[Products Service :9002]
         Kong --> Orders[Orders Service :9003]
+    end
+
+    subgraph "Transportes"
+        Orders -- "gRPC/TCP/NATS" --> Users
+        Orders -- "gRPC/TCP/NATS" --> Products
     end
 
     subgraph "Persistencia y Eventos"
@@ -25,6 +30,7 @@ graph TD
         Orders -- "Async Events" --> RMQ[RabbitMQ]
         Products & Users --- PDB[(Service DBs)]
         Users & Products & Orders --- Redis[(Redis Cache)]
+        NATS[NATS Broker] --- Users & Products & Orders
     end
 
     subgraph "Observabilidad Stack"
@@ -44,7 +50,7 @@ graph TD
 
 1.  **Preparar Infraestructura**:
     ```bash
-    docker-compose up -d users-db products-db orders-db redis rabbitmq
+    docker-compose up -d users-db products-db orders-db redis rabbitmq nats
     ```
 2.  **Configurar Variables de Entorno**:
     Asegúrate de que cada microservicio (`/users`, `/products`, `/orders`) tenga un archivo `.env` con la `DATABASE_URL` apuntando a los puertos mapeados (`15431`, `15432`, `15433` respectivamente) para poder correr migraciones desde el host:
@@ -81,9 +87,13 @@ graph TD
     ```
 
 4.  **Levantar el Resto del Ecosistema**:
+
     ```bash
-    docker-compose up -d
+    docker-compose up -d --build
     ```
+
+    > [!IMPORTANT]
+    > Los servicios de **Authentik** (Server y Worker) ahora corren como `user: root` para evitar problemas de permisos en volúmenes montados desde Windows/WSL.
 
 ---
 
@@ -105,6 +115,17 @@ graph TD
     ```bash
     docker-compose up -d users-service products-service orders-service
     ```
+
+### 💡 Configuración Dinámica de Transportes
+
+El `Orders Service` puede alternar entre transportes para comunicarse con `Users` y `Products`:
+
+- Edita `orders/.env`:
+  ```env
+  USERS_TRANSPORT=grpc  # opciones: grpc, tcp, nats
+  PRODUCTS_TRANSPORT=grpc
+  ```
+- Reinicia: `docker-compose restart orders-service`
 
 ---
 

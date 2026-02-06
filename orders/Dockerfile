@@ -14,7 +14,7 @@ COPY package.json pnpm-lock.yaml* ./
 COPY prisma ./prisma/
 
 # Install dependencies
-RUN pnpm install --prod=false
+RUN pnpm install --prod=false --ignore-scripts
 
 # Build the source code
 FROM base AS builder
@@ -52,7 +52,7 @@ RUN chown -R nestjs:nodejs /app
 
 USER nestjs
 
-# Expose ports for HTTP and gRPC
-EXPOSE 9003 50053
+# Expose ports for HTTP, gRPC and TCP
+EXPOSE 9003 50053 3003
 
 CMD ["node", "dist/main.js"]

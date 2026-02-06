@@ -59,3 +59,10 @@ export interface IRedisConfig {
     keyPrefix: string;
     ttl: number;
 }
+export interface ITcpConfig {
+    port: number;
+}
+
+export interface INatsConfig {
+    url: string;
+}

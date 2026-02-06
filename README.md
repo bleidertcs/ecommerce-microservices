@@ -6,7 +6,7 @@
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/bleidertcs/ecommerce-microservices)
 
-Una arquitectura de microservicios e-commerce avanzada construida con **NestJS**, **gRPC**, **RabbitMQ**, **Authentik** (Identity Provider) y **Kong API Gateway**. El sistema cuenta con un stack de observabilidad completo (Loki, Tempo, Mimir, Pyroscope).
+Una arquitectura de microservicios e-commerce avanzada construida con **NestJS**, **gRPC**, **TCP**, **NATS**, **RabbitMQ**, **Authentik** (Identity Provider) y **Kong API Gateway**. El sistema cuenta con un stack de observabilidad completo (Loki, Tempo, Mimir, Pyroscope).
 
 ---
 
@@ -32,7 +32,8 @@ graph TB
     Kong --> Orders[Orders Service<br/>Puerto: 9003]
 
     subgraph "Messaging & Auth"
-        RMQ[RabbitMQ]
+        RMQ[RabbitMQ - Asíncrono]
+        NATS[NATS - Síncrono/Alternativo]
         AK[Authentik IDP]
     end
 
@@ -46,8 +47,11 @@ graph TB
 
     Users-.-RMQ
     Orders-.-RMQ
-    Orders-.- |gRPC| Users
-    Orders-.- |gRPC| Products
+    Orders-.- |gRPC/TCP/NATS| Users
+    Orders-.- |gRPC/TCP/NATS| Products
+    Users-.-NATS
+    Products-.-NATS
+    Orders-.-NATS
 ```
 
 ## 🚀 Características Principales
@@ -56,7 +60,7 @@ graph TB
 
 - **👤 Users Service**: Gestión de perfiles, direcciones y métodos de pago.
 - **🏷️ Products Service**: Catálogo de productos, inventario y gestión de reviews.
-- **🛒 Orders Service**: Orquestación de pedidos con validación síncrona vía gRPC.
+- **🛒 Orders Service**: Orquestación de pedidos con validación síncrona flexible vía **gRPC**, **TCP** o **NATS**.
 
 ### 🛡️ Seguridad y Tráfico
 

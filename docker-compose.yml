@@ -197,6 +197,7 @@ services:
   authentik-server:
     image: ghcr.io/goauthentik/server:latest
     container_name: bw-authentik-server
+    user: root
     restart: unless-stopped
     command: server
     environment:
@@ -223,6 +224,7 @@ services:
   authentik-worker:
     image: ghcr.io/goauthentik/server:latest
     container_name: bw-authentik-worker
+    user: root
     restart: unless-stopped
     command: worker
     environment:
@@ -265,6 +267,31 @@ services:
       timeout: 5s
       retries: 3
 
+  # NATS - Alternative Message Broker
+  nats:
+    image: nats:2.10-alpine
+    container_name: bw-nats
+    command: -m 8222
+    restart: unless-stopped
+    ports:
+      - "4222:4222" # NATS client
+      - "8222:8222" # NATS monitoring
+    networks:
+      - bw-network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:8222/varz",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
   # Users Service
   users-service:
     build:
@@ -274,7 +301,8 @@ services:
     restart: unless-stopped
     ports:
       - "9001:9001" # HTTP API
-      - "50051:50051" # gRPC (Standard for Identity)
+      - "50051:50051" # gRPC
+      - "3001:3001" # TCP Transport
     env_file:
       - ./users/.env
     environment:
@@ -285,6 +313,7 @@ services:
       - PYROSCOPE_APPLICATION_NAME=users-service
       - DATABASE_URL=postgresql://admin:master123@users-db:5432/users?schema=public
       - REDIS_URL=redis://redis:6379
+      - NATS_URL=nats://nats:4222
     depends_on:
       users-db:
         condition: service_healthy
@@ -331,6 +360,7 @@ services:
     ports:
       - "9002:9002" # HTTP API
       - "50052:50052" # gRPC
+      - "3002:3002" # TCP Transport
     env_file:
       - ./products/.env
     environment:
@@ -341,6 +371,7 @@ services:
       - PYROSCOPE_APPLICATION_NAME=products-service
       - DATABASE_URL=postgresql://admin:master123@products-db:5432/products?schema=public
       - REDIS_URL=redis://redis:6379
+      - NATS_URL=nats://nats:4222
     depends_on:
       products-db:
         condition: service_healthy
@@ -387,6 +418,7 @@ services:
     ports:
       - "9003:9003" # HTTP API
       - "50053:50053" # gRPC
+      - "3003:3003" # TCP Transport
     env_file:
       - ./orders/.env
     environment:
@@ -397,6 +429,7 @@ services:
       - PYROSCOPE_APPLICATION_NAME=orders-service
       - DATABASE_URL=postgresql://admin:master123@orders-db:5432/orders?schema=public
       - REDIS_URL=redis://redis:6379
+      - NATS_URL=nats://nats:4222
     depends_on:
       orders-db:
         condition: service_healthy
