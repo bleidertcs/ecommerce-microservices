@@ -55,7 +55,7 @@ services:
     container_name: bw-grafana
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "3005:3000"
     volumes:
       - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
       - grafana_data:/var/lib/grafana
@@ -195,7 +195,7 @@ services:
       - bw-network
 
   authentik-server:
-    image: ghcr.io/goauthentik/server:latest
+    image: ghcr.io/goauthentik/server:2025.12.3
     container_name: bw-authentik-server
     user: root
     restart: unless-stopped
@@ -222,7 +222,7 @@ services:
         condition: service_healthy
 
   authentik-worker:
-    image: ghcr.io/goauthentik/server:latest
+    image: ghcr.io/goauthentik/server:2025.12.3
     container_name: bw-authentik-worker
     user: root
     restart: unless-stopped
@@ -467,6 +467,32 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  # Web App (Next.js Frontend)
+  web-app:
+    build:
+      context: ./web-app
+      dockerfile: Dockerfile
+    container_name: bw-web-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./web-app/.env
+    environment:
+      - AUTHENTIK_URL=http://authentik-server:9000
+      - NEXT_PUBLIC_API_URL=http://kong:8000
+    networks:
+      - bw-network
+    depends_on:
+      - kong
+      - authentik-server
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:3000').then(() => process.exit(0)).catch(() => process.exit(1))\""]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
 networks:
   bw-network:

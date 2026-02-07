@@ -1,57 +1,69 @@
-# Kong Authentication Skill
+---
+name: kong-auth
+description: Instructions for managing API Gateway security with Kong and Authentik.
+---
 
-This skill provides instructions for managing authentication and plugins in the Kong API Gateway.
+# Kong & Authentik Security Skill
 
-## Authentication Plugins
+This project uses **Kong Gateway** in DB-less mode and **Authentik** as the Identity Provider (OIDC).
 
-### Key Authentication
+## 🔐 OIDC / JWT FLOW
 
-To protect a route with key authentication:
+1. **Authentik**: Issues RS256 JWT tokens.
+2. **Kong**: Validates the token signature using a public key.
+3. **Microservices**: Receive identity via `x-user-id` header.
 
-1. Add `key-auth` plugin to the route:
-   ```yaml
-   plugins:
-     - name: key-auth
-       config:
-         key_names: [apikey]
-         hide_credentials: true
-   ```
-2. Create a consumer and a key:
-   ```yaml
-   consumers:
-     - username: user-name
-       custom_id: unique-id
-       keyauth_credentials:
-         - key: secret-key
-   ```
+### Configuration (`kong/config.yml`)
 
-### Header Propagation
-
-Use `request-transformer` to pass consumer info to microservices:
+Add the `jwt` plugin to routes:
 
 ```yaml
 plugins:
-  - name: request-transformer
+  - name: jwt
     config:
-      add:
-        headers:
-          - x-user-id:$(consumer_id)
-          - x-user-role:USER
+      key_claim_name: kid
+      claims_to_verify: [exp]
 ```
 
-## Management Commands
+## ⏳ Rate Limiting
 
-### Reload Configuration
+Configured at the Gateway level using **Redis** for persistence.
 
-If using declarative config (DB-less):
+### Per User (Authenticated)
+
+```yaml
+- name: rate-limiting
+  config:
+    minute: 30
+    policy: redis
+    limit_by: header
+    header_name: x-user-id
+```
+
+### Per IP (Public)
+
+```yaml
+- name: rate-limiting
+  config:
+    minute: 100
+    policy: redis
+    limit_by: ip
+```
+
+## 🛠️ Management
+
+### Reloading Kong
+
+Since it's DB-less, restart the container after editing `config.yml`:
 
 ```bash
 docker-compose restart kong
 ```
 
-### Direct Admin API
+### Extracting Public Key
 
-Kong Admin API is available at `http://localhost:8001`.
+To allow Kong to verify Authentik tokens:
 
-- List Consumers: `curl http://localhost:8001/consumers`
-- Check Health: `curl http://localhost:8001/status`
+1. Download certificate from Authentik.
+2. Extract public key: `openssl x509 -pubkey -noout -in cert.pem`.
+3. Add to Kong's `jwt_secrets`.

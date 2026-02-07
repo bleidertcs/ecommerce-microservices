@@ -27,27 +27,83 @@
 
 ---
 
-## Configuración de Authentik
+---
 
-### Provider OIDC
+## 🛠️ Configuración Paso a Paso en Authentik
 
-| Campo              | Valor                             |
-| ------------------ | --------------------------------- |
-| **Name**           | Kong Microservices                |
-| **Client Type**    | Confidential                      |
-| **Redirect URIs**  | `http://localhost:8000/.*`        |
-| **Signing Key**    | authentik Self-signed Certificate |
-| **Encryption Key** | **VACÍO** (importante)            |
+### 1. Crear el Provider (OAuth2/OpenID)
 
-> ⚠️ **IMPORTANTE:** Si configuras una "Llave de Encriptación", Authentik generará tokens JWE (encriptados) que Kong NO puede validar. Deja este campo vacío.
+El **Provider** define cómo Authentik se comunica con Kong y qué tipo de tokens emite.
 
-### Application
+1.  En el panel lateral de Authentik, ve a **Directory** > **Providers**.
+2.  Haz clic en **Create**.
+3.  Selecciona **OAuth2/OpenID Provider** y dale a **Next**.
+4.  **Configuración Básica:**
+    - **Name:** `Kong Gateway` (o el nombre que prefieras).
+    - **Authentication flow:** `default-authentication-flow` (por defecto).
+    - **Authorization flow:** `default-provider-authorization-explicit-consent` (o el que desees).
+5.  **Configuración de Protocolo:**
+    - **Client Type:** `Confidential`.
+    - **Redirect URIs:** `http://localhost:8000/.*` (Usa regex si es necesario para múltiples rutas).
+6.  **Configuración Avanzada (CRÍTICO):**
+    - **Signing Key:** Selecciona `authentik Self-signed Certificate`.
+    - **Encryption Key:** **DÉJALA VACÍA**. Si seleccionas una, Kong no podrá leer el token.
+    - **Subject mode:** `Based on the User's hashed ID` (recomendado).
+7.  Haz clic en **Finish**.
+8.  **Importante:** Una vez creado, entra en el Provider y copia el **Client ID** y **Client Secret**. Los necesitarás para tu frontend o para pruebas de cURL.
 
-| Campo        | Valor              |
-| ------------ | ------------------ |
-| **Name**     | Gateway API        |
-| **Slug**     | gateway-api        |
-| **Provider** | Kong Microservices |
+### 2. Crear la Aplicación
+
+La **Application** agrupa el Provider y lo expone en la interfaz de usuario.
+
+1.  Ve a **Resources** > **Applications**.
+2.  Haz clic en **Create**.
+3.  **Configuración:**
+    - **Name:** `Lumina E-Commerce` (Este es el nombre que verán los usuarios).
+    - **Slug:** `lumina-ecommerce` (Se usa en las URLs).
+    - **Provider:** Selecciona el Provider `Kong Gateway` que creaste antes.
+    - **Launch URL:** `http://localhost:3000` (URL de tu frontend de Next.js).
+4.  Haz clic en **Create**.
+
+---
+
+## 🎨 Personalización de la UI (Branding)
+
+Authentik permite cambiar la apariencia de los flujos de login para que coincidan con tu marca.
+
+### 1. Personalizar Títulos y Logos
+
+1.  Ve a **System** > **Settings**.
+2.  Busca la sección de **Branding settings**:
+    - **Title:** Cambia `authentik` por `Lumina | Premium Store`.
+    - **Logo (Light/Dark):** Sube tus propios archivos de imagen (PNG/SVG).
+    - **Favicon:** Sube tu icono personalizado.
+3.  Haz clic en **Save**.
+
+### 2. Personalizar el CSS (Look & Feel)
+
+Para un control más granular (colores, fondos):
+
+1.  Ve a **System** > **Brands**.
+2.  Edita la marca `default` (o crea una nueva).
+3.  En el campo **Custom CSS**, puedes añadir estilos para sobrescribir la UI de Authentik:
+    ```css
+    :root {
+      --ak-accent: #2563eb; /* Cambia el color principal al de tu ecommerce */
+    }
+    body {
+      background: #f3f4f6; /* Fondo más estándar para ecommerce */
+    }
+    ```
+4.  Asocia esta marca a tu flujo de autenticación si es necesario.
+
+### 3. Personalizar Flujos de Login (Flows)
+
+Puedes cambiar los textos y el comportamiento de las pantallas:
+
+1.  Ve a **Customization** > **Flows**.
+2.  Busca `default-authentication-flow`.
+3.  Puedes editar las **Stages** (pantallas) para cambiar etiquetas como "Username" por "Email de Usuario" o añadir términos y condiciones.
 
 ---
 

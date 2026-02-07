@@ -1,0 +1,47 @@
+.navbar {
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  background: var(--background);
+  border-bottom: 1px solid var(--border);
+  z-index: 100;
+}
+
+.logo {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--foreground);
+  letter-spacing: -0.5px;
+}
+
+.navLinks {
+  display: flex;
+  gap: 32px;
+}
+
+.link {
+  color: var(--muted);
+  font-weight: 500;
+  font-size: 14px;
+  transition: color 0.15s;
+}
+
+.link:hover {
+  color: var(--foreground);
+}
+
+.active {
+  color: var(--foreground);
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}

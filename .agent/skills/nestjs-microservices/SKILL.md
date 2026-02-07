@@ -5,30 +5,41 @@ description: Guidelines for managing and creating NestJS microservices in this p
 
 # NestJS Microservices Skill
 
-This skill provides instructions for maintaining and extending the NestJS microservices architecture used in this project.
+This project follows a modular, environment-driven microservices architecture using NestJS.
 
-## Core Principles
+## 🏗️ Service Architecture
 
-- **Modular Architecture**: Each service is organized into features/modules.
-- **Dependency Injection**: Use NestJS DI for services, controllers, and providers.
-- **Environment Driven**: Configuration must always be pulled from `@nestjs/config`.
+Each microservice is a standalone application with its own database and internal structure:
 
-## Creating a New Service
+- **Modules**: Domain-specific logic encapsulated in NestJS modules.
+- **Transport**: Hybrid support for gRPC, NATS, and TCP.
+- **Observability**: OTel-first instrumentation in `main.ts` and `tracing.ts`.
 
-1. Use the Nest CLI to generate a new app: `npx nest generate app <service-name>`.
-2. Move the app to a top-level directory (e.g., `/my-new-service`).
-3. Configure `packageManager: yarn@4.5.1` (or the version currently used in `auth/package.json`).
-4. Update `docker-compose.yml` to include the new service.
+## 🛠️ Creating a New Service
 
-## Code Style
+1. Generate app: `npx nest generate app <name>`.
+2. Move to root directory: `/service-name`.
+3. Standard structure:
+   - `src/main.ts`: Bootstrap with OTel and Hybrid transports.
+   - `src/tracing.ts`: OTel SDK configuration.
+   - `prisma/`: Prisma schema and migrations.
+4. Add to `docker-compose.yml`.
 
-- Follow the ESLint and Prettier rules defined in the root and service subfolders.
-- Use `npx nest build` to verify compilation.
-- Ensure all services provide a health check endpoint via `@nestjs/terminus`.
+## 🔄 Standard Patterns
 
-## Useful Commands
+- **Circuit Breaker**: Use Opossum for external service calls.
+- **Transactional Outbox**: For reliable event publishing.
+- **Health Checks**: Use `@nestjs/terminus` on `GET /health`.
+- **Validation**: Global `ValidationPipe` for DTOs.
 
-- `npm run build`: Build the service.
-- `npm run start`: Run in production mode.
-- `npm run dev`: Run in development mode with watch.
-- `npm run test`: Run unit tests.
+## 🌐 Environment Strategy
+
+- **Local**: `.env` (maps DB to localhost ports like `15431`).
+- **Docker**: Environment variables defined in `docker-compose.yml` (overlap `.env`).
+
+## 💻 Useful Commands
+
+- `pnpm run start:dev`: Local development with watch.
+- `docker-compose up <service> --build`: Run within the ecosystem.
+- `npx prisma migrate dev`: Handle DB changes.
+- `pnpm run test`: Execute unit tests.
