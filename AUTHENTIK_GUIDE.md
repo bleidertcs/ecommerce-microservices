@@ -29,6 +29,20 @@
 
 ---
 
+## 🏁 Inicio Rápido: Configuración Inicial
+
+Si es la primera vez que levantas el ambiente, debes crear la cuenta de administrador.
+
+1.  Accede a la URL de configuración inicial: [http://localhost:9000/if/flow/initial-setup/](http://localhost:9000/if/flow/initial-setup/)
+2.  **Crear Usuario Administrador:**
+    - Ingresa un nombre de usuario (ej. `akadmin`).
+    - Ingresa una contraseña segura.
+    - Confirma la contraseña.
+3.  Haz clic en **Siguiente** (o el botón de confirmación).
+4.  Una vez creado, serás redirigido al panel de administración. Si te pide login, usa las credenciales que acabas de crear.
+
+---
+
 ## 🛠️ Configuración Paso a Paso en Authentik
 
 ### 1. Crear el Provider (OAuth2/OpenID)

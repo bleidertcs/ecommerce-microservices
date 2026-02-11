@@ -11,26 +11,38 @@ import { BatchLogRecordProcessor } from '@opentelemetry/sdk-logs';
 import { WinstonInstrumentation } from '@opentelemetry/instrumentation-winston';
 
 // Enable OpenTelemetry debug logging
-diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.INFO);
+diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.WARN);
 
 const resource = new Resource({
   [ATTR_SERVICE_NAME]: process.env.OTEL_SERVICE_NAME || 'nestjs-service',
 });
 
-const traceExporter = new OTLPTraceExporter();
-const metricExporter = new OTLPMetricExporter();
-const logExporter = new OTLPLogExporter();
+// Explicit configuration for debugging
+const otlpEndpoint = process.env.OTEL_EXPORTER_OTLP_ENDPOINT || 'http://otel-collector:4317';
+
+const traceExporter = new OTLPTraceExporter({
+  url: otlpEndpoint,
+});
+const metricExporter = new OTLPMetricExporter({
+  url: otlpEndpoint,
+});
+const logExporter = new OTLPLogExporter({
+  url: otlpEndpoint,
+});
 
 const metricReader = new PeriodicExportingMetricReader({
   exporter: metricExporter,
   exportIntervalMillis: 15000,
 });
 
+
 export const otr_sdk = new NodeSDK({
   resource,
   traceExporter,
   metricReader,
-  logRecordProcessors: [new BatchLogRecordProcessor(logExporter)],
+  logRecordProcessors: [
+    new BatchLogRecordProcessor(logExporter),
+  ],
   instrumentations: [
     getNodeAutoInstrumentations({
       '@opentelemetry/instrumentation-fs': {

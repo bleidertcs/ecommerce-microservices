@@ -87,16 +87,16 @@ jwt_secrets:
     algorithm: RS256
     rsa_public_key: |
       -----BEGIN PUBLIC KEY-----
-      MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAmFvfX+R4N6ZUCm0j+kNy
-      D04aBQwKwwZwFzxDkfe9QVjYUuwG7U1K0c5CkeIwUSKYRdsTMEwooa+7F05MRYuv
-      ANBcVv9cHguir2oouYW4hQ2tXWGUd27qkLuBRL8kFLH1fGC9h3hJRw3ec665mEF4
-      riXAPat3YPknnEf9Q/TGbD8GXi+xYOHmJbo/VeRNcxL/Y4v3GyCJKn0kOOaBQWxr
-      +227G+MLYq5Eg4Zv5wxfJzurnBFzo8HJP/h3jnFuKIaK5z5OB8+a8C7Ei0QCPBw+
-      YU54OOmRe6vLDF893omIMmfqUbzv7CGT0JKg64XHlfuTXUYihk9x3RHG+XMih+tx
-      O+2qvQ4Iam4i3LJUO33YkaIbiTXghwrvrY/yEC/eSjfBZg4mqPoxJyHVTyGCeb6+
-      NlJ6chPQlQ8PMII4hgEFTrrkDnQPZWtNseOnNRbt0fwbmA/5uhyEOJs98tGLet5H
-      lG2eyyxjiONuRPLxwTPjtRjAaoJwxB1IGCQxAyDbxCP6dmeOmi9n+FEzuGhOKKUd
-      Hu6qLUbfgQfqz4RC/9XnHy1QzN6/ebBDLxDVWONNmnbRSPoX1TkYkAh+E/Zu106i
-      tOGZaw3+qTJBVV+Uk74AgTq/XTCAhE+9KB0rN4VWz78zhUmrshMj+CDflrl8GI2s
-      T44BfgSexzaHClGVCcmYaA0CAwEAAQ==
+      MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAp/g77nAlVKcxavnP/dqV
+      Clc0i8xIH08aPng7TfQ/FtxpF3lc+9RH0GV+Z+M+PEjHGBywMoWogG8c0X1gSOcI
+      9CGgK1uz59jtFAH7y2Y+9objTCG7fGlB9r/HBKoMzgMkJAC5I9ygtNjI7CYpy5gX
+      9lHf3SygsllUxlfm0JpInLYbDbaWGufDjlsSo+eMhncab91R8K4C+CwMMJdSa09V
+      +A3A63sUsarUHbcXI6fpirlX9f/9vXtSt7aHoF65fslobi//pC8ojokj+tOXg70F
+      L2FOLaaCgPHabh5EuBDsl3hcTPJovVHbfcHdlT8a65mX/JY30jG6Yt8HxapZM+aC
+      VWHzkgbe2wyd+i8I9/KdCqcM2Me+045efKUJZNwTZ9Ih4Q95ThK9GhdWSUctlBqK
+      GnzNi3Gy1X1jz0uTxEzueQ7bZded1KrmLiAS+MVNRFQZrKUa2kARAl6Q6n22RxWv
+      olpWWfX/CVyTKdZ4QaRTdGTA7f+NXbvBj0L176haIBSAxnbi532Gm/QjjA/qxKkp
+      2PaeBeE1dDYYxmILWhXD1XoaFnp8lCbjO5Uko5nV1CQACSUU9U0F732gVETBZuDH
+      iGgOm6xjbD8ik7lsSLmn86AFqOgZrHb9mQm4yhXNjeMBnILQo5FP5G23KfCL8a4F
+      oYXzrgcdLXHI2E+vAIPchzECAwEAAQ==
       -----END PUBLIC KEY-----

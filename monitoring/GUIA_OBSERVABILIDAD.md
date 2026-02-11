@@ -1,19 +1,15 @@
-# Guía de Observabilidad (Grafana Stack)
+# Guía de Observabilidad (SigNoz)
 
-Este repositorio ha sido integrado con un stack completo de observabilidad basado en Grafana.
+Este repositorio utiliza **SigNoz** como plataforma all-in-one de observabilidad, basada en **OpenTelemetry** de forma nativa.
 
 ## Componentes del Stack
 
-| Componente       | Puerto     | Descripción                                |
-| ---------------- | ---------- | ------------------------------------------ |
-| **Grafana**      | 3000       | Visualización de logs, métricas y trazas   |
-| **Loki**         | 3100       | Almacenamiento centralizado de logs        |
-| **Promtail**     | -          | Agente recolector de logs de Docker        |
-| **Tempo**        | 3200, 4317 | Almacenamiento de trazas distribuidas      |
-| **Mimir**        | 9009       | Almacenamiento de métricas a largo plazo   |
-| **Prometheus**   | 9090       | Scraper de métricas (remote-write a Mimir) |
-| **Pyroscope**    | 4040       | Continuous profiling (CPU, memoria)        |
-| **Alertmanager** | 9093       | Gestión y enrutamiento de alertas          |
+| Componente                | Contenedor                 | Puerto    | Descripción                           |
+| ------------------------- | -------------------------- | --------- | ------------------------------------- |
+| **SigNoz**                | `bw-signoz`                | 8080      | UI + API de observabilidad            |
+| **SigNoz OTel Collector** | `bw-signoz-otel-collector` | 4317/4318 | Receptor OTLP (gRPC/HTTP)             |
+| **ClickHouse**            | `bw-clickhouse`            | -         | Database para logs, trazas y métricas |
+| **ZooKeeper**             | `bw-zookeeper`             | -         | Coordinación requerida por ClickHouse |
 
 ## Cómo levantar el stack
 
@@ -21,84 +17,73 @@ Este repositorio ha sido integrado con un stack completo de observabilidad basad
 docker-compose up -d --build
 ```
 
-### Accesos
+### Acceso
 
-- **Grafana**: `http://localhost:3000` (User: `admin`, Pass: `admin`)
-- **Prometheus**: `http://localhost:9090`
-- **Loki API**: `http://localhost:3100`
-- **Tempo API**: `http://localhost:3200`
-- **Mimir API**: `http://localhost:9009`
+- **SigNoz UI**: `http://localhost:8080`
+
+> Al acceder por primera vez, SigNoz pedirá crear un usuario administrador.
 
 ## Integración técnica en NestJS
 
-### 1. Tracing (Tempo)
+### 1. Tracing
 
-Se utiliza el SDK de OpenTelemetry (`otr_sdk`) en `src/tracing.ts`. Se inicializa en el `main.ts` antes de que arranque la aplicación para capturar todas las instrumentaciones automáticas (HTTP, gRPC, Prisma, Redis).
+Se utiliza el SDK de OpenTelemetry (`otr_sdk`) en `src/tracing.ts`. Se inicializa en `main.ts` antes de arrancar la aplicación para capturar instrumentaciones automáticas (HTTP, gRPC, Prisma, Redis).
 
-**Configuración requerida en `docker-compose.yml`:**
+**Configuración en `docker-compose.yml`:**
 
 ```yaml
 environment:
   - OTEL_SERVICE_NAME=mi-servicio
-  - OTEL_EXPORTER_OTLP_ENDPOINT=tempo:4317
-  - OTEL_EXPORTER_OTLP_INSECURE=true # Requerido para conexión sin TLS
+  - OTEL_EXPORTER_OTLP_ENDPOINT=signoz-otel-collector:4317
+  - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+  - OTEL_EXPORTER_OTLP_INSECURE=true
 ```
 
-> **Importante**: La variable `OTEL_EXPORTER_OTLP_INSECURE=true` es **obligatoria** para que el exportador gRPC se conecte correctamente a Tempo en un entorno de desarrollo sin TLS.
+### 2. Logs
 
-### 2. Logs (Loki)
+Se usa `winston` con `nest-winston` para emitir logs en formato JSON. El `OpenTelemetryTransportV3` de `@opentelemetry/winston-transport` envía los logs al OTel Collector vía OTLP, que los almacena en ClickHouse.
 
-Se ha configurado `winston` con `nest-winston` para emitir logs en formato JSON por la consola. Promtail lee estos logs y les añade etiquetas como `service_name` y `container_name`.
+Los logs incluyen automáticamente el `trace_id`, permitiendo correlación directa con trazas en SigNoz.
 
-Los logs incluyen automáticamente el `trace_id` generado por OpenTelemetry, permitiendo correlacionar logs con trazas.
+### 3. Métricas
 
-### 3. Métricas (Prometheus/Mimir)
+Las métricas se exportan vía OTLP desde el SDK de OpenTelemetry directamente al SigNoz OTel Collector. **No se necesita Prometheus ni prom-client.**
 
-El SDK de OpenTelemetry expone un endpoint de métricas en el puerto `9464`. Prometheus hace scrape de cada microservicio en sus respectivos puertos.
+## Cómo usar SigNoz
 
-**Puertos de métricas:**
+### Trazas
 
-- `auth-service`: Puerto host `9464`
-- `post-service`: Puerto host `9465`
+1. Ir a **Traces** en el menú lateral
+2. Filtrar por `service.name` para seleccionar el microservicio
+3. Hacer clic en una traza para ver el flame graph y spans individuales
 
-## Dashboards Incluidos
+### Logs
 
-En Grafana encontrarás dashboards pre-configurados para:
+1. Ir a **Logs** en el menú lateral
+2. Usar filtros como `service.name=users-service` para acotar resultados
+3. Hacer clic en un log para ver sus atributos y saltar a la traza asociada
 
-- **Logs de Microservicios**: Filtra por contenedor y busca dentro de los logs.
-- **Métricas NestJS**: Visualiza el uso de CPU, Memoria y rate de peticiones HTTP.
-- **Tracing**: Integrado en el visor de logs (puedes saltar de un log a su traza correspondiente).
+### Métricas
 
-## Cómo usar Tempo (Trazas)
+1. Ir a **Dashboards** → crear un nuevo dashboard o usar los precreados
+2. Usar **Metrics Explorer** para buscar métricas como:
+   - `http.server.duration` — Duración de requests HTTP
+   - `system.cpu.utilization` — Uso de CPU
+   - `runtime.nodejs.heap.size` — Tamaño del heap de Node.js
 
-### Búsqueda por TraceQL
+### Alertas
 
-En Grafana → Explore → Tempo, usa la sintaxis TraceQL:
-
-```
-{resource.service.name="auth-service"}
-```
-
-> **Nota**: Los valores con guiones (como `auth-service`) **deben ir entre comillas dobles**.
-
-### Búsqueda visual
-
-1. En Grafana, ve a **Explore** → selecciona **Tempo**.
-2. Cambia a la pestaña **Search**.
-3. Selecciona "Service Name" y elige tu servicio de la lista.
-4. Haz clic en **Run Query**.
-
-### Correlación Logs → Trazas
-
-Los logs en Loki incluyen un campo `trace_id`. Al hacer clic en un log, verás un enlace directo para saltar a la traza correspondiente en Tempo.
+1. Ir a **Alerts** → **New Alert**
+2. Seleccionar el tipo de alerta (Metric, Log, Trace, Exceptions)
+3. Configurar la query, umbral y canales de notificación
 
 ## Extensión para nuevos servicios
 
 Para cada nuevo microservicio:
 
-1. **Copia el archivo `src/tracing.ts`** desde auth o post service.
+1. **Copia `src/tracing.ts`** desde cualquier servicio existente.
 
-2. **Importa e inicializa el SDK en `main.ts`:**
+2. **Importa e inicializa en `main.ts`:**
 
    ```typescript
    import { otr_sdk } from "./tracing";
@@ -106,112 +91,34 @@ Para cada nuevo microservicio:
    // ... resto del código
    ```
 
-3. **Añade el servicio a `docker-compose.yml`:**
+3. **Añade en `docker-compose.yml`:**
 
    ```yaml
    mi-servicio:
      # ... configuración base
-     ports:
-       - "XXXX:XXXX" # Puerto HTTP
-       - "YYYY:9464" # Puerto Métricas (único por servicio)
      environment:
        - OTEL_SERVICE_NAME=mi-servicio
-       - OTEL_EXPORTER_OTLP_ENDPOINT=tempo:4317
+       - OTEL_EXPORTER_OTLP_ENDPOINT=signoz-otel-collector:4317
+       - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
        - OTEL_EXPORTER_OTLP_INSECURE=true
    ```
 
-4. **Añade el job de scrape en `monitoring/prometheus/prometheus.yml`:**
-   ```yaml
-   - job_name: "mi-servicio"
-     metrics_path: "/metrics"
-     static_configs:
-       - targets: ["mi-servicio:9464"]
-   ```
+## Solución de problemas
 
-## Solución de problemas comunes
+### Las trazas no aparecen
 
-### Las trazas no aparecen en Tempo
+1. Verifica que `OTEL_EXPORTER_OTLP_ENDPOINT` apunte a `signoz-otel-collector:4317`
+2. Comprueba que `OTEL_EXPORTER_OTLP_INSECURE=true` esté configurado
+3. Revisa los logs del collector: `docker-compose logs signoz-otel-collector`
+4. Verifica estado del collector: `http://localhost:13133` (health check)
 
-1. Verifica que `OTEL_EXPORTER_OTLP_INSECURE=true` esté configurado.
-2. Comprueba que el endpoint sea `tempo:4317` (sin `http://`).
-3. Revisa los logs del microservicio buscando errores de conexión gRPC.
+### SigNoz UI no carga
 
-### Error "unknown identifier" en TraceQL
+1. Verifica que ClickHouse esté healthy: `docker-compose ps clickhouse`
+2. Revisa logs: `docker-compose logs signoz`
+3. Los schema migrators deben completarse exitosamente antes de que SigNoz arranque
 
-Asegúrate de usar comillas dobles en valores con caracteres especiales:
+### ClickHouse errores de conexión
 
-- ❌ `{resource.service.name=auth-service}`
-- ✅ `{resource.service.name="auth-service"}`
-
-### Loki no recibe logs
-
-1. Verifica que Promtail esté corriendo: `docker-compose logs promtail`
-2. Reinicia Promtail después de reiniciar Loki: `docker-compose restart promtail`
-
-### Mimir muestra "connection refused"
-
-Asegúrate de que Mimir esté iniciado con el flag `-target=all` para modo all-in-one.
-
-## Profiling con Pyroscope
-
-### Cómo usar Pyroscope
-
-1. En Grafana, ve a **Explore** → selecciona **Pyroscope**.
-2. Selecciona el servicio (ej. `auth-service` o `post-service`).
-3. Elige el tipo de profile:
-   - **CPU**: Analiza qué funciones consumen más tiempo de CPU.
-   - **Wall**: Tiempo total de ejecución (incluye I/O).
-   - **Heap**: Uso de memoria.
-4. Navega por los flame graphs para identificar cuellos de botella.
-
-### Configuración en microservicios
-
-El profiling se inicializa automáticamente en `src/profiling.ts`:
-
-```typescript
-import Pyroscope from "@pyroscope/nodejs";
-
-Pyroscope.init({
-  serverAddress: process.env.PYROSCOPE_SERVER_ADDRESS,
-  appName: process.env.PYROSCOPE_APPLICATION_NAME,
-  wall: { collectCpuTime: true },
-});
-Pyroscope.start();
-```
-
-## Alertas con Alertmanager
-
-### Reglas de alertas configuradas
-
-Las reglas de alertas se encuentran en `monitoring/prometheus/rules/alerts.yml`:
-
-| Alerta                    | Severidad | Descripción                                  |
-| ------------------------- | --------- | -------------------------------------------- |
-| `ServiceDown`             | critical  | Un servicio está caído por más de 1 minuto   |
-| `HighErrorRate`           | critical  | Tasa de errores HTTP 5xx superior al 5%      |
-| `HighResponseTime`        | warning   | Tiempo de respuesta p95 superior a 1 segundo |
-| `LowRequestRate`          | warning   | El servicio recibe muy pocas peticiones      |
-| `TempoNotReceivingTraces` | warning   | Tempo no recibe trazas                       |
-| `LokiNotReceivingLogs`    | warning   | Loki no recibe logs                          |
-
-### Ver alertas activas
-
-1. **En Prometheus**: `http://localhost:9090/alerts`
-2. **En Alertmanager**: `http://localhost:9093`
-3. **En Grafana**: Alerting → Alert rules
-
-### Configurar notificaciones
-
-Edita `monitoring/alertmanager/alertmanager.yml` para configurar:
-
-- **Email**: Descomenta y configura `smtp_smarthost`, `smtp_from`, etc.
-- **Slack**: Configura `slack_api_url` con tu webhook
-- **Webhook**: Cambia las URLs en los receivers
-
-### Silenciar alertas
-
-En Alertmanager (`http://localhost:9093`):
-
-1. Ve a "Silences" → "New Silence"
-2. Configura los matchers (ej. `alertname=LowRequestRate`)
-3. Define la duración del silencio
+1. Verifica que ZooKeeper esté healthy: `docker-compose ps zookeeper`
+2. Los schema migrators se ejecutan una vez y terminan — es normal que aparezcan como `Exited (0)`

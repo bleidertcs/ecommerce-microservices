@@ -2,10 +2,6 @@ import { otr_sdk } from './tracing';
 // Start SDK before everything else
 otr_sdk.start();
 
-import { initProfiling } from './profiling';
-// Start profiling
-initProfiling();
-
 import { Logger, ValidationPipe, VersioningType } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
@@ -13,6 +9,7 @@ import { Transport } from '@nestjs/microservices';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import express, { Request, Response } from 'express';
 import helmet from 'helmet';
+import { OpenTelemetryTransportV3 } from '@opentelemetry/winston-transport';
 import { WinstonModule } from 'nest-winston';
 import * as winston from 'winston';
 
@@ -31,6 +28,7 @@ async function bootstrap() {
                         winston.format.json(),
                     ),
                 }),
+                new OpenTelemetryTransportV3(),
             ],
         }),
     });

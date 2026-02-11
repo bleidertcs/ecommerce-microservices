@@ -1,6 +1,6 @@
 # 📖 Guía Completa de Ecosistema: Microservicios E-commerce
 
-Esta guía detalla la configuración integral del sistema, incluyendo **Authentik** (Identidad), **Kong** (Gateway), **Grafana LGTM Stack** (Observabilidad) y los microservicios de **Users, Products y Orders**.
+Esta guía detalla la configuración integral del sistema, incluyendo **Authentik** (Identidad), **Kong** (Gateway), **SigNoz** (Observabilidad) y los microservicios de **Users, Products y Orders**.
 
 ---
 
@@ -34,11 +34,9 @@ graph TD
     end
 
     subgraph "Observabilidad Stack"
-        Grafana[Grafana :3000]
-        Loki[Loki - Logs]
-        Tempo[Tempo - Traces]
-        Mimir[Mimir - Metrics]
-        Pyro[Pyroscope - Profiles]
+        SigNoz[SigNoz :8080]
+        OTelCol[OTel Collector]
+        CH[(ClickHouse)]
     end
 ```
 
@@ -109,7 +107,7 @@ graph TD
     ```
 3.  **Levantar Observabilidad**:
     ```bash
-    docker-compose up -d grafana loki tempo mimir pyroscope otel-collector promtail
+    docker-compose up -d zookeeper clickhouse schema-migrator-sync schema-migrator-async signoz signoz-otel-collector
     ```
 4.  **Levantar Microservicios**:
     ```bash
@@ -180,22 +178,24 @@ Kong está configurado en modo DB-less. Para aplicar cambios, edita `kong/config
 
 ---
 
-## 📊 5. Paso 4: Guía de Observabilidad (OpenTelemetry)
+## 📊 5. Paso 4: Guía de Observabilidad (SigNoz Native)
 
-El sistema utiliza un enfoque **OTel-first**. Todos los microservicios envían Traces, Métricas y Logs directamente al **OpenTelemetry Collector** usando el protocolo **OTLP** (gRPC).
+El sistema utiliza **SigNoz** como plataforma de observabilidad all-in-one para gestionar logs, trazas y métricas mediante el estándar **OpenTelemetry**.
 
-### Flujo de Datos:
+### Cómo funciona:
 
-- **Microservicios** -> OTLP (Logs/Traces/Metrics) -> **OTel Collector** -> Específicos (Loki/Tempo/Mimir).
-- Se ha eliminado **Promtail**, ya que los logs no se extraen de Docker, sino que se envían desde la aplicación para una mejor correlación.
+1.  **Instrumentación**: Los microservicios usan el SDK de OpenTelemetry para capturar automáticamente trazas (HTTP, gRPC, DB) y logs estructurados.
+2.  **Transporte OTLP**: Los datos se envían vía el protocolo **OTLP/gRPC** al **SigNoz OTel Collector**.
+3.  **Almacenamiento**: El colector procesa y almacena la telemetría en **ClickHouse**, una base de datos analítica de alto rendimiento.
+4.  **Visualización**: La UI de SigNoz unifica todas las señales, permitiendo saltar de un log a su traza correspondiente con un clic.
 
-### Acceso a Grafana:
+### Acceso a SigNoz:
 
-Acceso: `http://localhost:3000` (User: `admin`, Pass: `admin`).
+Acceso: `http://localhost:8080` (crear usuario en primer acceso).
 
-1.  **Logs (Loki)**: Explora logs estructurados enviados vía OTLP. Filtra por `service_name="orders-service"`.
-2.  **Traces (Tempo)**: Los logs y las trazas están correlacionados mediante `trace_id`.
-3.  **Continuous Profiling (Pyroscope)**: Disponible en **Explore** > **Pyroscope**.
+1.  **Logs**: Menú lateral → **Logs**. Permite buscar por atributos como `service.name` o texto libre.
+2.  **Traces**: Menú lateral → **Traces**. Visualiza el flujo completo de una petición a través de múltiples microservicios.
+3.  **Metrics**: Menú lateral → **Dashboards**. Monitoriza latencia, tráfico (RPS) y errores de forma automática.
 
 ---
 
@@ -295,9 +295,10 @@ curl -X POST http://localhost:8000/api/v1/orders \
 
 - [ ] ¿Authentik emite tokens JWT RS256?
 - [ ] ¿Kong tiene la clave pública correcta de Authentik?
-- [ ] ¿Ves los logs en Loki al hacer una petición?
-- [ ] ¿Ves los perfiles en Pyroscope?
-- [ ] ¿La tabla `outbox` en la DB de Orders se vacía correctamente (Worker funcionando)?
+- [ ] ¿Ves logs en SigNoz (Logs) al hacer una petición?
+- [ ] ¿Ves trazas en SigNoz (Traces) al hacer una petición?
+- [ ] ¿Los dashboards de servicios individuales muestran métricas RED?
+- [ ] ¿La tabla `outbox` en la DB de Orders se vacía correctamente?
 
 ---
 

@@ -1,3 +1,7 @@
+---
+trigger: always_on
+---
+
 # CORE RULES: NestJS E-commerce Microservices Project
 
 This document defines the strict development standards for this workspace.
@@ -13,6 +17,7 @@ This document defines the strict development standards for this workspace.
   /kong                - API Gateway config
   /monitoring          - Grafana observability stack
   /authentik           - Identity provider config
+  /web-app             - Web app for e-commerce UI
   docker-compose.yml   - Infrastructure orchestration
 ```
 

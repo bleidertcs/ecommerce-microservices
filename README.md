@@ -6,7 +6,7 @@
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/bleidertcs/ecommerce-microservices)
 
-Una arquitectura de microservicios e-commerce avanzada construida con **NestJS**, **gRPC**, **TCP**, **NATS**, **RabbitMQ**, **Authentik** (Identity Provider) y **Kong API Gateway**. El sistema cuenta con un stack de observabilidad completo (Loki, Tempo, Mimir, Pyroscope).
+Una arquitectura de microservicios e-commerce avanzada construida con **NestJS**, **gRPC**, **TCP**, **NATS**, **RabbitMQ**, **Authentik** (Identity Provider) y **Kong API Gateway**. El sistema cuenta con un stack de observabilidad moderno basado en **SigNoz** y **OpenTelemetry**.
 
 ---
 
@@ -16,7 +16,7 @@ Para una guía detallada paso a paso sobre cómo configurar y usar todo el ecosi
 
 👉 **[MASTER_GUIDE.md](./MASTER_GUIDE.md)**
 
-Esta guía incluye configuración de **Authentik**, **Kong**, **Grafana** y ejemplos de **cURL** para todos los servicios.
+Esta guía incluye configuración de **Authentik**, **Kong**, **SigNoz** y ejemplos de **cURL** para todos los servicios.
 
 ---
 
@@ -37,12 +37,10 @@ graph TB
         AK[Authentik IDP]
     end
 
-    subgraph "Observability"
-        GR[Grafana]
-        LO[Loki - Logs]
-        TE[Tempo - Traces]
-        MI[Mimir - Metrics]
-        PY[Pyroscope - Profiles]
+    subgraph "Observability (SigNoz)"
+        SN[SigNoz UI / Query]
+        OT[OTel Collector]
+        CH[(ClickHouse DB)]
     end
 
     Users-.-RMQ
@@ -52,6 +50,9 @@ graph TB
     Users-.-NATS
     Products-.-NATS
     Orders-.-NATS
+    Users & Products & Orders --- |OTLP| OT
+    OT --- SN
+    SN --- CH
 ```
 
 ## 🚀 Características Principales
@@ -68,12 +69,12 @@ graph TB
 - **🌐 Kong Gateway**: Enrutamiento, validación de JWT y Rate Limiting.
 - **🔑 JWT Validation**: Validación en el Gateway mediante claves públicas RSA-256 de Authentik.
 
-### 📊 Observabilidad (Stack Grafana)
+### 📊 Observabilidad (SigNoz Native)
 
-- **📝 Logs (Loki)**: Logs estructurados recolectados por Promtail.
-- **🕵️ Traces (Tempo)**: Rastreo distribuido completo mediante OTel Collector.
-- **📈 Metrics (Mimir)**: Métricas RED y de sistema centralizadas.
-- **🔥 Profiles (Pyroscope)**: Continuous profiling para optimización de rendimiento.
+- **📝 Unified Logs**: Logs estructurados correlacionados automáticamente con trazas.
+- **🕵️ Distributed Tracing**: Rastreo completo de peticiones entre microservicios mediante OpenTelemetry.
+- **📈 Metrics**: Monitorización de rendimiento (RED metrics) y consumo de recursos.
+- **⚡ Real-time Analysis**: Análisis de latencia y detección de anomalías basado en ClickHouse.
 
 ---
 
@@ -102,7 +103,7 @@ chmod +x setup-ecommerce.sh
 
 - **API Gateway**: `http://localhost:8000`
 - **Authentik**: `http://localhost:9000`
-- **Grafana**: `http://localhost:3000` (admin/admin)
+- **SigNoz UI**: `http://localhost:8080`
 - **RabbitMQ**: `http://localhost:15672` (admin/admin)
 
 ---
@@ -114,6 +115,7 @@ Para información técnica específica, consulta los siguientes documentos:
 - 📑 **[Servicios E-commerce](./ECOMMERCE_SERVICES.md)**: Modelos de datos, API endpoints y flujos de comunicación.
 - ⚙️ **[Recomendaciones Arquitecturales](./RECOMENDACIONES_ARQUITECTURA.md)**: Mejores prácticas y decisiones de diseño aplicadas.
 - 🔐 **[Guía de Authentik](./AUTHENTIK_GUIDE.md)**: Configuración del proveedor de identidad y flujos de token.
+- 📉 **[Guía de Observabilidad](./monitoring/GUIA_OBSERVABILIDAD.md)**: Detalles sobre el stack de SigNoz y OTel.
 
 ---
 
@@ -124,7 +126,7 @@ Para información técnica específica, consulta los siguientes documentos:
 docker-compose logs -f users-service
 
 # Reiniciar stack de observabilidad
-docker-compose restart prometheus grafana loki tempo mimir pyroscope
+docker-compose restart signoz signoz-otel-collector clickhouse
 ```
 
 ## 🤝 Contribuciones

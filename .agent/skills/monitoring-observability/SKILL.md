@@ -1,20 +1,18 @@
 ---
 name: monitoring-observability
-description: Guidelines for implementing and managing monitoring, logging, and tracing with Grafana stack.
+description: Guidelines for implementing and managing monitoring, logging, and tracing with SigNoz.
 ---
 
 # Monitoring & Observability Skill
 
-This skill provides instructions for working with the Grafana observability stack in this microservices project.
+This skill provides instructions for working with the SigNoz observability stack in this microservices project.
 
 ## Stack Components
 
-- **Grafana**: Visualization and dashboards (http://localhost:3000)
-- **Loki**: Log aggregation and query
-- **Tempo**: Distributed tracing
-- **Mimir**: Metrics storage (Prometheus-compatible)
-- **OpenTelemetry Collector**: Metrics and traces collection
-- **Alertmanager**: Alert management
+- **SigNoz**: All-in-one observability UI (http://localhost:8080)
+- **SigNoz OTel Collector**: Receives OTLP telemetry from microservices
+- **ClickHouse**: Data storage for logs, traces, and metrics
+- **ZooKeeper**: Coordination service for ClickHouse
 
 ## OpenTelemetry Integration
 
@@ -37,59 +35,73 @@ const sdk = new NodeSDK({
 
 ### Environment Variables
 
-Required in each service's `.env.docker`:
+Required in docker-compose.yml for each service:
 
-```env
-OTEL_SERVICE_NAME=users-service
-OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
-OTEL_EXPORTER_OTLP_INSECURE=true
+```yaml
+environment:
+  - OTEL_SERVICE_NAME=users-service
+  - OTEL_EXPORTER_OTLP_ENDPOINT=signoz-otel-collector:4317
+  - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+  - OTEL_EXPORTER_OTLP_INSECURE=true
 ```
 
-## Accessing Grafana
+## Accessing SigNoz
 
-1. Open http://localhost:3000
-2. Login with `admin` / `admin`
-3. Data sources are pre-configured:
-   - Loki (logs)
-   - Tempo (traces)
-   - Mimir (metrics)
+1. Open http://localhost:8080
+2. Create admin user on first access
+3. All data (logs, traces, metrics) is available in one unified UI
 
 ## Viewing Logs
 
-Using Loki in Grafana Explore:
+In SigNoz → **Logs**:
 
-```logql
-{service_name="users-service"} |= "error"
-{service_name="products-service"} | json | line_format "{{.message}}"
-```
+- Filter by `service.name` to select a specific service
+- Use search operators to filter log content
+- Click on a log entry to see its attributes and jump to the associated trace
 
 ## Viewing Traces
 
-Using Tempo in Grafana Explore or via trace ID from logs.
+In SigNoz → **Traces**:
+
+- Filter by service name, duration, status code
+- Click traces to see the flame graph with individual spans
+- Traces are auto-correlated with logs via `trace_id`
 
 ## Viewing Metrics
 
-Using Mimir/Prometheus queries:
+In SigNoz → **Dashboards** or **Metrics Explorer**:
 
-```promql
-http_request_duration_seconds_bucket{service_name="orders-service"}
-rate(http_requests_total[5m])
-```
+- Common metrics: `http.server.duration`, `system.cpu.utilization`
+- Create custom dashboards from the UI
 
 ## Creating Dashboards
 
-1. Go to Dashboards > New Dashboard
-2. Add panels with queries to Loki/Tempo/Mimir
+1. Go to **Dashboards** → **New Dashboard**
+2. Add panels with metric, log, or trace queries
 3. Save dashboard with descriptive name
-4. Export JSON to `monitoring/grafana/provisioning/dashboards/`
+4. Dashboards are stored in SigNoz's ClickHouse database
+
+## Creating Alerts
+
+1. Go to **Alerts** → **New Alert**
+2. Choose alert type: Metric, Log, Trace, or Exceptions
+3. Configure query, threshold, and notification channel
+4. SigNoz supports Slack, Email, PagerDuty, and webhook notifications
 
 ## Troubleshooting
 
-### No Data in Grafana
+### No Data in SigNoz
 
-1. Check OTEL Collector logs: `docker logs bw-otel-collector`
-2. Verify services are sending telemetry (check service logs)
-3. Ensure data source connections in Grafana are healthy
+1. Check SigNoz OTel Collector logs: `docker logs bw-signoz-otel-collector`
+2. Verify collector health: `http://localhost:13133`
+3. Verify services are sending telemetry (check service logs for OTLP errors)
+4. Ensure ClickHouse is healthy: `docker-compose ps clickhouse`
+
+### SigNoz UI Not Loading
+
+1. Check if schema migrators completed: `docker-compose ps` (should show `Exited (0)`)
+2. Check SigNoz logs: `docker logs bw-signoz`
+3. Verify ClickHouse is running and healthy
 
 ### Missing Metrics
 
@@ -102,4 +114,4 @@ rate(http_requests_total[5m])
 - **Structured Logging**: Use JSON format for logs
 - **Trace Context**: Propagate trace IDs across service boundaries
 - **Meaningful Metrics**: Instrument business-critical operations
-- **Alerts**: Set up alerts for error rates and latency thresholds
+- **Alerts**: Set up alerts for error rates and latency thresholds via SigNoz UI

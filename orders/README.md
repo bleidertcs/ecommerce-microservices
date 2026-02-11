@@ -1,15 +1,13 @@
-# Servicio de Publicaciones (Post)
+# Orders Service (🛒)
 
-Este microservicio gestiona todo el ciclo de vida de las publicaciones (blog posts), incluyendo la creación, búsqueda, actualización y eliminación lógica.
+Este microservicio orquestra la creación y gestión de pedidos, garantizando la consistencia mediante patrones de resiliencia y eventos asíncronos.
 
 ## 🚀 Características
 
-- **Gestión de Contenido**: CRUD completo de posts con soporte para imágenes.
-- **Seguimiento de Auditoría**: Rastreo de quién crea, edita o elimina cada post.
-- **Eliminación Lógica**: Los registros no se borran físicamente, facilitando auditorías.
-- **Búsqueda y Filtrado**: Capacidad de búsqueda por texto y paginación eficiente.
-- **Caché con Redis**: Almacenamiento temporal de listados para alta concurrencia.
-- **Integración gRPC**: Se conecta al `Auth Service` para verificar la identidad del usuario en cada petición protegida.
+- **Gestión de Pedidos**: Ciclo de vida completo desde la creación hasta el cumplimiento.
+- **Patrones de Resiliencia**: Implementación de **Circuit Breaker** y **Transactional Outbox**.
+- **Comunicación Híbrida**: Usa gRPC/TCP/NATS para consultas síncronas y RabbitMQ para eventos.
+- **Observabilidad Avanzada**: Trazado distribuido completo para rastrear pedidos a través de múltiples servicios.
 
 ---
 
@@ -17,62 +15,32 @@ Este microservicio gestiona todo el ciclo de vida de las publicaciones (blog pos
 
 - **Backend**: NestJS 10.
 - **Persistencia**: PostgreSQL + Prisma ORM.
-- **Caché**: Redis.
-- **Inter-comunicación**: Cliente gRPC para comunicación con el servicio de autenticación.
+- **Messaging**: RabbitMQ + NATS.
+- **Observabilidad**: OpenTelemetry SDK + SigNoz.
 
 ---
 
 ## 🛠️ Configuración
 
-### Dependencias
-
-Este servicio **depende** del `Auth Service` para validar los tokens JWT.
-
 ### Variables de Entorno Clave
 
 - `DATABASE_URL`: Conexión a Postgres.
-- `GRPC_AUTH_URL`: Dirección gRPC del servicio Auth (ej: `auth-service:50051`).
-- `REDIS_URL`: Endpoint de Redis.
-
-### Instalación
-
-```bash
-npm install
-npm run prisma:generate
-npm run proto:generate
-npm run dev
-```
+- `OTEL_EXPORTER_OTLP_ENDPOINT`: IP del SigNoz Collector (172.18.0.15:4317).
+- `RABBITMQ_URL`: Endpoint de RabbitMQ para publicación de eventos.
 
 ---
 
-## 📡 Endpoints de la API
+## 📊 Observabilidad
 
-### Gestión de Posts
+Este servicio es crítico para el flujo de negocio. Puedes monitorizar la creación de pedidos en **SigNoz**:
 
-- `GET /v1/post`: Lista publicaciones (paginado). Soporta parámetros `page`, `limit` y `search`.
-- `POST /v1/post`: Crea un post (Requiere Autenticación).
-- `PUT /v1/post/:id`: Actualiza un post propio (Requiere Autenticación).
-- `DELETE /v1/post/batch`: Eliminación masiva de posts por IDs (Requiere Autenticación).
-
-### Parámetros de Consulta (Query Params)
-
-- `search`: Filtra por título o contenido.
-- `page`: Número de página (Default: 1).
-- `limit`: Cantidad de resultados (Default: 10).
-
----
-
-## 🔌 Integración con Auth Service
-
-El `Post Service` utiliza un **Guardia gRPC** (`AuthJwtAccessGuard`). Cuando un cliente envía un token en los encabezados HTTP, el servicio:
-
-1. Extrae el token.
-2. Invoca el método `ValidateToken` del servicio Auth vía gRPC.
-3. Si el token es válido, inyecta los datos del usuario en la petición.
+1. Accede a `http://localhost:8080`.
+2. Filtra por `service.name="orders-service"`.
+3. Usa la vista de **Traces** para visualizar cómo una orden invoca a los servicios de `Users` y `Products`.
 
 ---
 
 ## 📊 Salud y Documentación
 
-Endpoint de salud: `http://localhost:9002/health`
-Swagger: `http://localhost:9002/docs`
+- **Endpoint de salud**: `http://localhost:9003/health`
+- **Swagger**: `http://localhost:9003/api/v1/docs`

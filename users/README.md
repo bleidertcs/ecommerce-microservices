@@ -1,15 +1,13 @@
-# Servicio de Publicaciones (Post)
+# Users Service (👤)
 
-Este microservicio gestiona todo el ciclo de vida de las publicaciones (blog posts), incluyendo la creación, búsqueda, actualización y eliminación lógica.
+Este microservicio gestiona la identidad, perfiles y seguridad de los usuarios en el ecosistema e-commerce.
 
 ## 🚀 Características
 
-- **Gestión de Contenido**: CRUD completo de posts con soporte para imágenes.
-- **Seguimiento de Auditoría**: Rastreo de quién crea, edita o elimina cada post.
-- **Eliminación Lógica**: Los registros no se borran físicamente, facilitando auditorías.
-- **Búsqueda y Filtrado**: Capacidad de búsqueda por texto y paginación eficiente.
-- **Caché con Redis**: Almacenamiento temporal de listados para alta concurrencia.
-- **Integración gRPC**: Se conecta al `Auth Service` para verificar la identidad del usuario en cada petición protegida.
+- **Gestión de Perfiles**: CRUD completo de usuarios con roles y permisos.
+- **Autenticación gRPC**: Provee métodos síncronos para validación de identidad a otros servicios.
+- **Seguridad**: Integración con Authentik para la gestión de identidades centralizada.
+- **Observabilidad Nativa**: Exportación de logs, trazas y métricas directamente a SigNoz.
 
 ---
 
@@ -17,62 +15,32 @@ Este microservicio gestiona todo el ciclo de vida de las publicaciones (blog pos
 
 - **Backend**: NestJS 10.
 - **Persistencia**: PostgreSQL + Prisma ORM.
-- **Caché**: Redis.
-- **Inter-comunicación**: Cliente gRPC para comunicación con el servicio de autenticación.
+- **Observabilidad**: OpenTelemetry SDK + SigNoz.
+- **Inter-comunicación**: Servidor gRPC y NATS para peticiones síncronas.
 
 ---
 
 ## 🛠️ Configuración
 
-### Dependencias
-
-Este servicio **depende** del `Auth Service` para validar los tokens JWT.
-
 ### Variables de Entorno Clave
 
 - `DATABASE_URL`: Conexión a Postgres.
-- `GRPC_AUTH_URL`: Dirección gRPC del servicio Auth (ej: `auth-service:50051`).
-- `REDIS_URL`: Endpoint de Redis.
-
-### Instalación
-
-```bash
-npm install
-npm run prisma:generate
-npm run proto:generate
-npm run dev
-```
+- `OTEL_EXPORTER_OTLP_ENDPOINT`: IP del SigNoz Collector (172.18.0.15:4317).
+- `REDIS_URL`: Endpoint de Redis para caché de sesiones.
 
 ---
 
-## 📡 Endpoints de la API
+## 📊 Observabilidad
 
-### Gestión de Posts
+Este servicio está instrumentado con **OpenTelemetry**. Puedes ver su rendimiento en tiempo real en **SigNoz**:
 
-- `GET /v1/post`: Lista publicaciones (paginado). Soporta parámetros `page`, `limit` y `search`.
-- `POST /v1/post`: Crea un post (Requiere Autenticación).
-- `PUT /v1/post/:id`: Actualiza un post propio (Requiere Autenticación).
-- `DELETE /v1/post/batch`: Eliminación masiva de posts por IDs (Requiere Autenticación).
-
-### Parámetros de Consulta (Query Params)
-
-- `search`: Filtra por título o contenido.
-- `page`: Número de página (Default: 1).
-- `limit`: Cantidad de resultados (Default: 10).
-
----
-
-## 🔌 Integración con Auth Service
-
-El `Post Service` utiliza un **Guardia gRPC** (`AuthJwtAccessGuard`). Cuando un cliente envía un token en los encabezados HTTP, el servicio:
-
-1. Extrae el token.
-2. Invoca el método `ValidateToken` del servicio Auth vía gRPC.
-3. Si el token es válido, inyecta los datos del usuario en la petición.
+1. Accede a `http://localhost:8080`.
+2. Filtra por `service.name="users-service"`.
+3. Explora **Logs** y **Traces** correlacionados.
 
 ---
 
 ## 📊 Salud y Documentación
 
-Endpoint de salud: `http://localhost:9002/health`
-Swagger: `http://localhost:9002/docs`
+- **Endpoint de salud**: `http://localhost:9001/health`
+- **Swagger**: `http://localhost:9001/api/v1/docs`

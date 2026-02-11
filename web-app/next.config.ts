@@ -2,6 +2,17 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  transpilePackages: [
+    "@opentelemetry/api",
+    "@opentelemetry/sdk-trace-web",
+    "@opentelemetry/exporter-trace-otlp-http",
+    "@opentelemetry/resources",
+    "@opentelemetry/semantic-conventions",
+    "@opentelemetry/instrumentation",
+    "@opentelemetry/instrumentation-fetch",
+    "@opentelemetry/instrumentation-xml-http-request",
+    "@opentelemetry/context-zone",
+  ],
   // Allow external API calls during development
   async rewrites() {
     return [

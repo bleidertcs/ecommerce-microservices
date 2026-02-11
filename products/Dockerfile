@@ -4,8 +4,8 @@ RUN apk add --no-cache libc6-compat
 RUN npm install -g pnpm
 ENV CI=true
 
-# Install dependencies only when needed
-FROM base AS deps
+# Build the source code
+FROM base AS builder
 RUN apk add --no-cache wget openssl
 WORKDIR /app
 
@@ -13,14 +13,10 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml* ./
 COPY prisma ./prisma/
 
-# Install dependencies
-RUN pnpm install --prod=false
+# Install dependencies (no frozen lockfile to allow platform adjustments)
+RUN pnpm install --ignore-scripts
 
-# Build the source code
-FROM base AS builder
-RUN apk add --no-cache wget openssl
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
+# Copy source code
 COPY . .
 
 # Generate Prisma client and build application

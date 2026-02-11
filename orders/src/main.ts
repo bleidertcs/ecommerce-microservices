@@ -2,9 +2,6 @@ import { otr_sdk } from './tracing';
 // Start SDK before everything else
 otr_sdk.start();
 
-import { initProfiling } from './profiling';
-// Start profiling
-initProfiling();
 
 import { Logger, ValidationPipe, VersioningType } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -15,9 +12,11 @@ import express, { Request, Response } from 'express';
 import helmet from 'helmet';
 import { WinstonModule } from 'nest-winston';
 import * as winston from 'winston';
+import { OpenTelemetryTransportV3 } from '@opentelemetry/winston-transport';
 
 import { AppModule } from './app/app.module';
 import { setupSwagger } from './swagger';
+
 
 async function bootstrap() {
     const expressInstance = express();
@@ -31,6 +30,7 @@ async function bootstrap() {
                         winston.format.json(),
                     ),
                 }),
+                new OpenTelemetryTransportV3(),
             ],
         }),
     });
@@ -102,6 +102,7 @@ async function bootstrap() {
     expressApp.get('/health', (_req: Request, res: Response) => {
         res.json({ status: 'healthy', timestamp: new Date().toISOString() });
     });
+
 
     // Swagger for development
     if (env !== 'production') {

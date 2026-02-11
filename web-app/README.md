@@ -20,6 +20,20 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## 📊 Observabilidad (SigNoz RUM)
+
+Este frontend está instrumentado con **OpenTelemetry Web SDK** para proporcionar visibilidad completa de la experiencia del usuario.
+
+### Qué se monitoriza:
+
+- **Trazas de Red**: Cada llamada a la API (vía Kong) genera una traza que se conecta con los microservicios del backend.
+- **Rendimiento**: Captura automática de Web Vitals.
+- **Errores**: Excepciones de JavaScript en el lado del cliente.
+
+Para ver los datos, accede a **SigNoz UI** (`http://localhost:8080`) y busca el servicio `web-app`.
+
+---
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
