@@ -50,7 +50,27 @@ async function bootstrap() {
     });
 
     // Security
-    app.use(helmet({ contentSecurityPolicy: env === 'production' ? undefined : false }));
+    if (env === 'production') {
+        // In production, use Helmet defaults (including default CSP)
+        app.use(helmet());
+    } else {
+        // In non-production, keep CSP enabled but more permissive to ease development
+        app.use(
+            helmet({
+                contentSecurityPolicy: {
+                    directives: {
+                        defaultSrc: ["'self'"],
+                        scriptSrc: ["'self'", "'unsafe-inline'", 'localhost:3000'],
+                        styleSrc: ["'self'", "'unsafe-inline'"],
+                        imgSrc: ["'self'", 'data:'],
+                        connectSrc: ["'self'", 'ws://localhost:3000', 'http://localhost:3000'],
+                        objectSrc: ["'none'"],
+                        frameAncestors: ["'self'"],
+                    },
+                },
+            }),
+        );
+    }
 
     // Validation
     app.useGlobalPipes(
