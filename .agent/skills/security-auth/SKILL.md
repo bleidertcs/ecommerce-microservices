@@ -248,26 +248,26 @@ await prisma.$executeRaw`SELECT * FROM users WHERE email = '${email}'`;
 
 ## Rotating Secrets
 
-1. Generate new secret in Authentik
-2. Update Kong configuration with both old and new keys
-3. Deploy changes
-4. Remove old key after grace period
+1. Generate new secret in Casdoor dashboard.
+2. Update Kong configuration with both old and new keys.
+3. Deploy changes.
+4. Remove old key after grace period.
 
 ## Monitoring Security
 
-- Log authentication failures
-- Monitor for brute force attempts
-- Alert on unusual access patterns
-- Track token usage
+- Log authentication failures.
+- Monitor for brute force attempts via Casdoor logs.
+- Alert on unusual access patterns.
+- Track token usage.
 
 ## Troubleshooting
 
 ### Token Validation Fails
 
-1. Check token expiration
-2. Verify public key matches in Kong and Authentik
-3. Ensure algorithm matches (RS256)
-4. Check audience and issuer claims
+1. Check token expiration.
+2. Verify public key matches in Kong and Casdoor.
+3. Ensure algorithm matches (RS256).
+4. Check audience and issuer claims.
 
 ### CORS Errors
 

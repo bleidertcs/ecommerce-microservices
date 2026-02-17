@@ -15,8 +15,8 @@ This document defines the strict development standards for this workspace.
   /products            - Products microservice
   /orders              - Orders microservice
   /kong                - API Gateway config
-  /monitoring          - Grafana observability stack
-  /authentik           - Identity provider config
+  /monitoring          - SigNoz observability stack
+  /casdoor             - Identity provider config
   /web-app             - Web app for e-commerce UI
   docker-compose.yml   - Infrastructure orchestration
 ```
@@ -168,7 +168,7 @@ OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
 ### Authentication
 
 - All protected endpoints must validate JWT
-- Use Authentik as identity provider
+- Use Casdoor as identity provider
 - Never log or expose tokens
 - Implement token refresh mechanisms
 - Use HTTPS in production
@@ -325,6 +325,7 @@ throw new UnauthorizedException("Invalid credentials");
 ## 14. Versioning
 
 - API versioning in URL: `/api/v1/`
+- Kong Gateway Port: `8010`
 - Maintain backward compatibility
 - Deprecate endpoints gracefully
 - Document breaking changes

@@ -5,7 +5,7 @@ Write-Host ""
 
 # Users Service
 Write-Host "📝 Users Service" -ForegroundColor Yellow
-Set-Location users
+Set-Location ../users
 Write-Host "  ↳ Generating Prisma Client..." -ForegroundColor Gray
 pnpm prisma:generate
 Write-Host "  ↳ Running migrations..." -ForegroundColor Gray
@@ -16,7 +16,7 @@ Set-Location ..
 
 # Products Service
 Write-Host "📦 Products Service" -ForegroundColor Yellow
-Set-Location products
+Set-Location ../products
 Write-Host "  ↳ Generating Prisma Client..." -ForegroundColor Gray
 pnpm prisma:generate
 Write-Host "  ↳ Running migrations..." -ForegroundColor Gray
@@ -27,7 +27,7 @@ Set-Location ..
 
 # Orders Service
 Write-Host "🛒 Orders Service" -ForegroundColor Yellow
-Set-Location orders
+Set-Location ../orders
 Write-Host "  ↳ Generating Prisma Client..." -ForegroundColor Gray
 pnpm prisma:generate
 Write-Host "  ↳ Running migrations..." -ForegroundColor Gray
@@ -47,4 +47,6 @@ Write-Host ""
 Write-Host "🎯 Next Steps:" -ForegroundColor Cyan
 Write-Host "  1. Start services: docker-compose up -d"
 Write-Host "  2. View Prisma Studio: cd [service]; pnpm prisma:studio"
-Write-Host "  3. Test APIs via Kong Gateway: http://localhost:8000"
+Write-Host "  3. Test APIs via Kong Gateway: http://localhost:8010"
+Write-Host "  4. View API Docs (Swagger): http://localhost:9001/api/docs"
+Write-Host "  5. Monitor System (SigNoz): http://localhost:8080"

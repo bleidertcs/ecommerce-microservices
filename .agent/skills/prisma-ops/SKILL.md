@@ -9,7 +9,7 @@ This skill provides instructions for managing the database schema and data using
 
 ## Architecture
 
-- Each service (e.g., `auth`, `post`) has its own Prisma schema located in its `prisma/` folder.
+- Each service (e.g., `users`, `products`, `orders`) has its own Prisma schema located in its `prisma/` folder.
 - Migrations are service-specific.
 
 ## Common Workflows

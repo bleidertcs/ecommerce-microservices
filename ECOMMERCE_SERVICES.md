@@ -26,8 +26,8 @@ Sistema de microservicios para e-commerce construido con NestJS, PostgreSQL, Rab
 - **RPC**: gRPC para comunicación síncrona entre servicios
 - **API Gateway**: Kong para enrutamiento, validación JWT y Rate Limiting
 - **Cache**: Redis
-- **Monitoring**: SigNoz (Logs, Traces, Metrics)
-- **Autenticación**: Casdoor (OIDC Provider) configurado con Kong
+- **Monitoring**: SigNoz (Logs, Traces, Metrics, Profiling)
+- **Autenticación**: Casdoor (OIDC Provider)
 
 ---
 
@@ -35,7 +35,7 @@ Sistema de microservicios para e-commerce construido con NestJS, PostgreSQL, Rab
 
 ```mermaid
 graph TD
-    Client[Cliente] --> Kong[Kong Gateway :8000]
+    Client[Cliente] --> Kong[Kong Gateway :8010]
 
     subgraph "Seguridad"
         Kong --> |JWT Auth| CD[Casdoor IDP :8000]
@@ -255,7 +255,7 @@ Gestión de órdenes de compra.
 ### Base URL
 
 ```
-Kong Gateway: http://localhost:8000
+Kong Gateway: http://localhost:8010
 ```
 
 ### Users Service
@@ -325,7 +325,7 @@ curl -X POST "http://localhost:8000/api/login/oauth/access_token" \
 
 ```bash
 curl -H "Authorization: Bearer <TOKEN>" \
-  http://localhost:8000/api/v1/users
+  http://localhost:8010/api/v1/users
 ```
 
 ### Servicios Protegidos
@@ -340,6 +340,11 @@ curl -H "Authorization: Bearer <TOKEN>" \
 2.  **Kong**: Importa la clave pública RSA de Casdoor en el plugin `jwt`.
 3.  **Validación**: Kong verifica la firma y el campo `exp` del token.
 4.  **Inyección**: El plugin `request-transformer` extrae el `sub` (User ID) del JWT y lo inyecta en el header `x-user-id` antes de pasar la petición al microservicio.
+
+---
+
+> [!TIP]
+> Para una guía detallada sobre la configuración técnica de la seguridad, consulta la **[Guía de Integración Casdoor & Kong](./CASDOOR_KONG_GUIDE.md)**.
 
 ---
 
@@ -437,7 +442,7 @@ Configuración en `kong/config.yml`:
 ### 1. Listar Productos (Público)
 
 ```bash
-curl http://localhost:8000/api/v1/products
+curl http://localhost:8010/api/v1/products
 ```
 
 **Respuesta:**
@@ -453,13 +458,13 @@ curl http://localhost:8000/api/v1/products
 ### 2. Obtener un Producto Específico
 
 ```bash
-curl http://localhost:8000/api/v1/products/123e4567-e89b-12d3-a456-426614174000
+curl http://localhost:8010/api/v1/products/123e4567-e89b-12d3-a456-426614174000
 ```
 
 ### 3. Crear una Orden (Requiere Auth)
 
 ```bash
-curl -X POST http://localhost:8000/api/v1/orders \
+curl -X POST http://localhost:8010/api/v1/orders \
   -H "Authorization: Bearer <TOKEN>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -487,7 +492,7 @@ curl -X POST http://localhost:8000/api/v1/orders \
 
 ```bash
 curl -H "Authorization: Bearer <TOKEN>" \
-  http://localhost:8000/api/v1/users
+  http://localhost:8010/api/v1/users
 ```
 
 ### 5. Verificar Health
@@ -587,11 +592,11 @@ docker exec bw-products-service pnpm exec ts-node prisma/seed.ts
 docker exec bw-orders-service pnpm exec ts-node prisma/seed.ts
 ```
 
-### Monitoreo
+### Monitoreo y Gestión
 
-- **Grafana**: http://localhost:3000 (admin/admin)
-- **RabbitMQ**: http://localhost:15672 (admin/admin)
-- **Authentik**: http://localhost:9000
+- **SigNoz UI**: http://localhost:8080
+- **Casdoor UI**: http://localhost:8000
+- **RabbitMQ UI**: http://localhost:15672 (admin/admin)
 
 ---
 

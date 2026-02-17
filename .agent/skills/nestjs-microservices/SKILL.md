@@ -12,7 +12,7 @@ This project follows a modular, environment-driven microservices architecture us
 Each microservice is a standalone application with its own database and internal structure:
 
 - **Modules**: Domain-specific logic encapsulated in NestJS modules.
-- **Transport**: Hybrid support for gRPC, NATS, and TCP.
+- **Transport**: Hybrid support for gRPC, NATS, and RabbitMQ.
 - **Observability**: OTel-first instrumentation in `main.ts` and `tracing.ts`.
 
 ## 🛠️ Creating a New Service

@@ -11,7 +11,7 @@ NC='\033[0m' # No Color
 
 # Navigate to users service
 echo -e "${YELLOW}📝 Users Service${NC}"
-cd users || exit
+cd ../users || exit
 echo "  ↳ Generating Prisma Client..."
 pnpm prisma:generate
 echo "  ↳ Running migrations..."
@@ -22,7 +22,7 @@ cd ..
 
 # Navigate to products service
 echo -e "${YELLOW}📦 Products Service${NC}"
-cd products || exit
+cd ../products || exit
 echo "  ↳ Generating Prisma Client..."
 pnpm prisma:generate
 echo "  ↳ Running migrations..."
@@ -33,7 +33,7 @@ cd ..
 
 # Navigate to orders service
 echo -e "${YELLOW}🛒 Orders Service${NC}"
-cd orders || exit
+cd ../orders || exit
 echo "  ↳ Generating Prisma Client..."
 pnpm prisma:generate
 echo "  ↳ Running migrations..."
@@ -53,4 +53,6 @@ echo ""
 echo "🎯 Next Steps:"
 echo "  1. Start services: docker-compose up -d"
 echo "  2. View Prisma Studio: cd [service] && pnpm prisma:studio"
-echo "  3. Test APIs via Kong Gateway: http://localhost:8000"
+echo "  3. Test APIs via Kong Gateway: http://localhost:8010"
+echo "  4. View API Docs (Swagger): http://localhost:9001/api/docs"
+echo "  5. Monitor System (SigNoz): http://localhost:8080"

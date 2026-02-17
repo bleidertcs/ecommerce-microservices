@@ -19,7 +19,7 @@ All requests must go through the **Kong Gateway** (`:8000`).
 
 ### Authentication
 
-- Use OIDC to get tokens from Authentik.
+- Use OIDC to get tokens from Casdoor.
 - Attach the JWT in the `Authorization: Bearer <token>` header.
 - Kong will validate and forward the request to the microservices.
 

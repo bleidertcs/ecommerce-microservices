@@ -39,12 +39,12 @@ Este documento detalla las oportunidades de mejora identificadas para la arquite
 
 ## 📊 4. Observabilidad (Nivel Avanzado)
 
-| Área                           | Estado Actual                     | Mejora Propuesta                                                                                  |
-| ------------------------------ | --------------------------------- | ------------------------------------------------------------------------------------------------- |
-| **Dashboards Grafana**         | Dashboard RED inicial configurado | Crear dashboards más profundos con desglose por endpoint y comparación de versiones.              |
-| **Alertas Proactivas**         | Alertmanager activo, sin reglas   | Definir reglas de alerta (ej. "Latencia P99 > 500ms", "Tasa de Errores > 5%").                    |
-| **Log Correlation (Trace ID)** | ✅ Implementado                   | Correlación logs ↔ traces activa vía Winston y TraceID inyectado.                                 |
-| **Profiling Continuo**         | ✅ Implementado (Pyroscope)       | Uso de Flamegraphs activo para identificar cuellos de botella en CPU/Memoria de manera proactiva. |
+| Area                           | Estado Actual             | Mejora Propuesta                                                                          |
+| ------------------------------ | ------------------------- | ----------------------------------------------------------------------------------------- |
+| **Dashboards SigNoz**          | Dashboard RED configurado | Crear dashboards personalizados para métricas de negocio (ej. "Órdenes por segundo").     |
+| **Alertas Proactivas**         | SigNoz Alerting activo    | Definir reglas de alerta (ej. "Latencia P99 > 500ms", "Tasa de Errores > 5%").            |
+| **Log Correlation (Trace ID)** | ✅ Implementado           | Correlación logs ↔ traces activa vía Winston y TraceID inyectado en SigNoz.               |
+| **Profiling Continuo**         | ✅ Implementado (SigNoz)  | Identificar cuellos de botella en CPU/Memoria de manera proactiva usando SigNoz Profiler. |
 
 ---
 
@@ -78,7 +78,7 @@ URGENCIA │ zados    │ ment     │
 ## Próximos Pasos Recomendados
 
 1. **Inmediato**: Migrar secrets a Docker Secrets o variables de entorno seguras (no versionadas).
-2. **Corto Plazo**: Definir reglas de alerta en Prometheus/Alertmanager para latencia y errores.
+2. **Corto Plazo**: Definir reglas de alerta en SigNoz para monitorear latencia y errores críticos.
 3. **Finalizado**: ✅ Rate Limiting avanzado (por usuario + Redis) implementado en Kong.
 4. **Finalizado**: ✅ Circuit Breaker implementado en servicios críticos.
 5. **Finalizado**: ✅ Transactional Outbox implementado para consistencia de eventos.

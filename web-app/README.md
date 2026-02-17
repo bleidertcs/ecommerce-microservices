@@ -34,6 +34,24 @@ Para ver los datos, accede a **SigNoz UI** (`http://localhost:8080`) y busca el 
 
 ---
 
+## 🔐 Autenticación (Casdoor)
+
+La aplicación utiliza **NextAuth.js** (o el SDK de Casdoor) para gestionar la autenticación OIDC.
+
+### Flujo de Login:
+
+1.  El usuario hace clic en "Login".
+2.  La aplicación redirige a **Casdoor** (`http://localhost:8000`).
+3.  Tras el login exitoso, Casdoor redirige de vuelta a `http://localhost:3000/callback` con un `code`.
+4.  El servidor de Next.js intercambia el `code` por un **JWT** de forma segura.
+
+### Comunicación con Microservicios:
+
+- El **JWT** se envía en el header `Authorization: Bearer <token>` en cada petición a **Kong Gateway** (`http://localhost:8010`).
+- Kong valida el token y pasa la identidad del usuario a los servicios de backend.
+
+---
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

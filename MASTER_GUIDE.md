@@ -8,7 +8,7 @@ Esta guía detalla la configuración integral del sistema, incluyendo **Casdoor*
 
 ```mermaid
 graph TD
-    Client[Cliente/Frontend] --> Kong[Kong Gateway :8000]
+    Client[Cliente/Frontend] --> Kong[Kong Gateway :8010]
 
     subgraph "Seguridad"
         Kong --> |JWT Auth| CD[Casdoor IDP :8000]
@@ -131,8 +131,8 @@ El `Orders Service` puede alternar entre transportes para comunicarse con `Users
 
 ### A. Acceso Inicial
 
-1. Navega a `http://localhost:8000/`.
-2. Introduce las credenciales por defecto: `admin` / `123`.
+1. Navega a **Casdoor UI** en `http://localhost:8000/`.
+2. Introduce las credenciales por defecto: `admin` / `123123`.
 
 ### B. Configuración de Organización (Consentimiento de Privilegios)
 
@@ -162,18 +162,24 @@ El `Orders Service` puede alternar entre transportes para comunicarse con `Users
 
 Kong está configurado en modo DB-less. Para aplicar cambios, edita `kong/config.yml`.
 
-### Plugins Activos:
-
-- **JWT**: Valida la firma contra la clave de Authentik.
-- **Request Transformer**: Extrae el `sub` del JWT y lo inyecta como `x-user-id`.
-- **Rate Limiting**:
-  - Limitación por **Header** (`x-user-id`) para servicios protegidos.
-  - Limitación por **IP** para el catálogo público.
-  - Persistencia en **Redis**.
+- **Persistencia en Redis**: El estado de los límites se comparte entre todas las instancias de Kong.
 
 ---
 
-## 📊 5. Paso 4: Guía de Observabilidad (SigNoz Native)
+## 📖 5. Documentación de API (Swagger)
+
+Cada microservicio expone su propia documentación interactiva via Swagger. Puedes probar los endpoints directamente (sin pasar por Kong) para depuración rápida:
+
+- **Users Service**: [http://localhost:9001/api/docs](http://localhost:9001/api/docs)
+- **Products Service**: [http://localhost:9002/api/docs](http://localhost:9002/api/docs)
+- **Orders Service**: [http://localhost:9003/api/docs](http://localhost:9003/api/docs)
+
+> [!TIP]
+> Para probar endpoints protegidos en Swagger, obtén un token de Casdoor y usa el botón **Authorize** arriba a la derecha en la UI de Swagger.
+
+---
+
+## 📊 6. Paso 4: Guía de Observabilidad (SigNoz Native)
 
 El sistema utiliza **SigNoz** como plataforma de observabilidad all-in-one para gestionar logs, trazas y métricas mediante el estándar **OpenTelemetry**.
 
@@ -194,7 +200,7 @@ Acceso: `http://localhost:8080` (crear usuario en primer acceso).
 
 ---
 
-## 🧪 6. Paso 6: Guía de Pruebas (Testing)
+## 🧪 7. Paso 6: Guía de Pruebas (Testing)
 
 Las pruebas están diseñadas para ejecutarse dentro de los contenedores para asegurar paridad con el entorno de ejecución, aunque también pueden correrse localmente.
 
@@ -235,7 +241,7 @@ Si prefieres ejecutar las pruebas sin Docker (requiere `pnpm` instalado localmen
 
 ---
 
-## 🔌 7. Paso 7: Guía de Uso (cURLs)
+## 🔌 8. Paso 7: Guía de Uso (cURLs)
 
 ### A. Obtener Token de Acceso
 
@@ -257,7 +263,7 @@ curl -X POST http://localhost:8000/api/login/oauth/access_token \
 _Sujeto a Rate Limiting por IP (100 req/min)_.
 
 ```bash
-curl -i http://localhost:8000/api/v1/products
+curl -i http://localhost:8010/api/v1/products
 ```
 
 ### C. Consultar mis Órdenes (Protegido)
@@ -266,7 +272,7 @@ _Identificado por JWT, Rate Limiting por usuario (30 req/min)_.
 
 ```bash
 curl -i -H "Authorization: Bearer <TU_TOKEN>" \
-  http://localhost:8000/api/v1/orders
+  http://localhost:8010/api/v1/orders
 ```
 
 ### D. Crear una Orden (Resiliencia y Consistencia)
@@ -274,7 +280,7 @@ curl -i -H "Authorization: Bearer <TU_TOKEN>" \
 Este endpoint pone a prueba el **Circuit Breaker** y el **Transactional Outbox**:
 
 ```bash
-curl -X POST http://localhost:8000/api/v1/orders \
+curl -X POST http://localhost:8010/api/v1/orders \
   -H "Authorization: Bearer <TU_TOKEN>" \
   -H "Content-Type: application/json" \
   -d '{

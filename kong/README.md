@@ -4,7 +4,7 @@ Este componente actúa como la puerta de enlace (Gateway) centralizada para todo
 
 ## 🚀 Funcionalidades en el Proyecto
 
-- **Proxy Inverso**: Enrutamiento de peticiones HTTP a los microservicios internos (`auth`, `post`).
+- **Proxy Inverso**: Enrutamiento de peticiones HTTP a los microservicios internos (`users`, `products`, `orders`).
 - **Rate Limiting**: Control de frecuencia de peticiones para prevenir abusos.
 - **Terminación de Rutas**: Normalización de URLs externas hacia puertos internos.
 
@@ -21,12 +21,11 @@ Kong se ejecuta en modo **DB-less** (sin base de datos) utilizando el archivo de
 
 ---
 
-## 🛠️ Rutas Configuradas
-
-| Prefijo Externo | Servicio Interno    | Descripción                        |
-| :-------------- | :------------------ | :--------------------------------- |
-| `/auth`         | `auth-service:9001` | Rutas de autenticación y usuarios. |
-| `/post`         | `post-service:9002` | Rutas de publicaciones y blogs.    |
+| Prefijo Externo | Servicio Interno        | Descripción                 |
+| :-------------- | :---------------------- | :-------------------------- |
+| `/api/v1/users` | `users-service:9001`    | Rutas de perfil y usuarios. |
+| `/api/v1/prod`  | `products-service:9002` | Catálogo de productos.      |
+| `/api/v1/ord`   | `orders-service:9003`   | Gestión de pedidos.         |
 
 ---
 
@@ -36,8 +35,8 @@ Kong se ejecuta en modo **DB-less** (sin base de datos) utilizando el archivo de
 
 Configurado individualmente por ruta:
 
-- **Auth**: 100 peticiones por minuto.
-- **Post**: 200 peticiones por minuto.
+- **Users**: 100 peticiones por minuto.
+- **Products**: 200 peticiones por minuto.
 
 Para verificar los límites, inspecciona las cabeceras de respuesta:
 

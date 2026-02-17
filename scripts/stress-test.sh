@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Configuration
-GATEWAY_URL="http://localhost:8000/api/v1/orders"
-AUTH_URL="http://localhost:9000/application/o/token/"
+GATEWAY_URL="http://localhost:8010/api/v1/orders"
+AUTH_URL="http://localhost:8000/api/login/oauth/access_token"
 CLIENT_ID="TU_CLIENT_ID"
 CLIENT_SECRET="TU_CLIENT_SECRET"
 USERNAME="tu_usuario"

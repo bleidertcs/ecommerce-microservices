@@ -13,9 +13,9 @@ The project uses `docker-compose.yml` in the root directory to orchestrate:
 
 - Databases (Postgres)
 - Message Brokers (RabbitMQ)
-- API Gateways (Kong / Traefik / Tyk)
-- Microservices (`auth`, `post`)
-- Monitoring (Grafana, Prometheus, Pyroscope)
+- API Gateways (Kong)
+- Microservices (`users`, `products`, `orders`)
+- Monitoring (SigNoz stack)
 
 ## Commands
 

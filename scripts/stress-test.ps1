@@ -1,6 +1,6 @@
 # Configuration
-$GatewayUrl = "http://localhost:8000/api/v1/orders"
-$AuthUrl = "http://localhost:9000/application/o/token/"
+$GatewayUrl = "http://localhost:8010/api/v1/orders"
+$AuthUrl = "http://localhost:8000/api/login/oauth/access_token"
 $ClientId = "TU_CLIENT_ID"
 $ClientSecret = "TU_CLIENT_SECRET"
 $Username = "tu_usuario"

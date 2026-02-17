@@ -10,13 +10,16 @@ Una arquitectura de microservicios e-commerce avanzada construida con **NestJS**
 
 ---
 
-## 📚 Documentación Maestra
+## 📚 Documentación Hub
 
-Para una guía detallada paso a paso sobre cómo configurar y usar todo el ecosistema, consulta:
-
-👉 **[MASTER_GUIDE.md](./MASTER_GUIDE.md)**
-
-Esta guía incluye configuración de **Casdoor**, **Kong**, **SigNoz** y ejemplos de **cURL** para todos los servicios.
+| Documento                                                            | Descripción                                                        |
+| :------------------------------------------------------------------- | :----------------------------------------------------------------- |
+| 📖 **[MASTER_GUIDE.md](./MASTER_GUIDE.md)**                          | **Guía de Inicio Rápido** y configuración completa del ecosistema. |
+| 🛡️ **[CASDOOR_KONG_GUIDE.md](./CASDOOR_KONG_GUIDE.md)**              | Detalles técnicos sobre la integración **Casdoor + Kong**.         |
+| 📊 **[GUIA_OBSERVABILIDAD.md](./monitoring/GUIA_OBSERVABILIDAD.md)** | Configuración de **SigNoz**, logs, trazas y métricas.              |
+| 🛠️ **[Scripts Guide](./scripts/README.md)**                          | Guía de **Scripts de Utilidad** (Setup, Stress, Auth).             |
+| 📑 **[ECOMMERCE_SERVICES.md](./ECOMMERCE_SERVICES.md)**              | Referencia técnica de Microservicios, API y Modelos.               |
+| ⚙️ **[RECOMENDACIONES.md](./RECOMENDACIONES_ARQUITECTURA.md)**       | Mejores prácticas y decisiones de arquitectura.                    |
 
 ---
 
@@ -26,7 +29,7 @@ Esta guía incluye configuración de **Casdoor**, **Kong**, **SigNoz** y ejemplo
 
 ```mermaid
 graph TB
-    Client[Aplicaciones Cliente] --> Kong[Kong API Gateway<br/>Puerto: 8000]
+    Client[Aplicaciones Cliente] --> Kong[Kong API Gateway<br/>Puerto: 8010]
     Kong --> Users[Users Service<br/>Puerto: 9001]
     Kong --> Products[Products Service<br/>Puerto: 9002]
     Kong --> Orders[Orders Service<br/>Puerto: 9003]
@@ -78,6 +81,20 @@ graph TB
 
 ---
 
+## 🛠️ Service Registry & Tools
+
+| Componente             | Puerto Host | Descripción                        | Swagger / UI                              |
+| :--------------------- | :---------- | :--------------------------------- | :---------------------------------------- |
+| **API Gateway (Kong)** | `8010`      | Punto de entrada único para la API | -                                         |
+| **Casdoor IDP**        | `8000`      | Proveedor de Identidad (Auth)      | [UI](http://localhost:8000)               |
+| **Users Service**      | `9001`      | Microservicio de Usuarios          | [Swagger](http://localhost:9001/api/docs) |
+| **Products Service**   | `9002`      | Catálogo de Productos              | [Swagger](http://localhost:9002/api/docs) |
+| **Orders Service**     | `9003`      | Gestión de Pedidos                 | [Swagger](http://localhost:9003/api/docs) |
+| **SigNoz**             | `8080`      | Observabilidad unificada           | [UI](http://localhost:8080)               |
+| **RabbitMQ**           | `15672`     | Broker de Mensajería               | [UI](http://localhost:15672)              |
+
+---
+
 ## ⚡ Inicio Rápido
 
 ### 1. Requisitos
@@ -92,19 +109,19 @@ El proyecto incluye scripts que automatizan la generación de protos, clientes p
 
 ```bash
 # En Windows (PowerShell)
-./setup-ecommerce.ps1
+./scripts/setup-ecommerce.ps1
 
 # En Linux/macOS
-chmod +x setup-ecommerce.sh
-./setup-ecommerce.sh
+chmod +x scripts/setup-ecommerce.sh
+./scripts/setup-ecommerce.sh
 ```
 
 ### 3. Acceso a Herramientas
 
-- **API Gateway**: `http://localhost:8000`
-- **Casdoor**: `http://localhost:8000` (también usado como IDP)
+- **API Gateway (Proxy)**: `http://localhost:8010`
+- **Casdoor (Auth/UI)**: `http://localhost:8000`
 - **SigNoz UI**: `http://localhost:8080`
-- **RabbitMQ**: `http://localhost:15672` (admin/admin)
+- **RabbitMQ UI**: `http://localhost:15672` (guest/guest)
 
 ---
 
