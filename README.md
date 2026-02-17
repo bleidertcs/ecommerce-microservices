@@ -6,7 +6,7 @@
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/bleidertcs/ecommerce-microservices)
 
-Una arquitectura de microservicios e-commerce avanzada construida con **NestJS**, **gRPC**, **TCP**, **NATS**, **RabbitMQ**, **Authentik** (Identity Provider) y **Kong API Gateway**. El sistema cuenta con un stack de observabilidad moderno basado en **SigNoz** y **OpenTelemetry**.
+Una arquitectura de microservicios e-commerce avanzada construida con **NestJS**, **gRPC**, **TCP**, **NATS**, **RabbitMQ**, **Casdoor** (Identity Provider) y **Kong API Gateway**. El sistema cuenta con un stack de observabilidad moderno basado en **SigNoz** y **OpenTelemetry**.
 
 ---
 
@@ -16,7 +16,7 @@ Para una guía detallada paso a paso sobre cómo configurar y usar todo el ecosi
 
 👉 **[MASTER_GUIDE.md](./MASTER_GUIDE.md)**
 
-Esta guía incluye configuración de **Authentik**, **Kong**, **SigNoz** y ejemplos de **cURL** para todos los servicios.
+Esta guía incluye configuración de **Casdoor**, **Kong**, **SigNoz** y ejemplos de **cURL** para todos los servicios.
 
 ---
 
@@ -34,7 +34,7 @@ graph TB
     subgraph "Messaging & Auth"
         RMQ[RabbitMQ - Asíncrono]
         NATS[NATS - Síncrono/Alternativo]
-        AK[Authentik IDP]
+        CD[Casdoor IDP]
     end
 
     subgraph "Observability (SigNoz)"
@@ -65,9 +65,9 @@ graph TB
 
 ### 🛡️ Seguridad y Tráfico
 
-- **🔐 Authentik IDP**: Gestión centralizada de identidades y autenticación OIDC.
+- **🔐 Casdoor IDP**: Gestión centralizada de identidades y autenticación OIDC.
 - **🌐 Kong Gateway**: Enrutamiento, validación de JWT y Rate Limiting.
-- **🔑 JWT Validation**: Validación en el Gateway mediante claves públicas RSA-256 de Authentik.
+- **🔑 JWT Validation**: Validación en el Gateway mediante claves públicas RSA-256 de Casdoor.
 
 ### 📊 Observabilidad (SigNoz Native)
 
@@ -102,7 +102,7 @@ chmod +x setup-ecommerce.sh
 ### 3. Acceso a Herramientas
 
 - **API Gateway**: `http://localhost:8000`
-- **Authentik**: `http://localhost:9000`
+- **Casdoor**: `http://localhost:8000` (también usado como IDP)
 - **SigNoz UI**: `http://localhost:8080`
 - **RabbitMQ**: `http://localhost:15672` (admin/admin)
 
@@ -114,7 +114,7 @@ Para información técnica específica, consulta los siguientes documentos:
 
 - 📑 **[Servicios E-commerce](./ECOMMERCE_SERVICES.md)**: Modelos de datos, API endpoints y flujos de comunicación.
 - ⚙️ **[Recomendaciones Arquitecturales](./RECOMENDACIONES_ARQUITECTURA.md)**: Mejores prácticas y decisiones de diseño aplicadas.
-- 🔐 **[Guía de Authentik](./AUTHENTIK_GUIDE.md)**: Configuración del proveedor de identidad y flujos de token.
+- 🔐 **[Guía Maestra](./MASTER_GUIDE.md)**: Configuración del proveedor de identidad (Casdoor), Kong y Observabilidad.
 - 📉 **[Guía de Observabilidad](./monitoring/GUIA_OBSERVABILIDAD.md)**: Detalles sobre el stack de SigNoz y OTel.
 
 ---

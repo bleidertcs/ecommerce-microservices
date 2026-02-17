@@ -13,6 +13,13 @@ receivers:
         endpoint: 0.0.0.0:4317
       http:
         endpoint: 0.0.0.0:4318
+        cors:
+          allowed_origins:
+            - http://localhost:3000
+            - http://localhost:8000
+            - http://localhost:3004
+          allowed_headers:
+            - "*"
   prometheus:
     config:
       global:

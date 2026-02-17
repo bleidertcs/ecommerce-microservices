@@ -8,7 +8,7 @@ services:
       - name: users-routes
         paths:
           - /api/v1/users
-        strip_path: true
+        strip_path: false
         protocols: ["http", "https"]
         methods: ["GET", "POST", "PUT", "PATCH", "DELETE"]
         plugins:
@@ -27,8 +27,9 @@ services:
               policy: redis
               limit_by: header
               header_name: x-user-id
-              redis_host: redis
-              redis_port: 6379
+              redis:
+                host: redis
+                port: 6379
 
   - name: products-service
     url: http://bw-products-service:9002
@@ -36,7 +37,7 @@ services:
       - name: products-routes
         paths:
           - /api/v1/products
-        strip_path: true
+        strip_path: false
         protocols: ["http", "https"]
         methods: ["GET", "POST", "PUT", "PATCH", "DELETE"]
         # Public catalog, protected management
@@ -46,8 +47,9 @@ services:
               minute: 100
               policy: redis
               limit_by: ip
-              redis_host: redis
-              redis_port: 6379
+              redis:
+                host: redis
+                port: 6379
 
   - name: orders-service
     url: http://bw-orders-service:9003
@@ -55,7 +57,7 @@ services:
       - name: orders-routes
         paths:
           - /api/v1/orders
-        strip_path: true
+        strip_path: false
         protocols: ["http", "https"]
         methods: ["GET", "POST", "DELETE"]
         plugins:
@@ -74,8 +76,9 @@ services:
               policy: redis
               limit_by: header
               header_name: x-user-id
-              redis_host: redis
-              redis_port: 6379
+              redis:
+                host: redis
+                port: 6379
 
 consumers:
   - username: test-user
@@ -83,20 +86,20 @@ consumers:
 
 jwt_secrets:
   - consumer: test-user
-    key: http://localhost:9000/application/o/gateway-api/
+    key: http://localhost:8000/casbin/app-built-in
     algorithm: RS256
     rsa_public_key: |
       -----BEGIN PUBLIC KEY-----
-      MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAp/g77nAlVKcxavnP/dqV
-      Clc0i8xIH08aPng7TfQ/FtxpF3lc+9RH0GV+Z+M+PEjHGBywMoWogG8c0X1gSOcI
-      9CGgK1uz59jtFAH7y2Y+9objTCG7fGlB9r/HBKoMzgMkJAC5I9ygtNjI7CYpy5gX
-      9lHf3SygsllUxlfm0JpInLYbDbaWGufDjlsSo+eMhncab91R8K4C+CwMMJdSa09V
-      +A3A63sUsarUHbcXI6fpirlX9f/9vXtSt7aHoF65fslobi//pC8ojokj+tOXg70F
-      L2FOLaaCgPHabh5EuBDsl3hcTPJovVHbfcHdlT8a65mX/JY30jG6Yt8HxapZM+aC
-      VWHzkgbe2wyd+i8I9/KdCqcM2Me+045efKUJZNwTZ9Ih4Q95ThK9GhdWSUctlBqK
-      GnzNi3Gy1X1jz0uTxEzueQ7bZded1KrmLiAS+MVNRFQZrKUa2kARAl6Q6n22RxWv
-      olpWWfX/CVyTKdZ4QaRTdGTA7f+NXbvBj0L176haIBSAxnbi532Gm/QjjA/qxKkp
-      2PaeBeE1dDYYxmILWhXD1XoaFnp8lCbjO5Uko5nV1CQACSUU9U0F732gVETBZuDH
-      iGgOm6xjbD8ik7lsSLmn86AFqOgZrHb9mQm4yhXNjeMBnILQo5FP5G23KfCL8a4F
-      oYXzrgcdLXHI2E+vAIPchzECAwEAAQ==
+      MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEA/Wx2G7qDKuLhtvJTHSpH
+      jriO4/PUZUqG+jxOh6ECpbtfElnMJSNZ63aBFpLUi9ChKuSFtRMGifnXUfUXj0VD
+      BL9Kf7uiyv5C+RXBJ8J/F4qMiB6j5FTL/tQWxsGQSnMfVDXMBIoL2kDn8ka5Ps7p
+      RUh/UQCBoGhVcSsfeM5CPjyDM4GiDJcOvZ3IKBKWYKfAjSeLgdvjN18JOzFf1Un6
+      QEefUyKBuhkUfgAnbuJ1S3DDscmmqmJyCYG/etInUo5I0CGID3+AE2Lw4Ehu/HbF
+      Q1NRHM3WZRmP6QaCcAw9mdJmOkgTRrobyP6hyfd14uQ6UAz53qV9EmvoAFOPo8qV
+      LaG4EyGN1cJWvbAJSTRynAbE7tKYXGas65wl56u/gzTnqZyMWbe0lVi+q+pjgaJF
+      Jxw06+7iDIRuH6HJPHLzvRSJ1SVIVpt/pXutqyfgpdIuvNIrGP6WwhXq5fkJmrtA
+      PMr9Zg89y8WSaXuePNTwkN4Q92Dbn2JgV6DVl4pZ3qulzxX09m1ZUHXQZBwK794x
+      0IiMeFbYA9vjVSIWjrAcspB8B/d89gMqwL0KgdvNjVRKjXG2oZUjxq2mtfQRhAU7
+      wwwokGY6A+zCUcFCf5QQ6TIMwpwCwjBIgWf5kSd+vRcI96gakh8KJm6m/ds62HLC
+      0zR3oCHmkm+8peQLB40dcP0CAwEAAQ==
       -----END PUBLIC KEY-----

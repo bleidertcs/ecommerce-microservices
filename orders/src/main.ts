@@ -81,6 +81,17 @@ async function bootstrap() {
 
     await app.startAllMicroservices();
 
+    // Global Prefix
+    app.setGlobalPrefix('api', { exclude: ['health'] });
+
+    // API versioning
+    app.enableVersioning({
+        type: VersioningType.URI,
+        defaultVersion: '1',
+        prefix: 'v',
+    });
+
+    /*
     // API versioning
     if (configService.get<boolean>('app.versioning.enable')) {
         app.enableVersioning({
@@ -89,19 +100,7 @@ async function bootstrap() {
             prefix: configService.get<string>('app.versioning.prefix'),
         });
     }
-
-    // Basic health check
-    expressApp.get('/', (_req: Request, res: Response) => {
-        res.json({
-            status: 'ok',
-            message: `Hello from ${appName}`,
-            environment: env,
-        });
-    });
-
-    expressApp.get('/health', (_req: Request, res: Response) => {
-        res.json({ status: 'healthy', timestamp: new Date().toISOString() });
-    });
+    */
 
 
     // Swagger for development

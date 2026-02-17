@@ -1,30 +1,51 @@
 "use client";
 
+console.log("🔥 tracing.client.ts: File loaded");
+
 export const initTracing = async () => {
-  if (typeof window === "undefined") return;
+  console.log("🔍 initTracing: Function entry");
+  if (typeof window === "undefined") {
+    console.log("🔍 initTracing: Server-side skip");
+    return;
+  }
+
+  console.log("🔍 initTracing: Client-side execution starting...");
 
   try {
+    console.log("📦 initTracing: Starting Promise.all for imports");
     const [
-      { WebTracerProvider },
-      { BatchSpanProcessor },
-      { OTLPTraceExporter },
-      { registerInstrumentations },
-      { FetchInstrumentation },
-      { XMLHttpRequestInstrumentation },
-      { ZoneContextManager },
-      { Resource },
-      { SEMRESATTRS_SERVICE_NAME },
+      sdkTraceWeb,
+      sdkTraceBase,
+      exporterOtlp,
+      instrumentation,
+      instrFetch,
+      instrXhr,
+      contextZone,
+      resources,
+      semconv,
     ] = await Promise.all([
-      import("@opentelemetry/sdk-trace-web"),
-      import("@opentelemetry/sdk-trace-base"),
-      import("@opentelemetry/exporter-trace-otlp-http"),
-      import("@opentelemetry/instrumentation"),
-      import("@opentelemetry/instrumentation-fetch"),
-      import("@opentelemetry/instrumentation-xml-http-request"),
-      import("@opentelemetry/context-zone"),
-      import("@opentelemetry/resources"),
-      import("@opentelemetry/semantic-conventions"),
+      import("@opentelemetry/sdk-trace-web").catch(e => { console.error("❌ Failed import: sdk-trace-web", e); throw e; }),
+      import("@opentelemetry/sdk-trace-base").catch(e => { console.error("❌ Failed import: sdk-trace-base", e); throw e; }),
+      import("@opentelemetry/exporter-trace-otlp-http").catch(e => { console.error("❌ Failed import: exporter-otlp", e); throw e; }),
+      import("@opentelemetry/instrumentation").catch(e => { console.error("❌ Failed import: instrumentation", e); throw e; }),
+      import("@opentelemetry/instrumentation-fetch").catch(e => { console.error("❌ Failed import: instr-fetch", e); throw e; }),
+      import("@opentelemetry/instrumentation-xml-http-request").catch(e => { console.error("❌ Failed import: instr-xhr", e); throw e; }),
+      import("@opentelemetry/context-zone").catch(e => { console.error("❌ Failed import: context-zone", e); throw e; }),
+      import("@opentelemetry/resources").catch(e => { console.error("❌ Failed import: resources", e); throw e; }),
+      import("@opentelemetry/semantic-conventions").catch(e => { console.error("❌ Failed import: semconv", e); throw e; }),
     ]);
+
+    const { WebTracerProvider } = sdkTraceWeb;
+    const { SimpleSpanProcessor } = sdkTraceBase;
+    const { OTLPTraceExporter } = exporterOtlp;
+    const { registerInstrumentations } = instrumentation;
+    const { FetchInstrumentation } = instrFetch;
+    const { XMLHttpRequestInstrumentation } = instrXhr;
+    const { ZoneContextManager } = contextZone;
+    const { Resource } = resources;
+    const { SEMRESATTRS_SERVICE_NAME } = semconv;
+
+    console.log("✅ initTracing: OTel modules loaded successfully");
 
     const serviceName = "web-app";
 
@@ -38,7 +59,7 @@ export const initTracing = async () => {
       url: "http://localhost:4318/v1/traces",
     });
 
-    provider.addSpanProcessor(new BatchSpanProcessor(exporter));
+    provider.addSpanProcessor(new SimpleSpanProcessor(exporter));
 
     provider.register({
       contextManager: new ZoneContextManager(),
@@ -48,19 +69,23 @@ export const initTracing = async () => {
       instrumentations: [
         new FetchInstrumentation({
           propagateTraceHeaderCorsUrls: [
-            /http:\/\/localhost:8000\/.*/, // Kong Gateway
+            /http:\/\/localhost:8000\/.*/,
+            /http:\/\/localhost:3000\/.*/,
+            /http:\/\/localhost:3004\/.*/,
           ],
         }),
         new XMLHttpRequestInstrumentation({
           propagateTraceHeaderCorsUrls: [
-            /http:\/\/localhost:8000\/.*/, // Kong Gateway
+            /http:\/\/localhost:8000\/.*/,
+            /http:\/\/localhost:3000\/.*/,
+            /http:\/\/localhost:3004\/.*/,
           ],
         }),
       ],
     });
 
-    console.log("🔭 Web RUM Tracing initialized for", serviceName);
+    console.log("🔭 initTracing: Web RUM Tracing initialized for", serviceName);
   } catch (error) {
-    console.error("❌ Failed to initialize Web RUM Tracing:", error);
+    console.error("❌ initTracing: Fatal error during initialization:", error);
   }
 };

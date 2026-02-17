@@ -1,9 +1,11 @@
 import { Controller, Get, Param, NotFoundException } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { PublicRoute } from '../../common/decorators/public.decorator';
 
 @ApiTags('Products')
-@Controller()
+@Controller('products')
+@PublicRoute()
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 

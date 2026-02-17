@@ -36,7 +36,6 @@ async function bootstrap() {
 
     const configService = app.get(ConfigService);
     const logger = app.get(Logger);
-    const expressApp = app.getHttpAdapter().getInstance();
 
     // Basic configuration
     const appName = configService.getOrThrow<string>('app.name');
@@ -62,33 +61,16 @@ async function bootstrap() {
         }),
     );
 
+    // Global Prefix
+    app.setGlobalPrefix('api', { exclude: ['health'] });
+
     // API versioning
-    if (configService.get<boolean>('app.versioning.enable')) {
-        app.enableVersioning({
-            type: VersioningType.URI,
-            defaultVersion: configService.get<string>('app.versioning.version'),
-            prefix: configService.get<string>('app.versioning.prefix'),
-        });
-    }
-
-    // Basic health check
-    expressApp.get('/', (_req: Request, res: Response) => {
-        res.json({
-            status: 'ok',
-            message: `Hello from ${appName}`,
-            environment: env,
-        });
+    app.enableVersioning({
+        type: VersioningType.URI,
+        defaultVersion: '1',
+        prefix: 'v',
     });
 
-    expressApp.get('/health', (_req: Request, res: Response) => {
-        res.json({ status: 'healthy', timestamp: new Date().toISOString() });
-    });
-
-
-    // Swagger for development
-    if (env !== 'production') {
-        setupSwagger(app);
-    }
 
     // Graceful shutdown
     app.enableShutdownHooks();
@@ -107,11 +89,7 @@ async function bootstrap() {
     await app.listen(port, host);
 
     logger.log(`🚀 ${appName} started at http://${host}:${port}`);
-    logger.log(`🔌 gRPC server started at ${configService.get<string>('grpc.url')}`);
-
-    if (env !== 'production') {
-        logger.log(`📖 Swagger: http://${host}:${port}/docs`);
-    }
+    logger.log(`🚀 Swagger: http://${host}:${port}/docs`);
 }
 
 bootstrap().catch(err => {

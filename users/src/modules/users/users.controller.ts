@@ -1,9 +1,11 @@
-import { Controller, Get, Param, NotFoundException, UseGuards, Headers } from '@nestjs/common';
+import { Controller, Get, Param, NotFoundException, Headers } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { PublicRoute } from '../../common/decorators/public.decorator';
 
 @ApiTags('Users')
-@Controller()
+@Controller('users')
+@PublicRoute()
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 

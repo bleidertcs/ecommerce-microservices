@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import Button from '../ui/Button';
+import ProductActions from './ProductActions';
 
 interface Product {
   id: string;
@@ -26,29 +27,31 @@ export default function ProductCard({ product }: ProductCardProps) {
       overflow: 'hidden',
       height: '100%'
     }}>
-      <div style={{ height: '200px', background: '#f9fafb', position: 'relative' }}>
-        <img 
-          src={image} 
-          alt={product.name} 
-          style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-        />
-        {product.featured && (
-          <span style={{ 
-            position: 'absolute', 
-            top: '8px', 
-            right: '8px', 
-            background: 'var(--primary)', 
-            color: 'white', 
-            padding: '4px 10px', 
-            borderRadius: '4px',
-            fontSize: '11px',
-            fontWeight: '600',
-            textTransform: 'uppercase'
-          }}>
-            Featured
-          </span>
-        )}
-      </div>
+      <Link href={`/products/${product.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+        <div style={{ height: '180px', background: '#f9fafb', position: 'relative' }}>
+          <img 
+            src={image} 
+            alt={product.name} 
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+          />
+          {product.featured && (
+            <span style={{ 
+              position: 'absolute', 
+              top: '8px', 
+              right: '8px', 
+              background: 'var(--primary)', 
+              color: 'white', 
+              padding: '4px 10px', 
+              borderRadius: '4px',
+              fontSize: '11px',
+              fontWeight: '600',
+              textTransform: 'uppercase'
+            }}>
+              Featured
+            </span>
+          )}
+        </div>
+      </Link>
       
       <div style={{ padding: '16px', flex: 1, display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
@@ -56,17 +59,20 @@ export default function ProductCard({ product }: ProductCardProps) {
           <span style={{ color: '#f59e0b', fontSize: '13px' }}>★ {product.rating}</span>
         </div>
         
-        <h3 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '8px', color: 'var(--foreground)' }}>{product.name}</h3>
+        <Link href={`/products/${product.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+          <h3 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '8px', minHeight: '44px' }}>{product.name}</h3>
+        </Link>
         
-        <div style={{ marginTop: 'auto', paddingTop: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{ fontSize: '18px', fontWeight: '700', color: 'var(--foreground)' }}>
+        <div style={{ marginTop: 'auto', paddingTop: '16px' }}>
+          <div style={{ marginBottom: '12px', fontSize: '18px', fontWeight: '700' }}>
             ${Number(product.price).toFixed(2)}
-          </span>
-          <Link href={`/products/${product.id}`}>
-             <Button variant="outline" size="sm">
-               View
-             </Button>
-          </Link>
+          </div>
+          <ProductActions 
+            productId={product.id} 
+            price={product.price} 
+            productName={product.name}
+            productImage={image}
+          />
         </div>
       </div>
     </div>

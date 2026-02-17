@@ -12,52 +12,47 @@ This skill provides instructions for implementing security measures and authenti
 ```
 Client → Kong Gateway (JWT validation) → Service
                 ↓
-         Authentik (Identity Provider)
+           Casdoor (Identity Provider)
 ```
 
-## Authentik Configuration
+## Casdoor Configuration
 
-**URL**: http://localhost:9000
-**Admin**: Configurable in docker-compose
+**URL**: http://localhost:8000
+**Admin**: admin / 123 (Initial)
 
-### OAuth2/OIDC Application Setup
+### Application Setup
 
-1. Navigate to Applications > Providers
-2. Create OAuth2/OpenID Connect Provider
-3. Configure:
-   - Client Type: Confidential
-   - Redirect URIs: Your application URLs
-   - Signing Key: Auto-generated
-4. Note the Client ID and Client Secret
+1. Navigate to Applications.
+2. Edit `app-built-in` or create a new Application.
+3. Configure Redirect URIs and copy **Client ID** and **Client Secret**.
+4. Application type: OAuth 2.0.
 
 ### Kong Integration
 
-Kong validates JWTs using the public key from Authentik.
+Kong validates JWTs using the public key from Casdoor (Certs section).
 
 Configuration in `kong/config.yml`:
 
 ```yaml
 jwt_secrets:
   - consumer: test-user
-    key: http://localhost:9000/application/o/gateway-api/
+    key: http://localhost:8000/casbin/app-built-in
     algorithm: RS256
     rsa_public_key: |
       -----BEGIN PUBLIC KEY-----
-      [Your actual public key]
+      [Your Casdoor public key]
       -----END PUBLIC KEY-----
 ```
 
 ## Obtaining JWT Tokens
 
-### Client Credentials Flow
-
-```bash
-curl -X POST "http://localhost:9000/application/o/token/" \
-  -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "grant_type=client_credentials" \
-  -d "client_id=YOUR_CLIENT_ID" \
-  -d "client_secret=YOUR_CLIENT_SECRET"
-```
+curl -X POST "http://localhost:8000/api/login/oauth/access_token" \
+ -H "Content-Type: application/x-www-form-urlencoded" \
+ -d "grant_type=password" \
+ -d "username=YOUR_USER" \
+ -d "password=YOUR_PASS" \
+ -d "client_id=YOUR_CLIENT_ID" \
+ -d "client_secret=YOUR_CLIENT_SECRET"
 
 Response:
 
@@ -100,12 +95,11 @@ Standard claims in tokens:
 
 ```json
 {
-  "sub": "user-id", // Subject (User ID)
-  "iss": "authentik", // Issuer
-  "aud": "gateway-api", // Audience
-  "exp": 1234567890, // Expiration
-  "iat": 1234567880, // Issued At
-  "email": "user@example.com",
+  "sub": "user-uuid", // Subject (User ID)
+  "iss": "http://localhost:8000/casbin/app-built-in", // Issuer
+  "aud": "client-id", // Audience
+  "exp": 1234567890,
+  "name": "User Name",
   "roles": ["customer"]
 }
 ```

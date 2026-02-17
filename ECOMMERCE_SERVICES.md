@@ -26,8 +26,8 @@ Sistema de microservicios para e-commerce construido con NestJS, PostgreSQL, Rab
 - **RPC**: gRPC para comunicación síncrona entre servicios
 - **API Gateway**: Kong para enrutamiento, validación JWT y Rate Limiting
 - **Cache**: Redis
-- **Monitoring**: Grafana Stack (Loki, Tempo, Mimir, Pyroscope)
-- **Autenticación**: Authentik (OIDC Provider) configurado con Kong
+- **Monitoring**: SigNoz (Logs, Traces, Metrics)
+- **Autenticación**: Casdoor (OIDC Provider) configurado con Kong
 
 ---
 
@@ -38,7 +38,7 @@ graph TD
     Client[Cliente] --> Kong[Kong Gateway :8000]
 
     subgraph "Seguridad"
-        Kong --> |JWT Auth| AK[Authentik IDP :9000]
+        Kong --> |JWT Auth| CD[Casdoor IDP :8000]
     end
 
     subgraph "Microservicios"
@@ -54,17 +54,13 @@ graph TD
     end
 
     subgraph "Observabilidad"
-        OTEL[OTel Collector]
-        Loki[Loki - Logs]
-        Tempo[Tempo - Traces]
-        Mimir[Mimir - Metrics]
-        Pyro[Pyroscope - Profiles]
-        Grafana[Grafana :3000]
+        OTEL[SigNoz OTel Collector]
+        CH[(ClickHouse DB)]
+        SN[SigNoz UI :8080]
 
         Users & Products & Orders --> OTEL
-        OTEL --> Loki & Tempo & Mimir
-        Users & Products & Orders --> Pyro
-        Loki & Tempo & Mimir & Pyro --> Grafana
+        OTEL --> CH
+        SN --- CH
     end
 ```
 
@@ -307,20 +303,22 @@ http://localhost:9003/health  # Orders
 
 ## Autenticación
 
-### Proveedor: Authentik
+### Proveedor: Casdoor
 
-El sistema utiliza Authentik como proveedor de identidad (OAuth2/OIDC).
+El sistema utiliza Casdoor como proveedor de identidad (OAuth2/OIDC).
 
-**URL**: http://localhost:9000
+**URL**: http://localhost:8000
 
 ### Obtener Token JWT
 
 ```bash
-curl -X POST "http://localhost:9000/application/o/token/" \
+curl -X POST "http://localhost:8000/api/login/oauth/access_token" \
   -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "grant_type=client_credentials" \
-  -d "client_id=iERI2KYzqdnazHUER0lTdX6TEWDjTCj3MKNUEryR" \
-  -d "client_secret=ck4VEu4v0YQimONsXbQKXpPr5YzG0doHfK63oqv8sstRDMfFZ9vPDHj5X6ThosWPzdjzsTT2T9zZcn7rQi8U2tFd82XuoxfVEiOIywcNvZPS1Ib2wAOjIqQAt05b1RZa"
+  -d "grant_type=password" \
+  -d "username=tu_usuario" \
+  -d "password=tu_password" \
+  -d "client_id=TU_CLIENT_ID" \
+  -d "client_secret=TU_CLIENT_SECRET"
 ```
 
 ### Usar Token en Requests
@@ -338,36 +336,22 @@ curl -H "Authorization: Bearer <TOKEN>" \
 
 ### Flujo Técnico de Autenticación
 
-1.  **Authentik**: Emite tokens firmados con una clave privada RSA.
-2.  **Kong**: Importa la clave pública RSA de Authentik en el plugin `jwt`.
+1.  **Casdoor**: Emite tokens firmados con una clave privada RSA.
+2.  **Kong**: Importa la clave pública RSA de Casdoor en el plugin `jwt`.
 3.  **Validación**: Kong verifica la firma y el campo `exp` del token.
 4.  **Inyección**: El plugin `request-transformer` extrae el `sub` (User ID) del JWT y lo inyecta en el header `x-user-id` antes de pasar la petición al microservicio.
 
 ---
 
-## 📊 Observabilidad Completa
+## 📊 Observabilidad Completa (SigNoz)
 
-El sistema implementa el **Grafana LGTM Stack** extendido con Pyroscope.
+El sistema implementa el **SigNoz Stack** para telemetría unificada.
 
-### 1. Logs (Loki)
+### 1. Logs, Traces y Metrics
 
-- Los logs son generados en formato JSON por los servicios NestJS.
-- **Promtail** los recolecta de Docker y extrae labels como `service_name`, `level` y `context`.
-
-### 2. Traces (Tempo)
-
-- El **OpenTelemetry Collector** centraliza los traces de todos los servicios.
-- Tempo genera métricas automáticas a partir de los spans (RED metrics y Service Graph).
-
-### 3. Metrics (Mimir)
-
-- Almacena métricas de sistema y métricas generadas por Tempo.
-- Permite consultas de alta resolución y largo plazo.
-
-### 4. Continuous Profiling (Pyroscope)
-
-- Los servicios utilizan el agent de `@pyroscope/nodejs`.
-- Permite visualizar **Flamegraphs** en Grafana para identificar cuellos de botella en CPU y memoria sin impacto en el rendimiento.
+- El **SigNoz OTel Collector** centraliza toda la telemetría (Logs, Traces y Métricas) de todos los servicios.
+- SigNoz genera métricas automáticas (RED metrics y Service Graph) y permite la búsqueda de logs correlacionados con trazas.
+- ClickHouse se utiliza como motor de base de datos analítica para todos los datos.
 
 ---
 
@@ -660,8 +644,8 @@ docker logs bw-users-db
 ### JWT inválido
 
 1. Verificar que el token no haya expirado
-2. Obtener un nuevo token de Authentik
-3. Verificar que la clave pública en Kong coincida con Authentik
+2. Obtener un nuevo token de Casdoor
+3. Verificar que la clave pública en Kong coincida con Casdoor
 
 ---
 

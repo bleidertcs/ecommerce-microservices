@@ -1,15 +1,15 @@
 ---
 name: kong-auth
-description: Instructions for managing API Gateway security with Kong and Authentik.
+description: Instructions for managing API Gateway security with Kong and Casdoor.
 ---
 
-# Kong & Authentik Security Skill
+# Kong & Casdoor Security Skill
 
-This project uses **Kong Gateway** in DB-less mode and **Authentik** as the Identity Provider (OIDC).
+This project uses **Kong Gateway** in DB-less mode and **Casdoor** as the Identity Provider (OIDC).
 
 ## 🔐 OIDC / JWT FLOW
 
-1. **Authentik**: Issues RS256 JWT tokens.
+1. **Casdoor**: Issues RS256 JWT tokens.
 2. **Kong**: Validates the token signature using a public key.
 3. **Microservices**: Receive identity via `x-user-id` header.
 
@@ -62,8 +62,9 @@ docker-compose restart kong
 
 ### Extracting Public Key
 
-To allow Kong to verify Authentik tokens:
+To allow Kong to verify Casdoor tokens:
 
-1. Download certificate from Authentik.
-2. Extract public key: `openssl x509 -pubkey -noout -in cert.pem`.
-3. Add to Kong's `jwt_secrets`.
+1. Go to Casdoor Dashboard -> Certs.
+2. Select the certificate used by your application.
+3. Copy the Public Key.
+4. Add to Kong's `jwt_secrets` in `kong/config.yml`.

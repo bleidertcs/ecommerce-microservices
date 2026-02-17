@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 interface AuthContextType {
   token: string | null;
@@ -25,26 +25,27 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     // Check localStorage on mount
-    const storedToken = localStorage.getItem('lumina_token');
+    const storedToken = localStorage.getItem("lumina_token");
     if (storedToken) {
       setToken(storedToken);
     }
   }, []);
 
   const login = (newToken: string) => {
-    localStorage.setItem('lumina_token', newToken);
+    localStorage.setItem("lumina_token", newToken);
     setToken(newToken);
-    router.push('/products'); // Redirect to products after login
+    router.push("/products"); // Redirect to products after login
   };
 
   const logout = () => {
-    localStorage.removeItem('lumina_token');
+    localStorage.removeItem("lumina_token");
     setToken(null);
-    router.push('/login');
+    router.push("/login");
   };
 
   return (
-    <AuthContext.Provider value={{ token, login, logout, isAuthenticated: !!token }}>
+    <AuthContext.Provider
+      value={{ token, login, logout, isAuthenticated: !!token }}>
       {children}
     </AuthContext.Provider>
   );

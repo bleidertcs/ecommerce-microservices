@@ -6,7 +6,7 @@ Este microservicio gestiona la identidad, perfiles y seguridad de los usuarios e
 
 - **Gestión de Perfiles**: CRUD completo de usuarios con roles y permisos.
 - **Autenticación gRPC**: Provee métodos síncronos para validación de identidad a otros servicios.
-- **Seguridad**: Integración con Authentik para la gestión de identidades centralizada.
+- **Seguridad**: Integración con Casdoor para la gestión de identidades centralizada.
 - **Observabilidad Nativa**: Exportación de logs, trazas y métricas directamente a SigNoz.
 
 ---

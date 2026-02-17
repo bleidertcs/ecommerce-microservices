@@ -1,20 +1,17 @@
-"use client";
+'use client';
 
-import React, { useEffect, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
-import { getCasdoorLoginUrl } from "@/lib/casdoor-config";
+import React, { useEffect } from 'react';
+import { getCasdoorSignupUrl } from '@/lib/casdoor-config';
 
-function LoginRedirect() {
-  const searchParams = useSearchParams();
-  
+export default function RegisterPage() {
   useEffect(() => {
-    window.location.href = getCasdoorLoginUrl();
+    window.location.href = getCasdoorSignupUrl();
   }, []);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
       <div className="spinner"></div>
-      <h2 style={{ marginTop: '20px' }}>Redirecting to Casdoor Login...</h2>
+      <h2 style={{ marginTop: '20px' }}>Redirecting to Casdoor Registration...</h2>
       <style jsx>{`
         .spinner {
           border: 4px solid rgba(0, 0, 0, 0.1);
@@ -30,13 +27,5 @@ function LoginRedirect() {
         }
       `}</style>
     </div>
-  );
-}
-
-export default function LoginPage() {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <LoginRedirect />
-    </Suspense>
   );
 }

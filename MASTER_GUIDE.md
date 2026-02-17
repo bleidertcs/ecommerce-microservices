@@ -1,6 +1,6 @@
 # 📖 Guía Completa de Ecosistema: Microservicios E-commerce
 
-Esta guía detalla la configuración integral del sistema, incluyendo **Authentik** (Identidad), **Kong** (Gateway), **SigNoz** (Observabilidad) y los microservicios de **Users, Products y Orders**.
+Esta guía detalla la configuración integral del sistema, incluyendo **Casdoor** (Identidad), **Kong** (Gateway), **SigNoz** (Observabilidad) y los microservicios de **Users, Products y Orders**.
 
 ---
 
@@ -11,7 +11,7 @@ graph TD
     Client[Cliente/Frontend] --> Kong[Kong Gateway :8000]
 
     subgraph "Seguridad"
-        Kong --> |JWT Auth| AK[Authentik IDP :9000]
+        Kong --> |JWT Auth| CD[Casdoor IDP :8000]
     end
 
     subgraph "Microservicios (Hybrid: gRPC/TCP/NATS)"
@@ -91,7 +91,7 @@ graph TD
     ```
 
     > [!IMPORTANT]
-    > Los servicios de **Authentik** (Server y Worker) ahora corren como `user: root` para evitar problemas de permisos en volúmenes montados desde Windows/WSL.
+    > Los servicios de **Casdoor** ahora corren como `user: root` para evitar problemas de permisos en volúmenes montados desde Windows/WSL.
 
 ---
 
@@ -103,7 +103,7 @@ graph TD
     ```
 2.  **Levantar Identidad y Gateway**:
     ```bash
-    docker-compose up -d authentik-server authentik-worker kong
+    docker-compose up -d casdoor kong
     ```
 3.  **Levantar Observabilidad**:
     ```bash
@@ -127,39 +127,34 @@ El `Orders Service` puede alternar entre transportes para comunicarse con `Users
 
 ---
 
-## 🔐 3. Paso 2: Configuración de Authentik
+## 🔐 3. Paso 2: Configuración de Casdoor
 
 ### A. Acceso Inicial
 
-1. Navega a `http://localhost:9000/if/flow/initial-setup/`.
-2. Configura la contraseña del administrador.
+1. Navega a `http://localhost:8000/`.
+2. Introduce las credenciales por defecto: `admin` / `123`.
 
-### B. Crear Provider OIDC
+### B. Configuración de Organización (Consentimiento de Privilegios)
 
-1. **Directory** > **Providers** > **Create** > **OAuth2/OpenID Provider**.
-2. **Name**: `Kong Gateway`.
-3. **Client Type**: `Confidential`.
-4. **Redirect URIs**: `http://localhost:8000/.*` (regex).
-5. **Signing Key**: Selecciona el certificado auto-firmado de Authentik.
-6. **Encryption Key**: **DÉJALA VACÍA** (Kong no soporta JWE por defecto).
+1. Ve a **Identity** > **Organizations**.
+2. Edita la organización `built-in`.
+3. > [!IMPORTANT]
+   > Para permitir el registro de nuevos usuarios en esta organización, habilita la opción **"Enable privilege consent"** (Tiene consentimiento de privilegios). Esto es necesario porque los usuarios de la organización `built-in` tienen permisos globales.
 
-### C. Crear Application
+### C. Configuración de Aplicación
 
-1. **Resources** > **Applications** > **Create**.
-2. **Name**: `Gateway API`.
-3. **Slug**: `gateway-api`.
-4. **Provider**: Selecciona el que creaste en el paso anterior.
+1. Ve a **Identity** > **Applications**.
+2. Edita la aplicación `app-built-in`.
+3. **Redirect URLs**: Añade `http://localhost:3000/callback`.
+4. **Grant Types**: Asegúrate de que `Authorization Code` y `Password` estén habilitados.
+5. Copia el **Client ID** y **Client Secret** al archivo `.env` raíz y `web-app/.env`.
 
 ### D. Extraer Clave Pública para Kong
 
-1. Ve a **System** > **Certificates**.
-2. Selecciona el certificado que usaste en el Provider.
-3. Haz clic en **Download Certificate** (.pem).
-4. Para Kong, necesitas la **Public Key**, no el certificado. Ejecuta esto con tu certificado:
-   ```bash
-   openssl x509 -pubkey -noout -in su-certificado.pem
-   ```
-5. Copia el resultado y pégalo en `kong/config.yml` bajo la sección `rsa_public_key`.
+1. Ve a **Identity** > **Certs**.
+2. Selecciona el certificado que usa tu aplicación (por defecto `cert-built-in`).
+3. Haz clic en el botón de edición y copia el contenido de **Public key**.
+4. Pega esta clave en `kong/config.yml` bajo la sección `rsa_public_key`.
 
 ---
 
@@ -244,10 +239,10 @@ Si prefieres ejecutar las pruebas sin Docker (requiere `pnpm` instalado localmen
 
 ### A. Obtener Token de Acceso
 
-Reemplaza los valores con los de tu Application en Authentik:
+Reemplaza los valores con los de tu Application en Casdoor:
 
 ```bash
-curl -X POST http://localhost:9000/application/o/token/ \
+curl -X POST http://localhost:8000/api/login/oauth/access_token \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -d "grant_type=password" \
   -d "username=tu_usuario" \
@@ -293,8 +288,9 @@ curl -X POST http://localhost:8000/api/v1/orders \
 
 ## ✅ Checklist de Verificación
 
-- [ ] ¿Authentik emite tokens JWT RS256?
-- [ ] ¿Kong tiene la clave pública correcta de Authentik?
+- [ ] ¿Casdoor emite tokens JWT RS256?
+- [ ] ¿Kong tiene la clave pública correcta de Casdoor?
+- [ ] ¿Está habilitado el "Privilege Consent" en la organización de Casdoor?
 - [ ] ¿Ves logs en SigNoz (Logs) al hacer una petición?
 - [ ] ¿Ves trazas en SigNoz (Traces) al hacer una petición?
 - [ ] ¿Los dashboards de servicios individuales muestran métricas RED?

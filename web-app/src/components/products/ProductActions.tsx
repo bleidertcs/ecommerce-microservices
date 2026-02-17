@@ -4,13 +4,37 @@ import React, { useState } from 'react';
 import Button from '@/components/ui/Button';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
+import { useCart } from '@/context/CartContext';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8010';
 
-export default function ProductActions({ productId, price }: { productId: string, price: number }) {
+export default function ProductActions({
+  productId,
+  price,
+  productName,
+  productImage
+}: {
+  productId: string,
+  price: number,
+  productName?: string,
+  productImage?: string
+}) {
   const { token, isAuthenticated } = useAuth();
+  const { addToCart } = useCart();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [added, setAdded] = useState(false);
+
+  const handleAddToCart = () => {
+    addToCart({
+      id: productId,
+      name: productName || 'Product',
+      price: price,
+      image: productImage
+    });
+    setAdded(true);
+    setTimeout(() => setAdded(false), 2000);
+  };
 
   const handleBuyNow = async () => {
     if (!isAuthenticated) {
@@ -23,7 +47,7 @@ export default function ProductActions({ productId, price }: { productId: string
     try {
       const payload = {
         items: [
-           { productId, quantity: 1 }
+           { productId, quantity: 1, price }
         ],
         shippingAddress: {
             street: "123 Main St",
@@ -55,7 +79,7 @@ export default function ProductActions({ productId, price }: { productId: string
       const data = await res.json();
       alert('Order Placed Successfully! ID: ' + data.id);
       router.push('/orders');
-      
+
     } catch (error) {
       console.error(error);
       alert('Failed to place order');
@@ -65,18 +89,29 @@ export default function ProductActions({ productId, price }: { productId: string
   };
 
   return (
-    <div style={{ display: 'flex', gap: '12px' }}>
-      <Button 
-        variant="primary" 
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+      <Button
+        variant="primary"
         size="lg"
-        style={{ flex: 1 }}
+        style={{ flex: 1, minWidth: '150px' }}
         onClick={handleBuyNow}
         disabled={loading}
       >
         {loading ? 'Processing...' : 'Buy Now'}
       </Button>
-      <Button variant="secondary" size="lg">
-        Add to Cart
+      <Button
+        variant={added ? "secondary" : "secondary"}
+        size="lg"
+        style={{
+          flex: 1,
+          minWidth: '150px',
+          borderColor: added ? 'var(--success, #22c55e)' : 'var(--border)',
+          color: added ? 'white' : 'inherit',
+          backgroundColor: added ? 'var(--success, #22c55e)' : 'transparent'
+        }}
+        onClick={handleAddToCart}
+      >
+        {added ? '✓ Added!' : 'Add to Cart'}
       </Button>
     </div>
   );

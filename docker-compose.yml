@@ -5,7 +5,7 @@ services:
     container_name: bw-kong
     restart: unless-stopped
     ports:
-      - "8000:8000" # HTTP API
+      - "8010:8010" # HTTP API (Changed to avoid conflict with Casdoor)
       - "8443:8443" # HTTPS API
       - "8001:8001" # Admin API
     environment:
@@ -16,7 +16,7 @@ services:
       KONG_PROXY_ERROR_LOG: /dev/stderr
       KONG_ADMIN_ERROR_LOG: /dev/stderr
       KONG_ADMIN_LISTEN: 0.0.0.0:8001
-      KONG_PROXY_LISTEN: 0.0.0.0:8000
+      KONG_PROXY_LISTEN: 0.0.0.0:8010
     volumes:
       - ./kong/config.yml:/var/lib/kong/kong.yml:ro
     networks:
@@ -217,95 +217,41 @@ services:
       timeout: 5s
       retries: 3
 
-  # Authentik - Identity Provider
-  authentik-postgresql:
+  # Casdoor - Identity Provider
+  casdoor-db:
     image: postgres:15-alpine
-    container_name: bw-authentik-db
+    container_name: bw-casdoor-db
     restart: unless-stopped
+    environment:
+      POSTGRES_USER: casdoor
+      POSTGRES_PASSWORD: ${CASDOOR_DB_PASSWORD:?error}
+      POSTGRES_DB: casdoor
+    volumes:
+      - casdoor_database:/var/lib/postgresql/data
+    networks:
+      - bw-network
     healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "pg_isready -d $${AUTHENTIK_POSTGRESQL__NAME} -U $${AUTHENTIK_POSTGRESQL__USER}",
-        ]
-      start_period: 20s
-      interval: 30s
-      retries: 5
+      test: ["CMD-SHELL", "pg_isready -U casdoor -d casdoor"]
+      interval: 10s
       timeout: 5s
-    networks:
-      - bw-network
-    volumes:
-      - authentik_database:/var/lib/postgresql/data
-    environment:
-      POSTGRES_PASSWORD: ${AUTHENTIK_POSTGRESQL__PASSWORD:?error}
-      POSTGRES_USER: ${AUTHENTIK_POSTGRESQL__USER:?error}
-      POSTGRES_DB: ${AUTHENTIK_POSTGRESQL__NAME:?error}
-
-  authentik-redis:
-    image: redis:7-alpine
-    container_name: bw-authentik-redis
-    command: --save 60 1 --loglevel warning
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
-      start_period: 20s
-      interval: 30s
       retries: 5
-      timeout: 3s
-    networks:
-      - bw-network
 
-  authentik-server:
-    image: ghcr.io/goauthentik/server:2025.12.3
-    container_name: bw-authentik-server
-    user: root
+  casdoor:
+    image: casbin/casdoor:latest
+    container_name: bw-casdoor
     restart: unless-stopped
-    command: server
+    depends_on:
+      casdoor-db:
+        condition: service_healthy
     environment:
-      AUTHENTIK_REDIS__HOST: authentik-redis
-      AUTHENTIK_POSTGRESQL__HOST: authentik-postgresql
-      AUTHENTIK_POSTGRESQL__USER: ${AUTHENTIK_POSTGRESQL__USER:?error}
-      AUTHENTIK_POSTGRESQL__NAME: ${AUTHENTIK_POSTGRESQL__NAME:?error}
-      AUTHENTIK_POSTGRESQL__PASSWORD: ${AUTHENTIK_POSTGRESQL__PASSWORD:?error}
-      AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY:?error}
-    volumes:
-      - ./authentik/media:/media
-      - ./authentik/templates:/templates
-    networks:
-      - bw-network
+      driverName: postgres
+      dataSourceName: user=casdoor password=${CASDOOR_DB_PASSWORD:?error} host=casdoor-db port=5432 sslmode=disable dbname=casdoor
+      dbName: casdoor
+      casdoorEndpoint: ${CASDOOR_ENDPOINT}
     ports:
-      - "9000:9000"
-      - "9443:9443"
-    depends_on:
-      authentik-postgresql:
-        condition: service_healthy
-      authentik-redis:
-        condition: service_healthy
-
-  authentik-worker:
-    image: ghcr.io/goauthentik/server:2025.12.3
-    container_name: bw-authentik-worker
-    user: root
-    restart: unless-stopped
-    command: worker
-    environment:
-      AUTHENTIK_REDIS__HOST: authentik-redis
-      AUTHENTIK_POSTGRESQL__HOST: authentik-postgresql
-      AUTHENTIK_POSTGRESQL__USER: ${AUTHENTIK_POSTGRESQL__USER:?error}
-      AUTHENTIK_POSTGRESQL__NAME: ${AUTHENTIK_POSTGRESQL__NAME:?error}
-      AUTHENTIK_POSTGRESQL__PASSWORD: ${AUTHENTIK_POSTGRESQL__PASSWORD:?error}
-      AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY:?error}
-    volumes:
-      - ./authentik/media:/media
-      - ./authentik/templates:/templates
-      - /var/run/docker.sock:/var/run/docker.sock
+      - "8000:8000"
     networks:
       - bw-network
-    depends_on:
-      authentik-postgresql:
-        condition: service_healthy
-      authentik-redis:
-        condition: service_healthy
 
   # RabbitMQ - Message Broker
   rabbitmq:
@@ -368,7 +314,7 @@ services:
       - ./users/.env
     environment:
       - OTEL_SERVICE_NAME=users-service
-      - OTEL_EXPORTER_OTLP_ENDPOINT=172.18.0.15:4317
+      - OTEL_EXPORTER_OTLP_ENDPOINT=signoz-otel-collector:4317
       - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
       - OTEL_EXPORTER_OTLP_INSECURE=true
       - DATABASE_URL=postgresql://admin:master123@users-db:5432/users?schema=public
@@ -425,7 +371,7 @@ services:
       - ./products/.env
     environment:
       - OTEL_SERVICE_NAME=products-service
-      - OTEL_EXPORTER_OTLP_ENDPOINT=172.18.0.15:4317
+      - OTEL_EXPORTER_OTLP_ENDPOINT=signoz-otel-collector:4317
       - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
       - OTEL_EXPORTER_OTLP_INSECURE=true
       - DATABASE_URL=postgresql://admin:master123@products-db:5432/products?schema=public
@@ -482,7 +428,7 @@ services:
       - ./orders/.env
     environment:
       - OTEL_SERVICE_NAME=orders-service
-      - OTEL_EXPORTER_OTLP_ENDPOINT=172.18.0.15:4317
+      - OTEL_EXPORTER_OTLP_ENDPOINT=signoz-otel-collector:4317
       - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
       - OTEL_EXPORTER_OTLP_INSECURE=true
       - DATABASE_URL=postgresql://admin:master123@orders-db:5432/orders?schema=public
@@ -538,13 +484,14 @@ services:
     env_file:
       - ./web-app/.env
     environment:
-      - AUTHENTIK_URL=http://authentik-server:9000
-      - NEXT_PUBLIC_API_URL=http://kong:8000
+      - CASDOOR_ENDPOINT=${CASDOOR_ENDPOINT}
+      - NEXT_PUBLIC_API_URL=http://localhost:8010
+      - INTERNAL_API_URL=http://kong:8010
     networks:
       - bw-network
     depends_on:
       - kong
-      - authentik-server
+      - casdoor
     healthcheck:
       test:
         [
@@ -567,8 +514,7 @@ volumes:
   signoz_data:
   zookeeper_data:
   rabbitmq_data:
-  authentik_database:
-  authentik_media:
+  casdoor_database:
   users_data:
   products_data:
   orders_data:

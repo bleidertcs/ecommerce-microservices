@@ -4,7 +4,9 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import styles from './Navbar.module.css';
 import Button from '../ui/Button';
+import { getCasdoorLoginUrl, getCasdoorSignupUrl } from '@/lib/casdoor-config';
 import { useAuth } from '@/context/AuthContext';
+import CartButton from './CartButton';
 
 export default function Navbar() {
   const { isAuthenticated, logout } = useAuth();
@@ -27,15 +29,20 @@ export default function Navbar() {
              Logout
            </Button>
         ) : (
-          <Link href="/login">
-            <Button variant="secondary">
+          <>
+            <Button variant="secondary" onClick={() => {
+              window.location.href = getCasdoorLoginUrl();
+            }}>
               Sign In
             </Button>
-          </Link>
+            <Button variant="primary" onClick={() => {
+              window.location.href = getCasdoorSignupUrl();
+            }}>
+              Register
+            </Button>
+          </>
         )}
-        <Button variant="primary">
-          Cart (0)
-        </Button>
+        <CartButton />
       </div>
     </nav>
   );

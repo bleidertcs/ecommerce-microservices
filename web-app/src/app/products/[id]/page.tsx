@@ -78,7 +78,12 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
             <p style={{ fontSize: '32px', fontWeight: '700', marginBottom: '16px' }}>
               ${Number(product.price).toFixed(2)}
             </p>
-            <ProductActions productId={product.id} price={product.price} />
+            <ProductActions 
+              productId={product.id} 
+              price={product.price} 
+              productName={product.name}
+              productImage={image}
+            />
             <p style={{ marginTop: '12px', fontSize: '13px', color: product.stock > 0 ? 'var(--success)' : 'var(--danger)' }}>
               {product.stock > 0 ? `${product.stock} in stock` : 'Out of Stock'}
             </p>

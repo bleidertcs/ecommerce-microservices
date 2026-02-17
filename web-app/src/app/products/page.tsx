@@ -12,7 +12,10 @@ interface Product {
   category: string;
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const isServer = typeof window === 'undefined';
+const API_BASE = isServer 
+  ? (process.env.INTERNAL_API_URL || 'http://kong:8010') 
+  : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8010');
 
 async function getProducts(): Promise<Product[]> {
   try {
