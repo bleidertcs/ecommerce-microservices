@@ -22,6 +22,7 @@ services:
     networks:
       - bw-network
     depends_on:
+      - redis
       - users-service
       - products-service
       - orders-service

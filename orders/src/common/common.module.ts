@@ -42,7 +42,7 @@ import { CacheableMemory } from 'cacheable';
                 // HTTP Configuration
                 HTTP_ENABLE: Joi.boolean().truthy('true').falsy('false').default(true),
                 HTTP_HOST: Joi.string().default('0.0.0.0'),
-                HTTP_PORT: Joi.number().port().default(9002),
+                HTTP_PORT: Joi.number().port().default(9003),
                 HTTP_VERSIONING_ENABLE: Joi.boolean().truthy('true').falsy('false').default(false),
                 HTTP_VERSION: Joi.number().valid(1, 2).default(1),
 

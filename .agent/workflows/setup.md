@@ -65,7 +65,7 @@ Este workflow configura y despliega todo el stack de microservicios e-commerce d
 
 ## Acceso a herramientas:
 
-- **API Gateway**: http://localhost:8000
+- **API Gateway**: http://localhost:8010
 - **Casdoor**: http://localhost:8000
 - **SigNoz**: http://localhost:8080
 - **RabbitMQ**: http://localhost:15672 (admin/admin)

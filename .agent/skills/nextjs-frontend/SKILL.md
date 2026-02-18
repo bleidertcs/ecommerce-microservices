@@ -15,7 +15,7 @@ This project uses **Next.js** (App Router) as the primary frontend framework.
 
 ## 🌉 Gateway Integration
 
-All requests must go through the **Kong Gateway** (`:8000`).
+All requests must go through the **Kong Gateway** (`:8010`).
 
 ### Authentication
 
@@ -25,8 +25,8 @@ All requests must go through the **Kong Gateway** (`:8000`).
 
 ### API Routes
 
-- Public: `http://localhost:8000/api/v1/products`
-- Protected: `http://localhost:8000/api/v1/orders`
+- Public: `http://localhost:8010/api/v1/products`
+- Protected: `http://localhost:8010/api/v1/orders`
 
 ## 🌐 Environment Variables
 

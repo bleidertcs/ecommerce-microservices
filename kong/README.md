@@ -16,16 +16,16 @@ Kong se ejecuta en modo **DB-less** (sin base de datos) utilizando el archivo de
 
 ### Puertos Expuestos
 
-- `8000`: Puerto proxy para peticiones de clientes.
+- `8010`: Puerto proxy para peticiones de clientes.
 - `8001`: Interfaz de administración (usada para inspeccionar rutas y servicios).
 
 ---
 
-| Prefijo Externo | Servicio Interno        | Descripción                 |
-| :-------------- | :---------------------- | :-------------------------- |
-| `/api/v1/users` | `users-service:9001`    | Rutas de perfil y usuarios. |
-| `/api/v1/prod`  | `products-service:9002` | Catálogo de productos.      |
-| `/api/v1/ord`   | `orders-service:9003`   | Gestión de pedidos.         |
+| Prefijo Externo   | Servicio Interno        | Descripción                 |
+| :---------------- | :---------------------- | :-------------------------- |
+| `/api/v1/users`   | `users-service:9001`    | Rutas de perfil y usuarios. |
+| `/api/v1/products` | `products-service:9002` | Catálogo de productos.      |
+| `/api/v1/orders`  | `orders-service:9003`   | Gestión de pedidos.         |
 
 ---
 
@@ -35,8 +35,9 @@ Kong se ejecuta en modo **DB-less** (sin base de datos) utilizando el archivo de
 
 Configurado individualmente por ruta:
 
-- **Users**: 100 peticiones por minuto.
-- **Products**: 200 peticiones por minuto.
+- **Users**: 60 peticiones por minuto.
+- **Products**: 100 peticiones por minuto.
+- **Orders**: 30 peticiones por minuto.
 
 Para verificar los límites, inspecciona las cabeceras de respuesta:
 
