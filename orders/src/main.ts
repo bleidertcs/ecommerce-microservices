@@ -52,7 +52,23 @@ async function bootstrap() {
     });
 
     // Security
-    app.use(helmet({ contentSecurityPolicy: env === 'production' ? undefined : false }));
+    app.use(
+        helmet(
+            env === 'production'
+                ? {}
+                : {
+                      contentSecurityPolicy: {
+                          directives: {
+                              defaultSrc: ["'self'"],
+                              scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+                              styleSrc: ["'self'", "'unsafe-inline'"],
+                              imgSrc: ["'self'", 'data:'],
+                              connectSrc: ["'self'", '*'],
+                          },
+                      },
+                  },
+        ),
+    );
 
     // Validation
     app.useGlobalPipes(
