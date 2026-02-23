@@ -42,24 +42,23 @@ export const initTracing = async () => {
     const { FetchInstrumentation } = instrFetch;
     const { XMLHttpRequestInstrumentation } = instrXhr;
     const { ZoneContextManager } = contextZone;
-    const { Resource } = resources;
+    const { resourceFromAttributes } = resources;
     const { SEMRESATTRS_SERVICE_NAME } = semconv;
 
     console.log("✅ initTracing: OTel modules loaded successfully");
 
     const serviceName = "web-app";
 
-    const provider = new WebTracerProvider({
-      resource: new Resource({
-        [SEMRESATTRS_SERVICE_NAME]: serviceName,
-      }),
-    });
-
     const exporter = new OTLPTraceExporter({
       url: "http://localhost:4318/v1/traces",
     });
 
-    provider.addSpanProcessor(new SimpleSpanProcessor(exporter));
+    const provider = new WebTracerProvider({
+      resource: resourceFromAttributes({
+        [SEMRESATTRS_SERVICE_NAME]: serviceName,
+      }),
+      spanProcessors: [new SimpleSpanProcessor(exporter)],
+    });
 
     provider.register({
       contextManager: new ZoneContextManager(),

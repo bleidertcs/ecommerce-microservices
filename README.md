@@ -1,7 +1,7 @@
 # Arquitectura de Microservicios E-commerce (NestJS)
 
-[![NestJS](https://img.shields.io/badge/NestJS-10.4.6-red.svg)](https://nestjs.com/)
-[![Node.js](https://img.shields.io/badge/Node.js-18.0.0-green.svg)](https://nodejs.org/)
+[![NestJS](https://img.shields.io/badge/NestJS-11.1.14-red.svg)](https://nestjs.com/)
+[![Node.js](https://img.shields.io/badge/Node.js-22.0.0-green.svg)](https://nodejs.org/)
 [![Docker](https://img.shields.io/badge/Docker-20.0.0-blue.svg)](https://docker.com/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/bleidertcs/ecommerce-microservices)
@@ -100,8 +100,8 @@ graph TB
 ### 1. Requisitos
 
 - Docker & Docker Compose
-- Node.js >= 18 (para desarrollo local)
-- PowerShell o Bash para scripts de setup
+- Node.js >= 22 (LTS)
+- PowerShell o Bash para scripts de setup (pnpm recomendado)
 
 ### 2. Configuración y Despliegue Automático
 
