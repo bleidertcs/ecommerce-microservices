@@ -1,5 +1,5 @@
 # Multi-stage build for optimal image size
-FROM node:lts-alpine AS base
+FROM node:22-alpine AS base
 RUN apk add --no-cache libc6-compat
 RUN npm install -g pnpm
 ENV CI=true

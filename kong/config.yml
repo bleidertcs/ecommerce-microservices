@@ -1,6 +1,35 @@
 _format_version: "3.0"
 _transform: true
 
+plugins:
+  - name: cors
+    config:
+      origins:
+        - "http://localhost:3000"
+      methods:
+        - GET
+        - POST
+        - PUT
+        - PATCH
+        - DELETE
+        - OPTIONS
+      headers:
+        - Accept
+        - Accept-Version
+        - Content-Length
+        - Content-MD5
+        - Content-Type
+        - Date
+        - Authorization
+        - traceparent
+        - tracestate
+        - baggage
+        - x-user-id
+      exposed_headers:
+        - X-Total-Count
+      credentials: true
+      max_age: 3600
+
 services:
   - name: users-service
     url: http://bw-users-service:9001

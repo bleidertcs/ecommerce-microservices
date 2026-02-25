@@ -4,6 +4,8 @@ import Button from '@/components/ui/Button';
 import ProductActions from '@/components/products/ProductActions';
 import { API_BASE_URL } from '@/lib/config';
 
+export const dynamic = 'force-dynamic';
+
 interface Product {
   id: string;
   name: string;

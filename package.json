@@ -1,0 +1,13 @@
+{
+    "name": "ecommerce",
+    "version": "1.0.0",
+    "description": "",
+    "private": true,
+    "scripts": {
+        "install:users": "cd users && pnpm install",
+        "install:products": "cd products && pnpm install",
+        "install:orders": "cd orders && pnpm install",
+        "install:web": "cd web-app && pnpm install",
+        "install:all": "pnpm install:users && pnpm install:products && pnpm install:orders && pnpm install:web"
+    }
+}

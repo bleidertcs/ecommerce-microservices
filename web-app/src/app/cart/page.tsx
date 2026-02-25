@@ -15,6 +15,20 @@ export default function CartPage() {
   const { isAuthenticated, token } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [shippingAddress, setShippingAddress] = useState({
+    street: '',
+    city: '',
+    state: '',
+    zipCode: '',
+    country: '',
+    recipientName: '',
+    recipientPhone: ''
+  });
+
+  const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setShippingAddress(prev => ({ ...prev, [name]: value }));
+  };
 
   const handleCheckout = async () => {
     if (!isAuthenticated) {
@@ -24,6 +38,11 @@ export default function CartPage() {
     }
 
     if (cart.length === 0) return;
+
+    if (!shippingAddress.recipientName || !shippingAddress.street || !shippingAddress.city || !shippingAddress.state || !shippingAddress.zipCode || !shippingAddress.country || !shippingAddress.recipientPhone) {
+      alert('Please fill out all shipping address fields.');
+      return;
+    }
 
     setLoading(true);
 
@@ -36,13 +55,13 @@ export default function CartPage() {
           price: item.price
         })),
         shippingAddress: {
-          street: "123 Main St",
-          city: "New York",
-          state: "NY",
-          zipCode: "10001",
-          country: "USA",
-          recipientName: "Demo User",
-          recipientPhone: "+1234567890"
+          street: shippingAddress.street,
+          city: shippingAddress.city,
+          state: shippingAddress.state,
+          zipCode: shippingAddress.zipCode,
+          country: shippingAddress.country,
+          recipientName: shippingAddress.recipientName,
+          recipientPhone: shippingAddress.recipientPhone
         },
         paymentMethod: "Credit Card"
       };
@@ -136,6 +155,43 @@ export default function CartPage() {
               style={{ border: 'none', background: 'transparent', color: 'var(--muted)', fontSize: '14px', cursor: 'pointer' }}
             >Clear Cart</button>
           </div>
+
+          {/* Shipping Address Form */}
+          {isAuthenticated && (
+            <div className="card" style={{ padding: '24px', marginTop: '16px' }}>
+              <h2 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '16px' }}>Shipping Address</h2>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <label style={{ fontSize: '14px', fontWeight: '500' }}>Recipient Name</label>
+                  <input type="text" name="recipientName" value={shippingAddress.recipientName} onChange={handleAddressChange} style={{ padding: '10px', borderRadius: '6px', border: '1px solid var(--border)' }} required />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <label style={{ fontSize: '14px', fontWeight: '500' }}>Phone</label>
+                  <input type="text" name="recipientPhone" value={shippingAddress.recipientPhone} onChange={handleAddressChange} style={{ padding: '10px', borderRadius: '6px', border: '1px solid var(--border)' }} required />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', gridColumn: '1 / -1' }}>
+                  <label style={{ fontSize: '14px', fontWeight: '500' }}>Street Address</label>
+                  <input type="text" name="street" value={shippingAddress.street} onChange={handleAddressChange} style={{ padding: '10px', borderRadius: '6px', border: '1px solid var(--border)' }} required />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <label style={{ fontSize: '14px', fontWeight: '500' }}>City</label>
+                  <input type="text" name="city" value={shippingAddress.city} onChange={handleAddressChange} style={{ padding: '10px', borderRadius: '6px', border: '1px solid var(--border)' }} required />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <label style={{ fontSize: '14px', fontWeight: '500' }}>State/Province</label>
+                  <input type="text" name="state" value={shippingAddress.state} onChange={handleAddressChange} style={{ padding: '10px', borderRadius: '6px', border: '1px solid var(--border)' }} required />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <label style={{ fontSize: '14px', fontWeight: '500' }}>Zip/Postal Code</label>
+                  <input type="text" name="zipCode" value={shippingAddress.zipCode} onChange={handleAddressChange} style={{ padding: '10px', borderRadius: '6px', border: '1px solid var(--border)' }} required />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <label style={{ fontSize: '14px', fontWeight: '500' }}>Country</label>
+                  <input type="text" name="country" value={shippingAddress.country} onChange={handleAddressChange} style={{ padding: '10px', borderRadius: '6px', border: '1px solid var(--border)' }} required />
+                </div>
+              </div>
+            </div>
+          )}
         </div>
         
         {/* Summary */}

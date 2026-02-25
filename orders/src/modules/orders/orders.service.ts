@@ -127,6 +127,7 @@ export class OrdersService implements OnModuleInit {
             orderId: order.id,
             userId: order.userId,
             total: order.total,
+            items: processedItems,
             timestamp: order.createdAt,
           },
         },
@@ -139,6 +140,31 @@ export class OrdersService implements OnModuleInit {
 
   async findAll() {
     return this.databaseService.order.findMany({ include: { items: true } });
+  }
+
+  async findOne(id: string) {
+    return this.databaseService.order.findUnique({
+      where: { id },
+      include: { items: true },
+    });
+  }
+
+  async payOrder(id: string) {
+    const order = await this.findOne(id);
+    if (!order) return null;
+
+    if (order.status !== OrderStatus.PENDING) {
+      throw new BadRequestException('Order cannot be paid in its current status');
+    }
+
+    return this.databaseService.order.update({
+      where: { id },
+      data: {
+        status: OrderStatus.PAID,
+        paymentStatus: 'PAID' as any,
+      },
+      include: { items: true },
+    });
   }
 
   async findByUser(userId: string) {

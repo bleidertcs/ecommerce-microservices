@@ -12,6 +12,7 @@ import helmet from 'helmet';
 import { WinstonModule } from 'nest-winston';
 import * as winston from 'winston';
 import { OpenTelemetryTransportV3 } from '@opentelemetry/winston-transport';
+import { Transport } from '@nestjs/microservices';
 
 import { AppModule } from './app/app.module';
 import { setupSwagger } from './swagger';
@@ -60,6 +61,20 @@ async function bootstrap() {
             forbidNonWhitelisted: true,
         }),
     );
+
+    // Microservices listener for RMQ
+    app.connectMicroservice({
+        transport: Transport.RMQ,
+        options: {
+            urls: [configService.get<string>('rabbitmq.url', 'amqp://guest:guest@rabbitmq:5672')],
+            queue: 'products_queue',
+            queueOptions: {
+                durable: true
+            },
+        },
+    });
+
+    await app.startAllMicroservices();
 
     // Global Prefix
     app.setGlobalPrefix('api', { exclude: ['health'] });

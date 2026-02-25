@@ -5,7 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import Button from '@/components/ui/Button';
 import Link from 'next/link';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8010';
 
 interface Order {
   id: string;
@@ -98,9 +98,11 @@ export default function OrdersPage() {
                 <p style={{ fontSize: '20px', fontWeight: '700' }}>
                   ${Number(order.total).toFixed(2)}
                 </p>
-                <Button variant="outline" size="sm" style={{ marginTop: '8px' }}>
-                  View Details
-                </Button>
+                <Link href={`/orders/${order.id}`}>
+                  <Button variant="outline" size="sm" style={{ marginTop: '8px' }}>
+                    View Details
+                  </Button>
+                </Link>
               </div>
             </div>
           ))}

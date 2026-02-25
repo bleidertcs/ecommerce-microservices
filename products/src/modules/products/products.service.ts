@@ -29,8 +29,28 @@ export class ProductsService implements OnModuleInit {
     }
   }
 
-  async findAll() {
-    return this.databaseService.product.findMany();
+  async findAll(query?: any) {
+    const { category, search, minPrice, maxPrice } = query || {};
+    const where: any = { isDeleted: false };
+
+    if (category) {
+      where.category = category;
+    }
+
+    if (search) {
+      where.name = {
+        contains: search,
+        mode: 'insensitive',
+      };
+    }
+
+    if (minPrice !== undefined || maxPrice !== undefined) {
+      where.price = {};
+      if (minPrice !== undefined) where.price.gte = parseFloat(minPrice);
+      if (maxPrice !== undefined) where.price.lte = parseFloat(maxPrice);
+    }
+
+    return this.databaseService.product.findMany({ where });
   }
 
   async findOne(id: string) {
@@ -42,5 +62,18 @@ export class ProductsService implements OnModuleInit {
       where: { id },
       data: { stock: { decrement: quantity } },
     });
+  }
+
+  async processOrderItems(items: any[]) {
+    for (const item of items) {
+      if (item.productId && item.quantity) {
+        try {
+          await this.updateStock(item.productId, item.quantity);
+          this.logger.log(`Deducted ${item.quantity} stock for product ${item.productId}`);
+        } catch (error) {
+          this.logger.error(`Failed to deduct stock for product ${item.productId}: ${error.message}`);
+        }
+      }
+    }
   }
 }

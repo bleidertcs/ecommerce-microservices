@@ -125,41 +125,33 @@ services:
       timeout: 5s
       retries: 3
 
-  # SigNoz Schema Migrator (sync tables)
-  schema-migrator-sync:
-    image: signoz/signoz-schema-migrator:v0.129.13
-    container_name: bw-schema-migrator-sync
+  # SigNoz Schema Migrator (telemetrystore)
+  signoz-telemetrystore-migrator:
+    image: signoz/signoz-otel-collector:v0.142.0
+    container_name: bw-signoz-telemetrystore-migrator
+    environment:
+      - SIGNOZ_OTEL_COLLECTOR_CLICKHOUSE_DSN=tcp://clickhouse:9000
+      - SIGNOZ_OTEL_COLLECTOR_CLICKHOUSE_CLUSTER=cluster
+      - SIGNOZ_OTEL_COLLECTOR_CLICKHOUSE_REPLICATION=true
+      - SIGNOZ_OTEL_COLLECTOR_TIMEOUT=10m
+    entrypoint:
+      - /bin/sh
     command:
-      - sync
-      - --dsn=tcp://clickhouse:9000
-      - --up=
+      - -c 
+      - |
+        /signoz-otel-collector migrate bootstrap &&
+        /signoz-otel-collector migrate sync up &&
+        /signoz-otel-collector migrate async up
     networks:
       - bw-network
     depends_on:
       clickhouse:
         condition: service_healthy
-    restart: on-failure
-
-  # SigNoz Schema Migrator (async tables)
-  schema-migrator-async:
-    image: signoz/signoz-schema-migrator:v0.129.13
-    container_name: bw-schema-migrator-async
-    command:
-      - async
-      - --dsn=tcp://clickhouse:9000
-      - --up=
-    networks:
-      - bw-network
-    depends_on:
-      clickhouse:
-        condition: service_healthy
-      schema-migrator-sync:
-        condition: service_completed_successfully
     restart: on-failure
 
   # SigNoz Query Service + Frontend (all-in-one)
   signoz:
-    image: signoz/signoz:v0.110.1
+    image: signoz/signoz:v0.112.1
     container_name: bw-signoz
     restart: unless-stopped
     environment:
@@ -170,6 +162,7 @@ services:
       - GODEBUG=netdns=go
       - TELEMETRY_ENABLED=true
       - DEPLOYMENT_TYPE=docker-standalone-amd
+      - SIGNOZ_TOKENIZER_JWT_SECRET=super_secret_jwt_signoz_key_for_local_dev_12345
     volumes:
       - signoz_data:/var/lib/signoz/
     ports:
@@ -179,29 +172,33 @@ services:
     depends_on:
       clickhouse:
         condition: service_healthy
-      schema-migrator-sync:
-        condition: service_completed_successfully
-      schema-migrator-async:
-        condition: service_completed_successfully
     healthcheck:
-      test: ["CMD-SHELL", "bash -c 'true > /dev/tcp/127.0.0.1/8080'"]
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/api/v1/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
 
   # SigNoz OTel Collector
   signoz-otel-collector:
-    image: signoz/signoz-otel-collector:v0.129.13
+    image: signoz/signoz-otel-collector:v0.142.0
     container_name: bw-signoz-otel-collector
     restart: unless-stopped
+    entrypoint:
+      - /bin/sh
     command:
-      - --config=/etc/otel-collector-config.yaml
-      - --feature-gates=-pkg.translator.prometheus.NormalizeName
+      - -c
+      - |
+        /signoz-otel-collector migrate sync check &&
+        /signoz-otel-collector --config=/etc/otel-collector-config.yaml
     volumes:
       - ./monitoring/signoz/otel-collector-config.yaml:/etc/otel-collector-config.yaml:ro
     environment:
       - OTEL_RESOURCE_ATTRIBUTES=host.name=bw-signoz-otel-collector,os.type=linux
       - LOW_CARDINAL_EXCEPTION_GROUPING=false
+      - SIGNOZ_OTEL_COLLECTOR_CLICKHOUSE_DSN=tcp://clickhouse:9000
+      - SIGNOZ_OTEL_COLLECTOR_CLICKHOUSE_CLUSTER=cluster
+      - SIGNOZ_OTEL_COLLECTOR_CLICKHOUSE_REPLICATION=true
+      - SIGNOZ_OTEL_COLLECTOR_TIMEOUT=10m
     ports:
       - "4317:4317" # OTLP gRPC
       - "4318:4318" # OTLP HTTP
@@ -488,6 +485,8 @@ services:
       - CASDOOR_ENDPOINT=${CASDOOR_ENDPOINT}
       - NEXT_PUBLIC_API_URL=http://localhost:8010
       - INTERNAL_API_URL=http://kong:8010
+      - OTEL_SERVICE_NAME=web-app
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://signoz-otel-collector:4318
     networks:
       - bw-network
     depends_on:

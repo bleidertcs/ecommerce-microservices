@@ -69,6 +69,7 @@ export const initTracing = async () => {
       instrumentations: [
         new FetchInstrumentation({
           propagateTraceHeaderCorsUrls: [
+            /http:\/\/localhost:8010\/.*/,
             /http:\/\/localhost:8000\/.*/,
             /http:\/\/localhost:3000\/.*/,
             /http:\/\/localhost:3004\/.*/,
@@ -76,6 +77,7 @@ export const initTracing = async () => {
         }),
         new XMLHttpRequestInstrumentation({
           propagateTraceHeaderCorsUrls: [
+            /http:\/\/localhost:8010\/.*/,
             /http:\/\/localhost:8000\/.*/,
             /http:\/\/localhost:3000\/.*/,
             /http:\/\/localhost:3004\/.*/,

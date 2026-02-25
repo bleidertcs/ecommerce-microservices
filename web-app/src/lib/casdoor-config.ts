@@ -11,7 +11,7 @@ export const casdoorConfig = {
   url: process.env.NEXT_PUBLIC_CASDOOR_URL || 'http://localhost:8000',
 
   /** OAuth2 Client ID registered in Casdoor */
-  clientId: process.env.NEXT_PUBLIC_CASDOOR_CLIENT_ID || '459c8c7b5ad4f1086016',
+  clientId: process.env.NEXT_PUBLIC_CASDOOR_CLIENT_ID || 'de01a6da141873d09ac8',
 
   /** Casdoor organization name */
   organization: process.env.NEXT_PUBLIC_CASDOOR_ORGANIZATION || 'built-in',
