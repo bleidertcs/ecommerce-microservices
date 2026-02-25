@@ -7,7 +7,7 @@ import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { Transport } from '@nestjs/microservices';
 import { ExpressAdapter } from '@nestjs/platform-express';
-import express, { Request, Response } from 'express';
+import express from 'express';
 import helmet from 'helmet';
 import { OpenTelemetryTransportV3 } from '@opentelemetry/winston-transport';
 import { WinstonModule } from 'nest-winston';
@@ -18,7 +18,7 @@ import { setupSwagger } from './swagger';
 
 async function bootstrap() {
     const expressInstance = express();
-    const app = await NestFactory.create(AppModule, new ExpressAdapter(expressInstance), {
+    const app = await NestFactory.create(AppModule, new ExpressAdapter(expressInstance) as any, {
         logger: WinstonModule.createLogger({
             transports: [
                 new winston.transports.Console({
@@ -35,7 +35,6 @@ async function bootstrap() {
 
     const configService = app.get(ConfigService);
     const logger = app.get(Logger);
-    const expressApp = app.getHttpAdapter().getInstance();
 
     // Basic configuration
     const appName = configService.getOrThrow<string>('app.name');

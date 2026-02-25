@@ -1,4 +1,4 @@
-import { ClientNats, Transport } from '@nestjs/microservices';
+import { ClientNats } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 
 async function verifyNats() {

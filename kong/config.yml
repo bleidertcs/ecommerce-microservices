@@ -12,6 +12,11 @@ services:
         protocols: ["http", "https"]
         methods: ["GET", "POST", "PUT", "PATCH", "DELETE"]
         plugins:
+          - name: opentelemetry
+            config:
+              endpoint: http://bw-signoz-otel-collector:4317
+              resource_attributes:
+                service.name: kong-gateway
           - name: jwt
             config:
               claims_to_verify: ["exp"]
@@ -42,6 +47,11 @@ services:
         methods: ["GET", "POST", "PUT", "PATCH", "DELETE"]
         # Public catalog, protected management
         plugins:
+          - name: opentelemetry
+            config:
+              endpoint: http://bw-signoz-otel-collector:4317
+              resource_attributes:
+                service.name: kong-gateway
           - name: rate-limiting
             config:
               minute: 100
@@ -61,6 +71,11 @@ services:
         protocols: ["http", "https"]
         methods: ["GET", "POST", "DELETE"]
         plugins:
+          - name: opentelemetry
+            config:
+              endpoint: http://bw-signoz-otel-collector:4317
+              resource_attributes:
+                service.name: kong-gateway
           - name: jwt
             config:
               claims_to_verify: ["exp"]

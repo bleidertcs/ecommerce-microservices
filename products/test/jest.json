@@ -22,6 +22,7 @@
     "^.+\\.(t|j)s$": "ts-jest"
   },
   "modulePathIgnorePatterns": ["<rootDir>/dist"],
+  "transformIgnorePatterns": ["node_modules/(?!@faker-js)"],
 
   "coverageReporters": ["text", "lcov", "html"],
   "coveragePathIgnorePatterns": [

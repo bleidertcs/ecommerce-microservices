@@ -1,4 +1,4 @@
-import { Resource } from '@opentelemetry/resources';
+import { resourceFromAttributes } from '@opentelemetry/resources';
 import { ATTR_SERVICE_NAME } from '@opentelemetry/semantic-conventions';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-grpc';
 import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-grpc';
@@ -13,7 +13,7 @@ import { WinstonInstrumentation } from '@opentelemetry/instrumentation-winston';
 // Enable OpenTelemetry debug logging
 diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.WARN);
 
-const resource = new Resource({
+const resource = resourceFromAttributes({
   [ATTR_SERVICE_NAME]: process.env.OTEL_SERVICE_NAME || 'nestjs-service',
 });
 
@@ -35,14 +35,11 @@ const metricReader = new PeriodicExportingMetricReader({
   exportIntervalMillis: 15000,
 });
 
-
 export const otr_sdk = new NodeSDK({
   resource,
   traceExporter,
-  metricReader,
-  logRecordProcessors: [
-    new BatchLogRecordProcessor(logExporter),
-  ],
+  metricReaders: [metricReader],
+  logRecordProcessors: [new BatchLogRecordProcessor(logExporter)],
   instrumentations: [
     getNodeAutoInstrumentations({
       '@opentelemetry/instrumentation-fs': {
@@ -69,3 +66,4 @@ process.on('SIGTERM', () => {
 });
 
 console.log('OpenTelemetry SDK initialized with metrics export interval: 15s');
+

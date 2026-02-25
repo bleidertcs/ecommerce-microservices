@@ -3,6 +3,7 @@ import { OrdersService } from '../../src/modules/orders/orders.service';
 import { DatabaseService } from '../../src/common/services/database.service';
 import { CircuitBreakerService } from '../../src/common/services/circuit-breaker.service';
 import { BadRequestException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 // import { of } from 'rxjs';
 
 describe('OrdersService', () => {
@@ -54,6 +55,7 @@ describe('OrdersService', () => {
         OrdersService,
         { provide: DatabaseService, useValue: databaseService },
         { provide: CircuitBreakerService, useValue: circuitBreakerService },
+        { provide: ConfigService, useValue: { get: jest.fn().mockReturnValue('grpc') } },
         { provide: 'USERS_PACKAGE', useValue: usersClient },
         { provide: 'PRODUCTS_PACKAGE', useValue: productsClient },
         { provide: 'RABBITMQ_SERVICE', useValue: rmqClient },

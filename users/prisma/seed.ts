@@ -1,7 +1,9 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, UserRole } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
 import { faker } from '@faker-js/faker';
 
-const prisma = new PrismaClient();
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
+const prisma = new PrismaClient({ adapter } as any);
 
 async function main() {
   console.log('🌱 Seeding Users database...');
@@ -20,7 +22,7 @@ async function main() {
       email: faker.internet.email({ firstName, lastName }).toLowerCase(),
       username: faker.internet.username({ firstName, lastName }).toLowerCase(),
       password: '$2b$10$K7L1OJ45/4Y2nIvhRVpCe.FSmhDdWoXehVzJptJ/op0lSsvqNu/1u', // "Password123!"
-      role: 'ADMIN',
+      role: UserRole.ADMIN,
       firstName,
       lastName,
       phone: faker.phone.number(),
@@ -69,7 +71,7 @@ async function main() {
       email: faker.internet.email({ firstName, lastName }).toLowerCase(),
       username: faker.internet.username({ firstName, lastName }).toLowerCase(),
       password: '$2b$10$K7L1OJ45/4Y2nIvhRVpCe.FSmhDdWoXehVzJptJ/op0lSsvqNu/1u', // "Password123!"
-      role: 'CUSTOMER',
+      role: UserRole.CUSTOMER,
       firstName,
       lastName,
       phone: faker.phone.number(),

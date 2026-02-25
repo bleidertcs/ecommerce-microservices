@@ -22,7 +22,7 @@ import { join } from 'path';
                 url: configService.get<string>('grpc.url', '0.0.0.0:50051'),
                 logging: {
                     enabled: true,
-                    level: configService.get<string>('app.env') === 'development' ? 'debug' : 'log',
+                    level: (configService.get<string>('app.env') === 'development' ? 'debug' : 'log') as any,
                     context: 'UsersService',
                     logErrors: true,
                     logPerformance: configService.get<string>('app.env') === 'development',
