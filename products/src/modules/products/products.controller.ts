@@ -2,20 +2,22 @@ import { Controller, Get, Param, NotFoundException, Query, Logger } from '@nestj
 import { EventPattern, Payload } from '@nestjs/microservices';
 import { ProductsService } from './products.service';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { SearchProductDto } from './dtos/search-product.dto';
 import { PublicRoute } from '../../common/decorators/public.decorator';
 
 @ApiTags('Products')
 @Controller('products')
-@PublicRoute()
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
+  @PublicRoute()
   @Get()
   @ApiOperation({ summary: 'Get products with optional filtering' })
-  async findAll(@Query() query: any) {
+  async findAll(@Query() query: SearchProductDto) {
     return this.productsService.findAll(query);
   }
 
+  @PublicRoute()
   @Get(':id')
   @ApiOperation({ summary: 'Get product by ID' })
   async findOne(@Param('id') id: string) {

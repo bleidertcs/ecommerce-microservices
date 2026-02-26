@@ -1,10 +1,13 @@
 import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { AuthGuard } from '@nestjs/passport';
 import { PUBLIC_ROUTE_KEY } from '../constants/request.constant';
 
 @Injectable()
-export class AuthJwtAccessGuard implements CanActivate {
-    constructor(private reflector: Reflector) {}
+export class AuthJwtAccessGuard extends AuthGuard('jwt') {
+    constructor(private reflector: Reflector) {
+        super();
+    }
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
         const isPublic = this.reflector.getAllAndOverride<boolean>(PUBLIC_ROUTE_KEY, [
@@ -16,18 +19,12 @@ export class AuthJwtAccessGuard implements CanActivate {
             return true;
         }
 
-        const request = context.switchToHttp().getRequest();
-        const userId = request.headers['x-user-id'];
-        const userRole = request.headers['x-user-role'];
-
-        if (!userId) {
-            throw new UnauthorizedException('User ID not found in headers. Did you go through Kong?');
+        // Delegate to Passport JWT strategy
+        const result = (await super.canActivate(context)) as boolean;
+        
+        if (!result) {
+            throw new UnauthorizedException('Security validation failed');
         }
-
-        request.user = {
-            id: userId,
-            role: userRole || 'USER',
-        };
 
         return true;
     }

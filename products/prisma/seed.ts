@@ -43,8 +43,9 @@ async function main() {
     const reviewCount = faker.number.int({ min: 0, max: 500 });
     
     // Generate 1-4 product images
+    const keyword = encodeURIComponent(productName.split(' ').pop()?.toLowerCase() || 'product');
     const images = faker.helpers.multiple(
-      () => `https://picsum.photos/seed/${faker.string.uuid()}/800/600`,
+      () => `https://loremflickr.com/800/600/${keyword}?lock=${faker.number.int({ min: 1, max: 1000 })}`,
       { count: { min: 1, max: 4 } }
     );
 

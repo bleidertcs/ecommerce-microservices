@@ -1,15 +1,15 @@
-import { Controller, Get, Param, NotFoundException, Headers } from '@nestjs/common';
+import { Controller, Get, Param, NotFoundException, Headers, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { PublicRoute } from '../../common/decorators/public.decorator';
+import { AuthUser } from '../../common/decorators/auth-user.decorator';
 
 @ApiTags('Users')
 @Controller('users')
-@PublicRoute()
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get()
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all users' })
   async findAll() {
     return this.usersService.findAll();
@@ -18,13 +18,13 @@ export class UsersController {
   @Get('me')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get current user profile' })
-  async getMe(@Headers('x-user-id') userId: string) {
-    if (!userId) {
-      throw new NotFoundException('User identity not found in headers');
+  async getMe(@AuthUser() user: any) {
+    if (!user || !user.id) {
+      throw new UnauthorizedException('User identity not found');
     }
-    const user = await this.usersService.findOne(userId);
-    if (!user) throw new NotFoundException('User not found');
-    return user;
+    const userProfile = await this.usersService.findOne(user.id);
+    if (!userProfile) throw new NotFoundException('User not found');
+    return userProfile;
   }
 
   @Get(':id')

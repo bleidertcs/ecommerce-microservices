@@ -1,11 +1,11 @@
-import { Controller, Get, Post, Body, Param, NotFoundException, Headers, Patch, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, NotFoundException, Headers, Patch, BadRequestException, UseGuards, Req, UnauthorizedException } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { PublicRoute } from '../../common/decorators/public.decorator';
+import { CreateOrderDto } from './dtos/create-order.dto';
+import { AuthUser } from '../../common/decorators/auth-user.decorator';
 
 @ApiTags('Orders')
 @Controller('orders')
-@PublicRoute()
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
@@ -13,11 +13,11 @@ export class OrdersController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a new order' })
   async create(
-    @Headers('x-user-id') userId: string,
-    @Body() createOrderDto: { items: { productId: string; quantity: number; price: number }[] }
+    @AuthUser() user: any,
+    @Body() createOrderDto: CreateOrderDto
   ) {
-    if (!userId) throw new NotFoundException('User identity not found in headers');
-    return this.ordersService.createOrder(userId, createOrderDto.items);
+    if (!user || !user.id) throw new UnauthorizedException('User identity not found');
+    return this.ordersService.createOrder(user.id, createOrderDto.items);
   }
 
   @Get()
@@ -29,9 +29,9 @@ export class OrdersController {
   @Get('my-orders')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get current user orders' })
-  async findMyOrders(@Headers('x-user-id') userId: string) {
-    if (!userId) throw new NotFoundException('User identity not found in headers');
-    return this.ordersService.findByUser(userId);
+  async findMyOrders(@AuthUser() user: any) {
+    if (!user || !user.id) throw new UnauthorizedException('User identity not found');
+    return this.ordersService.findByUser(user.id);
   }
 
   @Get(':id')

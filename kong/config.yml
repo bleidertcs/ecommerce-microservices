@@ -39,7 +39,7 @@ services:
           - /api/v1/users
         strip_path: false
         protocols: ["http", "https"]
-        methods: ["GET", "POST", "PUT", "PATCH", "DELETE"]
+        methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
         plugins:
           - name: opentelemetry
             config:
@@ -73,7 +73,7 @@ services:
           - /api/v1/products
         strip_path: false
         protocols: ["http", "https"]
-        methods: ["GET", "POST", "PUT", "PATCH", "DELETE"]
+        methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
         # Public catalog, protected management
         plugins:
           - name: opentelemetry
@@ -98,7 +98,7 @@ services:
           - /api/v1/orders
         strip_path: false
         protocols: ["http", "https"]
-        methods: ["GET", "POST", "DELETE"]
+        methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"]
         plugins:
           - name: opentelemetry
             config:

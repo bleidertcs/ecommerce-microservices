@@ -6,6 +6,7 @@ import { AcceptLanguageResolver, I18nModule, QueryResolver } from 'nestjs-i18n';
 
 import configs from './config';
 import { AuthJwtAccessGuard } from './guards/jwt.access.guard';
+import { JwtStrategy } from './guards/jwt.strategy';
 import { RolesGuard } from './guards/roles.guard';
 import { ResponseInterceptor } from './interceptors/response.interceptor';
 import { HashService } from './services/hash.service';
@@ -18,10 +19,12 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { createKeyv, Keyv } from '@keyv/redis';
 import { ResilienceModule } from './resilience.module';
 import { CacheableMemory } from 'cacheable';
+import { PassportModule } from '@nestjs/passport';
 
 @Global()
 @Module({
     imports: [
+        PassportModule.register({ defaultStrategy: 'jwt' }),
         ConfigModule.forRoot({
             load: configs,
             isGlobal: true,
@@ -96,6 +99,7 @@ import { CacheableMemory } from 'cacheable';
         DatabaseService,
         HashService,
         QueryBuilderService,
+        JwtStrategy,
 
         // Global Interceptors
         {
