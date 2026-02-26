@@ -7,6 +7,12 @@ export class RequestMiddleware implements NestMiddleware {
 
     use(request: Request, response: Response, next: NextFunction): void {
         const { method, originalUrl, ip } = request;
+
+        // Skip logging for health checks
+        if (originalUrl === '/health' || originalUrl === '/api/health') {
+            return next();
+        }
+
         const userAgent = request.get('user-agent') || 'Unknown';
         const startTime = Date.now();
         const requestId = this.generateRequestId();

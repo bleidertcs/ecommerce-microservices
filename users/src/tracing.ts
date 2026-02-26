@@ -48,6 +48,10 @@ export const otr_sdk = new NodeSDK({
       // Enable HTTP instrumentation to generate metrics
       '@opentelemetry/instrumentation-http': {
         enabled: true,
+        ignoreIncomingRequestHook: (req) => {
+          const url = req.url || '';
+          return url === '/health' || url === '/api/health';
+        },
       },
       '@opentelemetry/instrumentation-express': {
         enabled: true,

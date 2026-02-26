@@ -31,6 +31,14 @@ plugins:
       max_age: 3600
 
 services:
+  - name: swagger-ui
+    url: http://bw-swagger-ui:8080
+    routes:
+      - name: swagger-routes
+        paths:
+          - /docs
+        strip_path: false
+
   - name: users-service
     url: http://bw-users-service:9001
     routes:

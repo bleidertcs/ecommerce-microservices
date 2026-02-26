@@ -3,6 +3,7 @@ import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { SwaggerCustomOptions } from '@nestjs/swagger';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { PublicRoute } from './common/decorators/public.decorator';
 
 export const setupSwagger = async (app: INestApplication) => {
     const configService = app.get(ConfigService);
@@ -40,5 +41,12 @@ export const setupSwagger = async (app: INestApplication) => {
         customSiteTitle: docName,
         ...customOptions,
     });
+
+    // Ensure the JSON endpoint is public
+    const httpAdapter = app.getHttpAdapter();
+    httpAdapter.get(`${docPrefix}-json`, (req, res) => {
+        res.json(document);
+    });
+
     logger.log(`Docs will serve on ${docPrefix}`, 'NestApplication');
 };

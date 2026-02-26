@@ -160,7 +160,7 @@ services:
       - SIGNOZ_SQLSTORE_SQLITE_PATH=/var/lib/signoz/signoz.db
       - STORAGE=clickhouse
       - GODEBUG=netdns=go
-      - TELEMETRY_ENABLED=true
+      - TELEMETRY_ENABLED=false
       - DEPLOYMENT_TYPE=docker-standalone-amd
       - SIGNOZ_TOKENIZER_JWT_SECRET=super_secret_jwt_signoz_key_for_local_dev_12345
     volumes:
@@ -192,6 +192,7 @@ services:
         /signoz-otel-collector --config=/etc/otel-collector-config.yaml
     volumes:
       - ./monitoring/signoz/otel-collector-config.yaml:/etc/otel-collector-config.yaml:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
     environment:
       - OTEL_RESOURCE_ATTRIBUTES=host.name=bw-signoz-otel-collector,os.type=linux
       - LOW_CARDINAL_EXCEPTION_GROUPING=false
@@ -487,6 +488,7 @@ services:
       - INTERNAL_API_URL=http://kong:8010
       - OTEL_SERVICE_NAME=web-app
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://signoz-otel-collector:4318
+      - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
     networks:
       - bw-network
     depends_on:
@@ -502,6 +504,18 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+
+  # Swagger UI - API Documentation
+  swagger-ui:
+    image: swaggerapi/swagger-ui
+    container_name: bw-swagger-ui
+    restart: unless-stopped
+    environment:
+      # Aggregated docs for all microservices via Kong
+      URLS: "[{url: '/api/v1/users/docs-json', name: 'Users'}, {url: '/api/v1/products/docs-json', name: 'Products'}, {url: '/api/v1/orders/docs-json', name: 'Orders'}]"
+      BASE_URL: "/docs"
+    networks:
+      - bw-network
 
 networks:
   bw-network:
