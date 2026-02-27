@@ -1,0 +1,188 @@
+.layout {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 64px;
+  align-items: start;
+}
+
+.visualColumn {
+  position: relative;
+}
+
+.mainImageGlass {
+  position: relative;
+  aspect-ratio: 16/10;
+  overflow: hidden;
+  background: radial-gradient(circle at center, #1a1a1a 0%, #050505 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 32px;
+  border: 1px solid var(--border);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+}
+
+.mainImage {
+  width: 80%;
+  height: 80%;
+  object-fit: contain;
+  z-index: 1;
+}
+
+.imageOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent 60%, rgba(0,0,0,0.4));
+  pointer-events: none;
+}
+
+.specsGridMini {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 32px;
+}
+
+.specItemMini {
+  padding: 16px;
+  text-align: center;
+}
+
+.specLabel {
+  display: block;
+  font-size: 9px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+  font-weight: 700;
+}
+
+.specVal {
+  font-size: 14px;
+  font-weight: 700;
+  font-family: var(--font-heading);
+}
+
+.infoCardPremium {
+  padding: 40px;
+}
+
+.productMetaTags {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.brandTag {
+  color: var(--primary);
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+}
+
+.categoryTagDetail {
+  color: var(--muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  border-left: 1px solid var(--border);
+  padding-left: 12px;
+}
+
+.productTitleDetail {
+  font-size: 36px;
+  line-height: 1.2;
+  margin-bottom: 16px;
+}
+
+.ratingRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 32px;
+}
+
+.reviewText {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.productDescDetail {
+  font-size: 16px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 40px;
+}
+
+.purchaseModulePremium {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 20px;
+  padding: 32px;
+  border: 1px solid var(--border);
+}
+
+.priceSection {
+  margin-bottom: 28px;
+}
+
+.investmentLabel {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.priceTagDetail {
+  display: flex;
+  align-items: baseline;
+}
+
+.priceSymbol {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--primary);
+  margin-right: 4px;
+}
+
+.priceAmount {
+  font-size: 40px;
+  font-weight: 800;
+  font-family: var(--font-heading);
+  letter-spacing: -0.02em;
+}
+
+.stockStatusDetail {
+  margin-top: 24px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.statusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.inStock {
+  background-color: var(--success);
+  box-shadow: 0 0 8px var(--success);
+}
+
+.outOfStock {
+  background-color: var(--danger);
+}
+
+@media (max-width: 1024px) {
+  .layout {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+}

@@ -6,7 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8010';
+import { API_BASE_URL } from '@/lib/config';
 
 export default function ProductActions({
   productId,
@@ -89,30 +89,43 @@ export default function ProductActions({
   };
 
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+    <div className="actions-wrapper">
       <Button
         variant="primary"
-        size="lg"
-        style={{ flex: 1, minWidth: '150px' }}
+        glow
+        className="action-btn"
         onClick={handleBuyNow}
         disabled={loading}
       >
         {loading ? 'Processing...' : 'Buy Now'}
       </Button>
       <Button
-        variant={added ? "secondary" : "secondary"}
-        size="lg"
-        style={{
-          flex: 1,
-          minWidth: '150px',
-          borderColor: added ? 'var(--success, #22c55e)' : 'var(--border)',
-          color: added ? 'white' : 'inherit',
-          backgroundColor: added ? 'var(--success, #22c55e)' : 'transparent'
-        }}
+        variant={added ? "secondary" : "glass"}
+        className={`action-btn ${added ? 'btn-success' : ''}`}
         onClick={handleAddToCart}
       >
-        {added ? '✓ Added!' : 'Add to Cart'}
+        {added ? '✓ Added' : 'Add to Cart'}
       </Button>
+
+      <style jsx>{`
+        .actions-wrapper {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          width: 100%;
+        }
+
+        :global(.action-btn) {
+          width: 100% !important;
+          justify-content: center !important;
+        }
+
+        :global(.btn-success) {
+          background: rgba(0, 229, 255, 0.1) !important;
+          color: var(--success) !important;
+          border-color: var(--success) !important;
+        }
+      `}</style>
     </div>
   );
 }

@@ -6,6 +6,7 @@ plugins:
     config:
       origins:
         - "http://localhost:3000"
+        - "http://localhost:8010"
       methods:
         - GET
         - POST
@@ -42,6 +43,12 @@ services:
   - name: users-service
     url: http://bw-users-service:9001
     routes:
+      - name: users-docs
+        paths:
+          - /api/v1/users/docs
+        strip_path: false
+        protocols: ["http", "https"]
+        methods: ["GET"]
       - name: users-routes
         paths:
           - /api/v1/users
@@ -101,6 +108,12 @@ services:
   - name: orders-service
     url: http://bw-orders-service:9003
     routes:
+      - name: orders-docs
+        paths:
+          - /api/v1/orders/docs
+        strip_path: false
+        protocols: ["http", "https"]
+        methods: ["GET"]
       - name: orders-routes
         paths:
           - /api/v1/orders
@@ -131,6 +144,15 @@ services:
               redis:
                 host: redis
                 port: 6379
+
+  - name: web-app
+    url: http://bw-web-app:3000
+    routes:
+      - name: web-app-routes
+        paths:
+          - /
+        strip_path: false
+        protocols: ["http", "https"]
 
 consumers:
   - username: test-user

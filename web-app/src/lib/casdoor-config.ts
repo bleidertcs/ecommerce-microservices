@@ -56,3 +56,13 @@ export function getCasdoorSignupUrl(state = 'lumina'): string {
   });
   return `${url}/signup/oauth/authorize?${params.toString()}`;
 }
+
+/**
+ * Build the Casdoor logout URL.
+ * This clears the Casdoor session cookie.
+ */
+export function getCasdoorLogoutUrl(): string {
+  const { url } = casdoorConfig;
+  const redirectUri = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
+  return `${url}/api/logout?redirect_uri=${encodeURIComponent(redirectUri)}`;
+}

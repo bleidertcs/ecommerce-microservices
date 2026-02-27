@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { getCasdoorLogoutUrl } from "@/lib/casdoor-config";
 
 interface AuthContextType {
   token: string | null;
@@ -40,7 +41,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const logout = () => {
     localStorage.removeItem("lumina_token");
     setToken(null);
-    router.push("/login");
+    
+    // Redirect to Casdoor to clear its session cookie
+    // This prevents immediate re-login when redirecting back to the app
+    window.location.href = getCasdoorLogoutUrl();
   };
 
   return (

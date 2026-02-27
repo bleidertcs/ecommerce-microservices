@@ -54,9 +54,7 @@ export default function OrderDetailsPage() {
         });
 
         if (!res.ok) {
-          if (res.status === 404) {
-             throw new Error('Order not found');
-          }
+          if (res.status === 404) throw new Error('Order not found');
           throw new Error('Failed to fetch order details');
         }
         
@@ -69,9 +67,7 @@ export default function OrderDetailsPage() {
       }
     };
 
-    if (id) {
-      fetchOrder();
-    }
+    if (id) fetchOrder();
   }, [id, token, isAuthenticated]);
 
   const handlePayment = async () => {
@@ -98,118 +94,244 @@ export default function OrderDetailsPage() {
 
   if (!isAuthenticated) {
     return (
-      <div style={{ textAlign: 'center', padding: '80px 0' }}>
-        <h2 style={{ fontSize: '24px', marginBottom: '16px' }}>Please sign in to view this order</h2>
-        <Link href="/login"><Button>Sign In</Button></Link>
+      <div className="container section-padding" style={{ textAlign: 'center' }}>
+        <div className="glass-card" style={{ padding: '80px 48px' }}>
+          <h2 className="display-small">Identification Required</h2>
+          <p className="text-muted" style={{ marginBottom: '32px' }}>Please establish your identity to access these records.</p>
+          <Link href="/login"><Button variant="primary" glow>Sign In</Button></Link>
+        </div>
       </div>
     );
   }
 
-  if (loading) return <div style={{ padding: '40px', textAlign: 'center' }}>Loading order details...</div>;
+  if (loading) return (
+    <div className="container section-padding" style={{ textAlign: 'center', height: '400px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div className="spinner"></div>
+      <style jsx>{`.spinner { width: 40px; height: 40px; border: 2px solid rgba(255,255,255,0.1); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; } @keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
 
   if (error || !order) {
     return (
-      <div style={{ padding: '40px', textAlign: 'center' }}>
-        <h2 style={{ color: 'var(--danger)', marginBottom: '16px' }}>Error</h2>
-        <p style={{ marginBottom: '24px' }}>{error || 'Order not found'}</p>
-        <Button onClick={() => router.push('/orders')}>Back to Orders</Button>
+      <div className="container section-padding" style={{ textAlign: 'center' }}>
+        <div className="glass-card" style={{ padding: '60px', border: '1px solid var(--danger)' }}>
+          <h2 style={{ color: 'var(--danger)', marginBottom: '16px' }}>Terminal Error</h2>
+          <p className="text-muted" style={{ marginBottom: '24px' }}>{error || 'The requested acquisition record does not exist in our database.'}</p>
+          <Button variant="glass" onClick={() => router.push('/orders')}>Return to History</Button>
+        </div>
       </div>
     );
   }
 
-  const getStatusBadge = (status: string) => {
-    const classes: Record<string, string> = {
-      'PAID': 'badge-success',
-      'DELIVERED': 'badge-success',
-      'PENDING': 'badge-warning',
-      'PROCESSING': 'badge-warning',
-      'CANCELLED': 'badge-danger',
-      'REFUNDED': 'badge-danger',
-    };
-    return classes[status] || 'badge';
-  };
-
   return (
-    <div style={{ padding: '32px 0' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
-        <h1 style={{ fontSize: '32px', fontWeight: '700' }}>Order Details</h1>
-        <Button variant="outline" onClick={() => router.push('/orders')}>Back to Orders</Button>
+    <div className="container section-padding animate-fade-in">
+      <div className="order-details-header">
+        <Link href="/orders" className="back-link">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          History
+        </Link>
+        <h1 className="display-small">Acquisition Matrix</h1>
+        <div className="order-badge">
+           <span className="dot" style={{ backgroundColor: order.status === 'PAID' ? 'var(--success)' : 'var(--warning)' }}></span>
+           {order.status}
+        </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '32px', alignItems: 'start' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          <div className="card" style={{ padding: '24px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', paddingBottom: '16px', borderBottom: '1px solid var(--border)' }}>
-              <div>
-                <p style={{ color: 'var(--muted)', fontSize: '14px', marginBottom: '4px' }}>Order ID</p>
-                <p style={{ fontWeight: '600' }}>{order.id}</p>
+      <div className="details-layout">
+        <main className="main-content">
+          {/* Order Info Card */}
+          <div className="glass-card info-card">
+            <div className="card-header">
+              <div className="id-block">
+                <span className="label">Unique Identifier</span>
+                <span className="val">{order.id.toUpperCase()}</span>
               </div>
-              <div style={{ textAlign: 'right' }}>
-                <p style={{ color: 'var(--muted)', fontSize: '14px', marginBottom: '4px' }}>Date</p>
-                <p style={{ fontWeight: '500' }}>
+              <div className="date-block">
+                <span className="label">Timestamp</span>
+                <span className="val">
                   {new Date(order.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                </p>
+                </span>
               </div>
             </div>
 
-            <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '16px' }}>Items</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <h3 className="section-title">Artifacts</h3>
+            <div className="items-list">
               {order.items?.map((item, index) => (
-                <div key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', background: '#f9fafb', borderRadius: '8px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                     <div style={{ flex: 1 }}>
-                      <p style={{ fontWeight: '600', marginBottom: '4px' }}>{item.productName}</p>
-                      <p style={{ color: 'var(--muted)', fontSize: '14px' }}>Qty: {item.quantity}</p>
-                    </div>
+                <div key={index} className="order-item-row">
+                  <div className="item-info">
+                    <p className="item-name">{item.productName}</p>
+                    <p className="item-qty">Qty: {item.quantity}</p>
                   </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <p style={{ fontWeight: '600' }}>${(item.price * item.quantity).toFixed(2)}</p>
-                    <p style={{ color: 'var(--muted)', fontSize: '14px' }}>${Number(item.price).toFixed(2)} each</p>
+                  <div className="item-price">
+                    <p className="total-val">${(item.price * item.quantity).toFixed(2)}</p>
+                    <p className="unit-val">${Number(item.price).toFixed(2)} / unit</p>
                   </div>
                 </div>
               ))}
             </div>
           </div>
-        </div>
+        </main>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          <div className="card" style={{ padding: '24px' }}>
-             <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '16px' }}>Order Summary</h3>
-             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-                <span style={{ color: 'var(--muted)' }}>Status</span>
-                <span className={`badge ${getStatusBadge(order.status)}`}>{order.status}</span>
+        <aside className="sidebar">
+          {/* Summary Card */}
+          <div className="glass-card summary-card">
+             <h3 className="section-title">Matrix Summary</h3>
+             <div className="summary-row">
+                <span className="label">Status</span>
+                <span className={`status-pill ${order.status.toLowerCase()}`}>{order.status}</span>
              </div>
-             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-                <span style={{ color: 'var(--muted)' }}>Total Amount</span>
-                <span style={{ fontWeight: '700', fontSize: '18px', color: 'var(--primary)' }}>${Number(order.total).toFixed(2)}</span>
+             <div className="summary-row">
+                <span className="label">Total Value</span>
+                <span className="val-total">${Number(order.total).toFixed(2)}</span>
              </div>
              {order.paymentMethod && (
-               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '12px', paddingTop: '12px', borderTop: '1px solid var(--border)' }}>
-                 <span style={{ color: 'var(--muted)' }}>Payment Method</span>
-                 <span style={{ fontWeight: '500' }}>{order.paymentMethod}</span>
+               <div className="summary-row" style={{ marginTop: '12px', borderTop: '1px solid var(--border)', paddingTop: '12px' }}>
+                 <span className="label">Protocol</span>
+                 <span className="val-method">{order.paymentMethod}</span>
                </div>
              )}
              {order.status === 'PENDING' && (
-               <div style={{ marginTop: '24px' }}>
-                 <Button onClick={handlePayment} style={{ width: '100%' }}>Pay Now</Button>
+               <div className="payment-action">
+                 <Button glow variant="primary" onClick={handlePayment} style={{ width: '100%', justifyContent: 'center' }}>Execute Payment</Button>
                </div>
              )}
           </div>
 
+          {/* Shipping Card */}
           {order.shippingAddress && (
-            <div className="card" style={{ padding: '24px' }}>
-              <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '16px' }}>Shipping details</h3>
-              <p style={{ fontWeight: '600', marginBottom: '4px' }}>{order.shippingAddress.recipientName}</p>
-              <p style={{ color: 'var(--muted)', marginBottom: '4px', fontSize: '14px' }}>{order.shippingAddress.street}</p>
-              <p style={{ color: 'var(--muted)', marginBottom: '8px', fontSize: '14px' }}>
-                {order.shippingAddress.city}, {order.shippingAddress.state} {order.shippingAddress.zipCode}
-              </p>
-              <p style={{ color: 'var(--muted)', marginBottom: '8px', fontSize: '14px' }}>{order.shippingAddress.country}</p>
-              <p style={{ color: 'var(--muted)', fontSize: '14px' }}>Phone: {order.shippingAddress.recipientPhone}</p>
+            <div className="glass-card shipping-card">
+              <h3 className="section-title">Relay Coordinates</h3>
+              <div className="address-block">
+                <p className="recipient">{order.shippingAddress.recipientName}</p>
+                <p className="address-line">{order.shippingAddress.street}</p>
+                <p className="address-line">
+                  {order.shippingAddress.city}, {order.shippingAddress.state} {order.shippingAddress.zipCode}
+                </p>
+                <p className="address-line territory">{order.shippingAddress.country}</p>
+                <p className="phone">Signal: {order.shippingAddress.recipientPhone}</p>
+              </div>
             </div>
           )}
-        </div>
+        </aside>
       </div>
+
+      <style jsx>{`
+        .order-details-header {
+          display: flex;
+          align-items: center;
+          gap: 32px;
+          margin-bottom: 60px;
+          border-bottom: 1px solid var(--border);
+          padding-bottom: 32px;
+        }
+
+        .back-link {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          color: var(--muted);
+          font-weight: 600;
+          font-size: 14px;
+          transition: 0.3s;
+        }
+
+        .back-link:hover { color: var(--primary); transform: translateX(-4px); }
+
+        .order-badge {
+          background: rgba(255,255,255,0.03);
+          border: 1px solid var(--border);
+          padding: 6px 16px;
+          border-radius: 20px;
+          font-size: 11px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.1em;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-left: auto;
+        }
+
+        .dot { width: 6px; height: 6px; border-radius: 50%; }
+
+        .details-layout {
+          display: grid;
+          grid-template-columns: 2fr 1fr;
+          gap: 60px;
+          align-items: start;
+        }
+
+        .info-card { padding: 40px; }
+        
+        .card-header {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 48px;
+          padding-bottom: 24px;
+          border-bottom: 1px solid var(--border);
+        }
+
+        .label {
+          display: block;
+          font-size: 10px;
+          font-weight: 700;
+          text-transform: uppercase;
+          color: var(--muted);
+          margin-bottom: 8px;
+          letter-spacing: 0.1em;
+        }
+
+        .val { font-size: 14px; font-weight: 600; font-family: var(--font-heading); }
+
+        .section-title {
+          font-size: 13px;
+          text-transform: uppercase;
+          letter-spacing: 0.15em;
+          color: var(--muted);
+          margin-bottom: 24px;
+        }
+
+        .order-item-row {
+          display: flex;
+          justify-content: space-between;
+          padding: 24px;
+          background: rgba(255, 255, 255, 0.02);
+          border-radius: 16px;
+          margin-bottom: 12px;
+          border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .item-name { font-size: 17px; font-weight: 600; margin-bottom: 4px; }
+        .item-qty { font-size: 13px; color: var(--muted); font-weight: 500; }
+        
+        .item-price { text-align: right; }
+        .total-val { font-size: 18px; font-weight: 700; color: var(--foreground); }
+        .unit-val { font-size: 12px; color: var(--muted); }
+
+        .sidebar { display: flex; flexDirection: column; gap: 24px; }
+        
+        .summary-card, .shipping-card { padding: 32px; }
+        
+        .summary-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        
+        .status-pill { padding: 4px 12px; border-radius: 8px; font-size: 11px; font-weight: 700; border: 1px solid rgba(255,255,255,0.1); }
+        .status-pill.paid { color: var(--success); background: rgba(0, 229, 255, 0.05); border-color: rgba(0, 229, 255, 0.2); }
+        .status-pill.pending { color: var(--warning); background: rgba(255, 204, 0, 0.05); border-color: rgba(255, 204, 0, 0.2); }
+
+        .val-total { font-size: 28px; font-weight: 800; color: var(--primary); font-family: var(--font-heading); }
+        .val-method { font-size: 14px; font-weight: 600; }
+        .payment-action { margin-top: 32px; }
+
+        .address-block p { margin-bottom: 4px; font-size: 15px; }
+        .recipient { font-weight: 700; margin-bottom: 8px !important; color: var(--foreground); }
+        .address-line { color: rgba(255,255,255,0.7); }
+        .phone { margin-top: 12px !important; font-size: 13px !important; font-weight: 600; color: var(--primary); }
+
+        @media (max-width: 1024px) {
+          .details-layout { grid-template-columns: 1fr; }
+          .sidebar { order: -1; }
+        }
+      `}</style>
     </div>
   );
 }

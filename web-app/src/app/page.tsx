@@ -12,7 +12,7 @@ async function getFeaturedProducts() {
     if (!res.ok) return [];
     const json = await res.json();
     const products = Array.isArray(json) ? json : (json.data || json.products || []);
-    return products.filter((p: any) => p.featured).slice(0, 4);
+    return products.slice(0, 4);
   } catch (error) {
     return [];
   }
@@ -22,110 +22,115 @@ export default async function Home() {
   const featuredProducts = await getFeaturedProducts();
 
   return (
-    <div style={{ padding: '0 0 48px' }}>
+    <div className="animate-fade-in">
       {/* Hero Section */}
-      <section style={{ 
-        textAlign: 'center', 
-        padding: '80px 0', 
-        marginBottom: '48px', 
-        background: 'linear-gradient(135deg, var(--card-bg) 0%, var(--background) 100%)',
-        borderRadius: '0 0 32px 32px',
-        borderBottom: '1px solid var(--border)'
+      <section className="section-padding" style={{ 
+        textAlign: 'center',
+        paddingTop: '160px',
+        paddingBottom: '100px',
+        position: 'relative'
       }}>
-        <h1 style={{ 
-          fontSize: '56px', 
-          fontWeight: '800', 
-          color: 'var(--foreground)', 
-          marginBottom: '20px', 
-          letterSpacing: '-2px',
-          lineHeight: '1.1'
-        }}>
-          Premium Tech & Style <br />
-          <span style={{ color: 'var(--primary)' }}>Delivered to You</span>
-        </h1>
-        <p style={{ fontSize: '20px', color: 'var(--muted)', maxWidth: '600px', margin: '0 auto 32px', lineHeight: '1.6' }}>
-          Discover our curated collection of premium products. Experience seamless shopping with Lumina.
-        </p>
-        <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
-          <Link href="/products">
-            <Button variant="primary" size="lg" style={{ padding: '12px 32px' }}>
-              Shop Catalog
-            </Button>
-          </Link>
-          <Link href="/register">
-            <Button variant="outline" size="lg" style={{ padding: '12px 32px' }}>
-              Join Community
-            </Button>
-          </Link>
+        <div className="container">
+          <div className="badge badge-success" style={{ marginBottom: '24px' }}>New Generation of Tech</div>
+          <h1 className="display-large" style={{ marginBottom: '24px' }}>
+            Elevate Your <span className="text-primary text-glow">Lumina</span> Life
+          </h1>
+          <p style={{ 
+            fontSize: '20px', 
+            color: 'var(--muted)', 
+            maxWidth: '700px', 
+            margin: '0 auto 48px',
+            fontWeight: '400'
+          }}>
+            Experience the intersection of luxury and technology. Curated premium electronics designed for the future.
+          </p>
+          <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
+            <Link href="/products">
+              <Button variant="primary" size="lg" glow>
+                Explore Catalog
+              </Button>
+            </Link>
+            <Link href="/register">
+              <Button variant="glass" size="lg">
+                Join Lumina
+              </Button>
+            </Link>
+          </div>
         </div>
       </section>
 
-      {/* Featured Products Section */}
-      {featuredProducts.length > 0 && (
-        <section style={{ marginBottom: '80px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '32px' }}>
+      {/* Featured Products (Bento Style) */}
+      <section className="section-padding" style={{ background: 'rgba(255,255,255,0.01)' }}>
+        <div className="container">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '48px' }}>
             <div>
-              <h2 style={{ fontSize: '32px', fontWeight: '700', marginBottom: '8px' }}>Featured Collections</h2>
-              <p style={{ color: 'var(--muted)' }}>Hand-picked premium items for your lifestyle.</p>
+              <h2 className="display-medium" style={{ marginBottom: '12px' }}>Curated Picks</h2>
+              <p className="text-muted">Hand-selected for the modern enthusiast.</p>
             </div>
-            <Link href="/products" style={{ color: 'var(--primary)', fontWeight: '600', textDecoration: 'none' }}>
-              View all products →
+            <Link href="/products" className="text-primary" style={{ fontWeight: '600' }}>
+              View Showcase →
             </Link>
           </div>
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', 
-            gap: '24px' 
-          }}>
+
+          <div className="grid grid-cols-4" style={{ gap: '32px' }}>
             {featuredProducts.map((product: any) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
-        </section>
-      )}
-
-      {/* Features Grid */}
-      <section style={{ 
-        display: 'grid', 
-        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', 
-        gap: '24px', 
-        marginBottom: '80px' 
-      }}>
-        <div className="card" style={{ padding: '32px', textAlign: 'center' }}>
-          <div style={{ fontSize: '40px', marginBottom: '16px' }}>🚚</div>
-          <h3 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '12px' }}>Worldwide Shipping</h3>
-          <p style={{ color: 'var(--muted)', fontSize: '15px', lineHeight: '1.6' }}>Free shipping on all orders over $50. Track your items from warehouse to doorstep.</p>
-        </div>
-        <div className="card" style={{ padding: '32px', textAlign: 'center' }}>
-          <div style={{ fontSize: '40px', marginBottom: '16px' }}>🔒</div>
-          <h3 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '12px' }}>Secure Verification</h3>
-          <p style={{ color: 'var(--muted)', fontSize: '15px', lineHeight: '1.6' }}>Authenticated via Casdoor. Your data privacy and payment security are our top priorities.</p>
-        </div>
-        <div className="card" style={{ padding: '32px', textAlign: 'center' }}>
-          <div style={{ fontSize: '40px', marginBottom: '16px' }}>⭐</div>
-          <h3 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '12px' }}>Top Tier Support</h3>
-          <p style={{ color: 'var(--muted)', fontSize: '15px', lineHeight: '1.6' }}>24/7 customer assistance. We are here to ensure you have the best shopping experience.</p>
         </div>
       </section>
 
-      {/* Final CTA */}
-      <section className="card" style={{ 
-        padding: '64px', 
-        textAlign: 'center', 
-        background: 'var(--primary)', 
-        color: 'white', 
-        borderRadius: '24px',
-        boxShadow: '0 20px 40px rgba(var(--primary-rgb), 0.2)'
-      }}>
-        <h2 style={{ fontSize: '36px', fontWeight: '800', marginBottom: '16px' }}>Start Your Experience Today</h2>
-        <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '18px', marginBottom: '32px', maxWidth: '500px', margin: '0 auto 32px' }}>
-          Join thousands of satisfied customers and get access to exclusive deals.
-        </p>
-        <Link href="/products">
-          <Button variant="secondary" size="lg" style={{ background: 'white', color: 'var(--primary)', fontWeight: '700', padding: '12px 48px' }}>
-            Explore Full Catalog
-          </Button>
-        </Link>
+      {/* Why Lumina (Bento Grid Layout) */}
+      <section className="section-padding">
+        <div className="container">
+          <h2 className="display-medium" style={{ textAlign: 'center', marginBottom: '64px' }}>The Lumina Standard</h2>
+          
+          <div className="bento-grid">
+            <div className="glass-card bento-item-large" style={{ padding: '48px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <div style={{ fontSize: '48px', marginBottom: '24px' }}>✨</div>
+              <h3 className="display-small" style={{ fontSize: '28px', marginBottom: '16px' }}>Impeccable Quality</h3>
+              <p className="text-muted" style={{ fontSize: '18px' }}>Every product in our collection undergoes rigorous testing to meet the Lumina standard of excellence.</p>
+            </div>
+            
+            <div className="glass-card" style={{ padding: '32px', textAlign: 'center' }}>
+              <div style={{ fontSize: '32px', marginBottom: '16px' }}>🛡️</div>
+              <h4 style={{ fontSize: '18px', marginBottom: '12px' }}>Secure Core</h4>
+              <p className="text-muted" style={{ fontSize: '14px' }}>Casdoor powered security for your peace of mind.</p>
+            </div>
+            
+            <div className="glass-card" style={{ padding: '32px', textAlign: 'center' }}>
+              <div style={{ fontSize: '32px', marginBottom: '16px' }}>🚀</div>
+              <h4 style={{ fontSize: '18px', marginBottom: '12px' }}>Elite Speed</h4>
+              <p className="text-muted" style={{ fontSize: '14px' }}>Instant fulfillment and real-time tracking.</p>
+            </div>
+            
+            <div className="glass-card bento-item-wide" style={{ padding: '40px', background: 'linear-gradient(90deg, var(--primary) 0%, #00d1ff 100%)', color: 'white', border: 'none' }}>
+              <h3 style={{ fontSize: '24px', marginBottom: '12px' }}>Lumina Prime Support</h3>
+              <p style={{ opacity: 0.9 }}>Concierge-level customer assistance available 24/7 for our elite members.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Visual Break / Newsletter */}
+      <section className="section-padding">
+        <div className="container">
+          <div className="glass-card" style={{ 
+            padding: '80px', 
+            textAlign: 'center',
+            background: 'radial-gradient(circle at center, rgba(6, 127, 249, 0.15) 0%, transparent 70%)',
+            border: '1px solid var(--primary)'
+          }}>
+            <h2 className="display-medium" style={{ marginBottom: '24px' }}>Stay Ahead</h2>
+            <p className="text-muted" style={{ fontSize: '18px', maxWidth: '600px', margin: '0 auto 40px' }}>
+              Get exclusive access to pre-orders and limited edition Lumina drops.
+            </p>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', maxWidth: '400px', margin: '0 auto' }}>
+              <input type="email" placeholder="Your electronic mail" className="input" style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '12px' }} />
+              <Button variant="primary">Subscribe</Button>
+            </div>
+          </div>
+        </div>
       </section>
     </div>
   );

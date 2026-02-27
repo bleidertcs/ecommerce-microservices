@@ -8,26 +8,44 @@ function LoginRedirect() {
   const searchParams = useSearchParams();
   
   useEffect(() => {
-    window.location.href = getCasdoorLoginUrl();
+    // Artificial small delay for premium feels
+    const timer = setTimeout(() => {
+       window.location.href = getCasdoorLoginUrl();
+    }, 800);
+    return () => clearTimeout(timer);
   }, []);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
-      <div className="spinner"></div>
-      <h2 style={{ marginTop: '20px' }}>Redirecting to Casdoor Login...</h2>
+    <div className="redirect-container animate-fade-in">
+      <div className="glass-card redirect-card">
+        <div className="spinner"></div>
+        <h2 className="display-small" style={{ fontSize: '24px' }}>Securing Connection</h2>
+        <p className="text-muted">Establishing link with Lumina Core...</p>
+      </div>
       <style jsx>{`
+        .redirect-container {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          height: 60vh;
+        }
+        .redirect-card {
+           padding: 60px;
+           text-align: center;
+           display: flex;
+           flex-direction: column;
+           align-items: center;
+           gap: 24px;
+        }
         .spinner {
-          border: 4px solid rgba(0, 0, 0, 0.1);
-          width: 36px;
-          height: 36px;
+          width: 48px;
+          height: 48px;
+          border: 2px solid rgba(255, 255, 255, 0.05);
+          border-top-color: var(--primary);
           border-radius: 50%;
-          border-left-color: #000;
           animation: spin 1s linear infinite;
         }
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
+        @keyframes spin { to { transform: rotate(360deg); } }
       `}</style>
     </div>
   );
@@ -35,7 +53,7 @@ function LoginRedirect() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div className="container section-padding" style={{ textAlign: 'center' }}>Initialising...</div>}>
       <LoginRedirect />
     </Suspense>
   );

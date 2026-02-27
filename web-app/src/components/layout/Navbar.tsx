@@ -9,7 +9,7 @@ import { useAuth } from '@/context/AuthContext';
 import CartButton from './CartButton';
 
 export default function Navbar() {
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated } = useAuth();
 
   return (
     <nav className={styles.navbar}>
@@ -21,13 +21,16 @@ export default function Navbar() {
         <Link href="/" className={styles.link}>Home</Link>
         <Link href="/products" className={styles.link}>Products</Link>
         {isAuthenticated && <Link href="/orders" className={styles.link}>Orders</Link>}
+        {isAuthenticated && <Link href="/profile" className={styles.link}>Profile</Link>}
       </div>
 
       <div className={styles.actions}>
         {isAuthenticated ? (
-           <Button variant="secondary" onClick={logout}>
-             Logout
-           </Button>
+           <Link href="/logout">
+             <Button variant="secondary">
+               Logout
+             </Button>
+           </Link>
         ) : (
           <>
             <Button variant="secondary" onClick={() => {

@@ -100,6 +100,9 @@ async function bootstrap() {
         app.close();
     });
 
+    // Swagger documentation
+    await setupSwagger(app);
+
     // Start server
     await app.listen(port, host);
 

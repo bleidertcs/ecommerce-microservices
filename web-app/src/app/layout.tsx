@@ -27,10 +27,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
+      <body>
         <Providers>
           <Navbar />
-          <main className="container" style={{ paddingTop: '100px', minHeight: '80vh' }}>
+          <main style={{ minHeight: '100vh', paddingTop: '100px' }}>
             {children}
           </main>
           <Footer />

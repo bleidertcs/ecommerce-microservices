@@ -32,7 +32,6 @@ export default function CartPage() {
 
   const handleCheckout = async () => {
     if (!isAuthenticated) {
-      // Redirect to Casdoor login
       window.location.href = getCasdoorLoginUrl();
       return;
     }
@@ -95,141 +94,296 @@ export default function CartPage() {
 
   if (cart.length === 0) {
     return (
-      <div style={{ padding: '80px 0', textAlign: 'center' }}>
-        <div className="card" style={{ padding: '48px', maxWidth: '600px', margin: '0 auto' }}>
-          <h1 style={{ fontSize: '24px', marginBottom: '16px' }}>Your cart is empty</h1>
-          <p style={{ color: 'var(--muted)', marginBottom: '32px' }}>
-            Looks like you haven't added anything to your cart yet.
+      <div className="container section-padding animate-fade-in" style={{ textAlign: 'center' }}>
+        <div className="glass-card empty-cart-card">
+          <div className="empty-icon">🛒</div>
+          <h1 className="display-small">Your Vessel is Empty</h1>
+          <p className="text-muted" style={{ marginBottom: '40px' }}>
+            There are no tech artifacts currently in your possession.
           </p>
           <Link href="/products">
-            <Button variant="primary">Browse Products</Button>
+            <Button variant="primary" glow size="lg">Discover Essentials</Button>
           </Link>
         </div>
+        <style jsx>{`
+          .empty-cart-card {
+            padding: 80px 48px;
+            max-width: 600px;
+            margin: 0 auto;
+          }
+          .empty-icon { font-size: 64px; margin-bottom: 24px; opacity: 0.3; }
+        `}</style>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: '32px 0' }}>
-      <h1 style={{ fontSize: '32px', fontWeight: '700', marginBottom: '32px' }}>Your Shopping Cart</h1>
-      
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '32px', alignItems: 'start' }}>
-        {/* Cart Items */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {cart.map((item) => (
-            <div key={item.id} className="card" style={{ padding: '16px', display: 'flex', gap: '20px', alignItems: 'center' }}>
-              <div style={{ width: '100px', height: '100px', background: '#f9fafb', borderRadius: '8px', overflow: 'hidden' }}>
-                <img src={item.image || 'https://via.placeholder.com/100'} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              </div>
-              
-              <div style={{ flex: 1 }}>
-                <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '4px' }}>{item.name}</h3>
-                <p style={{ color: 'var(--primary)', fontWeight: '600' }}>${item.price.toFixed(2)}</p>
-              </div>
-              
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <button 
-                  onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                  style={{ width: '30px', height: '30px', borderRadius: '4px', border: '1px solid var(--border)', background: 'transparent', cursor: 'pointer' }}
-                >-</button>
-                <span style={{ fontWeight: '600', minWidth: '20px', textAlign: 'center' }}>{item.quantity}</span>
-                <button 
-                  onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                  style={{ width: '30px', height: '30px', borderRadius: '4px', border: '1px solid var(--border)', background: 'transparent', cursor: 'pointer' }}
-                >+</button>
-              </div>
-              
-              <div style={{ textAlign: 'right', minWidth: '100px' }}>
-                <p style={{ fontWeight: '700', fontSize: '18px' }}>${(item.price * item.quantity).toFixed(2)}</p>
-                <button 
-                  onClick={() => removeFromCart(item.id)}
-                  style={{ border: 'none', background: 'transparent', color: 'var(--danger, #ef4444)', fontSize: '13px', cursor: 'pointer', marginTop: '4px', padding: '4px' }}
-                >Remove</button>
-              </div>
-            </div>
-          ))}
-          
-          <div style={{ display: 'flex', justifyContent: 'flex-start', marginTop: '16px' }}>
-            <button 
-              onClick={clearCart}
-              style={{ border: 'none', background: 'transparent', color: 'var(--muted)', fontSize: '14px', cursor: 'pointer' }}
-            >Clear Cart</button>
+    <div className="container section-padding animate-fade-in">
+      <div className="cart-header">
+        <h1 className="display-medium">Checkout Flow</h1>
+        <div className="auth-status">
+          <div className={`status-pill ${isAuthenticated ? 'authenticated' : 'unauthorized'}`}>
+            <span className="dot"></span>
+            {isAuthenticated ? 'Secured Selection' : 'Unidentified Asset'}
           </div>
-
-          {/* Shipping Address Form */}
-          {isAuthenticated && (
-            <div className="card" style={{ padding: '24px', marginTop: '16px' }}>
-              <h2 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '16px' }}>Shipping Address</h2>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <label style={{ fontSize: '14px', fontWeight: '500' }}>Recipient Name</label>
-                  <input type="text" name="recipientName" value={shippingAddress.recipientName} onChange={handleAddressChange} style={{ padding: '10px', borderRadius: '6px', border: '1px solid var(--border)' }} required />
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <label style={{ fontSize: '14px', fontWeight: '500' }}>Phone</label>
-                  <input type="text" name="recipientPhone" value={shippingAddress.recipientPhone} onChange={handleAddressChange} style={{ padding: '10px', borderRadius: '6px', border: '1px solid var(--border)' }} required />
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', gridColumn: '1 / -1' }}>
-                  <label style={{ fontSize: '14px', fontWeight: '500' }}>Street Address</label>
-                  <input type="text" name="street" value={shippingAddress.street} onChange={handleAddressChange} style={{ padding: '10px', borderRadius: '6px', border: '1px solid var(--border)' }} required />
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <label style={{ fontSize: '14px', fontWeight: '500' }}>City</label>
-                  <input type="text" name="city" value={shippingAddress.city} onChange={handleAddressChange} style={{ padding: '10px', borderRadius: '6px', border: '1px solid var(--border)' }} required />
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <label style={{ fontSize: '14px', fontWeight: '500' }}>State/Province</label>
-                  <input type="text" name="state" value={shippingAddress.state} onChange={handleAddressChange} style={{ padding: '10px', borderRadius: '6px', border: '1px solid var(--border)' }} required />
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <label style={{ fontSize: '14px', fontWeight: '500' }}>Zip/Postal Code</label>
-                  <input type="text" name="zipCode" value={shippingAddress.zipCode} onChange={handleAddressChange} style={{ padding: '10px', borderRadius: '6px', border: '1px solid var(--border)' }} required />
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <label style={{ fontSize: '14px', fontWeight: '500' }}>Country</label>
-                  <input type="text" name="country" value={shippingAddress.country} onChange={handleAddressChange} style={{ padding: '10px', borderRadius: '6px', border: '1px solid var(--border)' }} required />
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-        
-        {/* Summary */}
-        <div className="card" style={{ padding: '24px', position: 'sticky', top: '100px' }}>
-          <h2 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '24px' }}>Order Summary</h2>
-          
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: 'var(--muted)' }}>Subtotal</span>
-              <span style={{ fontWeight: '600' }}>${cartTotal.toFixed(2)}</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: 'var(--muted)' }}>Shipping</span>
-              <span style={{ color: 'var(--success)' }}>Free</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px', paddingTop: '16px', borderTop: '1px solid var(--border)' }}>
-              <span style={{ fontSize: '18px', fontWeight: '700' }}>Total</span>
-              <span style={{ fontSize: '18px', fontWeight: '700', color: 'var(--primary)' }}>${cartTotal.toFixed(2)}</span>
-            </div>
-          </div>
-          
-          <Button 
-            variant="primary" 
-            size="lg" 
-            style={{ width: '100%' }}
-            onClick={handleCheckout}
-            disabled={loading}
-          >
-            {loading ? 'Processing...' : isAuthenticated ? 'Complete Purchase' : 'Sign in to Checkout'}
-          </Button>
-          
-          {!isAuthenticated && (
-            <p style={{ marginTop: '16px', fontSize: '13px', color: 'var(--muted)', textAlign: 'center' }}>
-              You need to be logged in to create an order.
-            </p>
-          )}
         </div>
       </div>
+      
+      <div className="cart-layout">
+        <div className="cart-main">
+          {/* Cart Items Area */}
+          <div className="items-list">
+            <h2 className="section-title">Artifacts</h2>
+            {cart.map((item) => (
+              <div key={item.id} className="glass-card cart-item">
+                <div className="item-image-wrapper">
+                  <img src={item.image || 'https://via.placeholder.com/200'} alt={item.name} />
+                </div>
+                
+                <div className="item-details">
+                  <h3 className="item-name">{item.name}</h3>
+                  <div className="item-meta">
+                    <span className="item-price">${item.price.toFixed(2)}</span>
+                  </div>
+                </div>
+                
+                <div className="quantity-controls">
+                  <button className="qty-btn" onClick={() => updateQuantity(item.id, item.quantity - 1)}>−</button>
+                  <span className="qty-val">{item.quantity}</span>
+                  <button className="qty-btn" onClick={() => updateQuantity(item.id, item.quantity + 1)}>+</button>
+                </div>
+                
+                <div className="item-total-area">
+                  <div className="item-total-price">${(item.price * item.quantity).toFixed(2)}</div>
+                  <button className="remove-link" onClick={() => removeFromCart(item.id)}>Discard</button>
+                </div>
+              </div>
+            ))}
+            
+            <button className="clear-btn" onClick={clearCart}>Purge Entire Selection</button>
+          </div>
+
+          {/* Shipping Gateway */}
+          <div className="shipping-section">
+            <h2 className="section-title">Delivery Coordinates</h2>
+            {!isAuthenticated ? (
+               <div className="glass-card auth-required">
+                  <p>Identification required to proceed with delivery protocols.</p>
+                  <Button variant="primary" onClick={() => window.location.href = getCasdoorLoginUrl()}>Sign In to Lumina</Button>
+               </div>
+            ) : (
+              <div className="glass-card address-form">
+                <div className="form-grid">
+                  <div className="form-group">
+                    <label>Recipient Full Name</label>
+                    <input type="text" name="recipientName" value={shippingAddress.recipientName} onChange={handleAddressChange} className="input premium-input" placeholder="Executor Name" />
+                  </div>
+                  <div className="form-group">
+                    <label>Encrypted Phone</label>
+                    <input type="text" name="recipientPhone" value={shippingAddress.recipientPhone} onChange={handleAddressChange} className="input premium-input" placeholder="+1..." />
+                  </div>
+                  <div className="form-group full-width">
+                    <label>Orbital Address</label>
+                    <input type="text" name="street" value={shippingAddress.street} onChange={handleAddressChange} className="input premium-input" placeholder="Street, Building..." />
+                  </div>
+                  <div className="form-group">
+                    <label>City / Hub</label>
+                    <input type="text" name="city" value={shippingAddress.city} onChange={handleAddressChange} className="input premium-input" placeholder="New York" />
+                  </div>
+                  <div className="form-group">
+                    <label>Sector / State</label>
+                    <input type="text" name="state" value={shippingAddress.state} onChange={handleAddressChange} className="input premium-input" placeholder="NY" />
+                  </div>
+                  <div className="form-group">
+                    <label>Nexus Code</label>
+                    <input type="text" name="zipCode" value={shippingAddress.zipCode} onChange={handleAddressChange} className="input premium-input" placeholder="10001" />
+                  </div>
+                  <div className="form-group">
+                    <label>Territory</label>
+                    <input type="text" name="country" value={shippingAddress.country} onChange={handleAddressChange} className="input premium-input" placeholder="Earth / USA" />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+        
+        {/* Order Summary Sidebar */}
+        <aside className="cart-sidebar">
+          <div className="glass-card summary-card sticky-sidebar">
+            <h2 className="summary-title">Universal Summary</h2>
+            
+            <div className="summary-details">
+              <div className="summary-row">
+                <span>Core Value</span>
+                <span className="val">${cartTotal.toFixed(2)}</span>
+              </div>
+              <div className="summary-row">
+                <span>Quantum Shipping</span>
+                <span className="val success">Included</span>
+              </div>
+              <div className="summary-row total-row">
+                <span className="total-label">Final Investment</span>
+                <span className="total-val">${cartTotal.toFixed(2)}</span>
+              </div>
+            </div>
+            
+            <Button 
+              variant="primary" 
+              size="lg" 
+              glow
+              className="checkout-btn"
+              onClick={handleCheckout}
+              disabled={loading}
+            >
+              {loading ? 'Transmitting...' : isAuthenticated ? 'Finalize Order' : 'Establish Identity'}
+            </Button>
+            
+            {!isAuthenticated && (
+              <p className="auth-hint">Session required for transaction finalization.</p>
+            )}
+          </div>
+        </aside>
+      </div>
+
+      <style jsx>{`
+        .cart-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-end;
+          margin-bottom: 60px;
+          border-bottom: 1px solid var(--border);
+          padding-bottom: 32px;
+        }
+
+        .status-pill {
+          padding: 6px 16px;
+          border-radius: 20px;
+          font-size: 11px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.1em;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .status-pill.authenticated { background: rgba(0, 229, 255, 0.1); color: var(--success); border: 1px solid rgba(0, 229, 255, 0.2); }
+        .status-pill.unauthorized { background: rgba(255, 0, 85, 0.1); color: var(--danger); border: 1px solid rgba(255, 0, 85, 0.2); }
+
+        .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+        .cart-layout {
+          display: grid;
+          grid-template-columns: 1fr 380px;
+          gap: 60px;
+          align-items: start;
+        }
+
+        .section-title {
+          font-size: 14px;
+          text-transform: uppercase;
+          letter-spacing: 0.2em;
+          color: var(--muted);
+          margin-bottom: 24px;
+        }
+
+        .items-list {
+          margin-bottom: 60px;
+        }
+
+        .cart-item {
+          display: grid;
+          grid-template-columns: 120px 1fr auto 140px;
+          gap: 32px;
+          padding: 24px;
+          align-items: center;
+          margin-bottom: 16px;
+        }
+
+        .item-image-wrapper {
+          width: 120px;
+          height: 120px;
+          border-radius: 12px;
+          overflow: hidden;
+          background: rgba(255, 255, 255, 0.02);
+        }
+
+        .item-image-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+
+        .item-name { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+        .item-price { font-size: 15px; color: var(--primary); font-weight: 700; }
+
+        .quantity-controls {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          background: rgba(255, 255, 255, 0.03);
+          padding: 8px 16px;
+          border-radius: 12px;
+          border: 1px solid var(--border);
+        }
+
+        .qty-btn { background: none; border: none; color: white; cursor: pointer; font-size: 18px; padding: 0 4px; }
+        .qty-val { font-weight: 700; min-width: 20px; text-align: center; font-family: var(--font-heading); }
+
+        .item-total-area { text-align: right; }
+        .item-total-price { font-size: 20px; font-weight: 800; font-family: var(--font-heading); margin-bottom: 4px; }
+        .remove-link { background: none; border: none; color: var(--danger); font-size: 12px; cursor: pointer; text-transform: uppercase; font-weight: 600; opacity: 0.6; transition: 0.3s; }
+        .remove-link:hover { opacity: 1; }
+
+        .clear-btn { background: none; border: none; color: var(--muted); font-size: 12px; cursor: pointer; text-transform: uppercase; font-weight: 600; margin-top: 16px; }
+
+        .shipping-section { margin-top: 60px; }
+        
+        .address-form { padding: 40px; }
+        
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        .full-width { grid-column: span 2; }
+        
+        .form-group label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+
+        .premium-input {
+          background: rgba(255, 255, 255, 0.03) !important;
+          border: 1px solid rgba(255, 255, 255, 0.08) !important;
+          border-top-color: rgba(255, 255, 255, 0.12) !important;
+          border-radius: 12px !important;
+          padding: 14px 20px !important;
+          width: 100%;
+        }
+
+        .auth-required { padding: 48px; text-align: center; }
+        .auth-required p { margin-bottom: 24px; color: var(--muted); }
+
+        .summary-card { padding: 40px; }
+        .summary-title { font-size: 20px; font-weight: 800; margin-bottom: 32px; font-family: var(--font-heading); }
+        
+        .summary-row { display: flex; justify-content: space-between; margin-bottom: 16px; color: var(--muted); font-size: 14px; }
+        .summary-row .val { color: var(--foreground); font-weight: 600; }
+        .summary-row .val.success { color: var(--success); }
+        
+        .total-row { border-top: 1px solid var(--border); margin-top: 24px; padding-top: 24px; color: var(--foreground); }
+        .total-label { font-size: 18px; font-weight: 700; }
+        .total-val { font-size: 24px; font-weight: 800; color: var(--primary); font-family: var(--font-heading); }
+
+        :global(.checkout-btn) { width: 100% !important; margin-top: 32px !important; justify-content: center !important; }
+        .auth-hint { font-size: 12px; color: var(--muted); text-align: center; margin-top: 16px; }
+
+        .sticky-sidebar { position: sticky; top: 100px; }
+
+        @media (max-width: 1100px) {
+          .cart-layout { grid-template-columns: 1fr; }
+          .cart-sidebar { position: static; }
+        }
+
+        @media (max-width: 768px) {
+          .cart-item { grid-template-columns: 80px 1fr; grid-template-rows: auto auto auto; }
+          .item-total-area { grid-column: span 2; text-align: left; margin-top: 16px; }
+          .quantity-controls { grid-column: span 2; justify-content: center; }
+          .form-grid { grid-template-columns: 1fr; }
+          .full-width { grid-column: span 1; }
+        }
+      `}</style>
     </div>
   );
 }
