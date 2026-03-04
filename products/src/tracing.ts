@@ -17,8 +17,11 @@ const resource = resourceFromAttributes({
   [ATTR_SERVICE_NAME]: process.env.OTEL_SERVICE_NAME || 'nestjs-service',
 });
 
-// Explicit configuration for debugging
-const otlpEndpoint = process.env.OTEL_EXPORTER_OTLP_ENDPOINT || 'http://otel-collector:4317';
+// Normalize endpoint: gRPC exporters in Node expect URL with scheme
+const rawEndpoint = process.env.OTEL_EXPORTER_OTLP_ENDPOINT || 'http://otel-collector:4317';
+const otlpEndpoint = rawEndpoint.startsWith('http://') || rawEndpoint.startsWith('https://')
+  ? rawEndpoint
+  : `http://${rawEndpoint}`;
 
 const traceExporter = new OTLPTraceExporter({
   url: otlpEndpoint,

@@ -1,0 +1,6 @@
+{
+  "success": {
+    "200": "Operation successful",
+    "201": "Resource created successfully"
+  }
+}

@@ -1,0 +1,13 @@
+---
+description: Buenas prácticas transversales: TypeScript, seguridad, API, errores, logging, Git
+alwaysApply: true
+---
+
+# Buenas prácticas (transversal)
+
+- **TypeScript**: `strict: true`; evitar `any`. Interfaces/tipos explícitos; `readonly` donde corresponda. `const` sobre `let`; async/await en lugar de callbacks.
+- **Seguridad**: Passwords con bcrypt (mín. 10 rounds). No loguear ni exponer tokens o PII. Validar entrada con class-validator; sanitizar salida (XSS). Queries parametrizadas (Prisma lo hace).
+- **API**: Métodos HTTP correctos; recursos en plural (`/api/v1/orders`). Códigos de estado apropiados (200, 201, 400, 401, 404, 500). Respuestas consistentes (ej. `{ data, error?, metadata? }`).
+- **Errores**: Usar excepciones de NestJS (NotFoundException, BadRequestException, etc.). Filtros globales; mensajes útiles para el cliente; stack completo solo en logs.
+- **Logging**: Estructurado (JSON); niveles ERROR/WARN/INFO/DEBUG. Incluir correlation/trace cuando haya OTEL. Nunca datos sensibles.
+- **Git**: Commits convencionales (feat:, fix:, docs:, chore:). Mensajes descriptivos; commits atómicos. Ver `.agent/rules/CORE_RULES.md` para ramas y PRs.

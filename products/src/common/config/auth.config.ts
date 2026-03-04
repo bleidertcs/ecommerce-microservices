@@ -2,18 +2,18 @@ import { registerAs } from '@nestjs/config';
 
 export default registerAs('auth', () => ({
   publicKey: `-----BEGIN PUBLIC KEY-----
-MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEA/Wx2G7qDKuLhtvJTHSpH
-jriO4/PUZUqG+jxOh6ECpbtfElnMJSNZ63aBFpLUi9ChKuSFtRMGifnXUfUXj0VD
-BL9Kf7uiyv5C+RXBJ8J/F4qMiB6j5FTL/tQWxsGQSnMfVDXMBIoL2kDn8ka5Ps7p
-RUh/UQCBoGhVcSsfeM5CPjyDM4GiDJcOvZ3IKBKWYKfAjSeLgdvjN18JOzFf1Un6
-QEefUyKBuhkUfgAnbuJ1S3DDscmmqmJyCYG/etInUo5I0CGID3+AE2Lw4Ehu/HbF
-Q1NRHM3WZRmP6QaCcAw9mdJmOkgTRrobyP6hyfd14uQ6UAz53qV9EmvoAFOPo8qV
-LaG4EyGN1cJWvbAJSTRynAbE7tKYXGas65wl56u/gzTnqZyMWbe0lVi+q+pjgaJF
-Jxw06+7iDIRuH6HJPHLzvRSJ1SVIVpt/pXutqyfgpdIuvNIrGP6WwhXq5fkJmrtA
-PMr9Zg89y8WSaXuePNTwkN4Q92Dbn2JgV6DVl4pZ3qulzxX09m1ZUHXQZBwK794x
-0IiMeFbYA9vjVSIWjrAcspB8B/d89gMqwL0KgdvNjVRKjXG2oZUjxq2mtfQRhAU7
-wwwokGY6A+zCUcFCf5QQ6TIMwpwCwjBIgWf5kSd+vRcI96gakh8KJm6m/ds62HLC
-0zR3oCHmkm+8peQLB40dcP0CAwEAAQ==
+MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEA7eOTNH7MOXO6yrXySrHv
+aIBsN2fFdV490IEPFXcJNXr12+jUwA6mjngCBAR5+V3EdAcvb9Z8hfclpxT2XS4z
+SNQShMVqSpsVBJs/92mKEaze1yWQJ0sbpp50/q1Z6JDtFvKRajxyK/RxC2VWqREP
+72CtNTTgZeyC7WTAJCuKDK5w/vBbtm+AR9/YSke5ByU5LnmZ2aCk/RQyXkSwv5/Q
+dwuhO168Bfm2/go2QNezlusagTHypksPAgZeQgWLS44umh4c6F4irkQdynzCtwMR
+5t21Bv3xMFmrP7urIhmNBivlWNXibrFmBaejcfI3s4Rb89HCo77M9eLSVHakPpwn
+JLQH98fjzBRfdlJViU9tA/7k78SsF15lKLJSyDm5bC/C1Iqi4CcbHn0A8j9YkDPY
+bK81vZ2cTElvKTeVo/EYRgublVaAsA6q+ysnd1CTghZShyJAm0ObkCrh2lMzUqt9
+oR2Wql+ALtMlqGUhAnAKxPOSM369ex0LapOiN4eYw39JnMSCyYextaGAGWZyu3yc
+ltXqXAg3xAMnBReV/4jN4DU+IpgSR6aNQ/cvxuPF5GjeqbYQzDjIkkfwjYuxHWAJ
+iDPsRPBwWD/Gjts9KHEdRvBruUgwv5rrmxBNPGmOV5m3sejo1C9tfDYV9XkfziOv
+53uMLkxuuwTpu67EP9iO/sMCAwEAAQ==
 -----END PUBLIC KEY-----`,
-  issuer: 'http://localhost:8000/casbin/app-built-in',
+  issuer: 'http://localhost:8000',
 }));

@@ -11,7 +11,9 @@ export class OutboxWorker {
   constructor(
     private readonly databaseService: DatabaseService,
     @Inject('RABBITMQ_SERVICE') private rmqClient: ClientProxy,
-  ) {}
+  ) { }
+
+  private readonly MAX_RETRIES = 5;
 
   @Cron(CronExpression.EVERY_5_SECONDS)
   async handleOutbox() {
@@ -19,8 +21,18 @@ export class OutboxWorker {
     this.isProcessing = true;
 
     try {
+      const now = new Date();
       const messages = await this.databaseService.outbox.findMany({
-        where: { status: 'PENDING' },
+        where: {
+          OR: [
+            { status: 'PENDING' },
+            {
+              status: 'FAILED',
+              retryCount: { lt: this.MAX_RETRIES },
+              nextRetryAt: { lte: now }
+            },
+          ],
+        },
         take: 10,
         orderBy: { createdAt: 'asc' },
       });
@@ -30,9 +42,10 @@ export class OutboxWorker {
         return;
       }
 
-      this.logger.log(`Processing ${messages.length} messages from outbox`);
+      this.logger.log(`Processing ${messages.length} messages from outbox (including retries)`);
 
-      for (const message of messages) {
+      for (const msg of messages) {
+        const message = msg as any;
         try {
           // Publish to RabbitMQ
           this.rmqClient.emit(message.type, message.payload);
@@ -45,15 +58,25 @@ export class OutboxWorker {
               processedAt: new Date(),
             },
           });
-          
+
           this.logger.log(`Message ${message.id} [${message.type}] processed successfully`);
         } catch (error) {
-          this.logger.error(`Error processing message ${message.id}: ${error.message}`);
-          
+          const nextRetryCount = message.retryCount + 1;
+          // Exponential backoff: 2^attemptsSoFar * 5 seconds (first retry = 5s, second = 10s, etc.)
+          const delayInSeconds = Math.pow(2, message.retryCount) * 5;
+          const nextRetryAt = new Date(Date.now() + delayInSeconds * 1000);
+
+          this.logger.error(
+            `Error processing message ${message.id} [Try ${nextRetryCount}/${this.MAX_RETRIES}]: ${error.message}. ` +
+            `Next retry at ${nextRetryAt.toISOString()}`
+          );
+
           await this.databaseService.outbox.update({
             where: { id: message.id },
             data: {
               status: 'FAILED',
+              retryCount: nextRetryCount,
+              nextRetryAt: nextRetryAt,
               error: error.message,
             },
           });

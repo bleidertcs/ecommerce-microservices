@@ -8,7 +8,7 @@
         "npm": ">=9.0.0"
     },
     "scripts": {
-        "prebuild": "rimraf dist",
+        "prebuild": "rm -rf dist",
         "build": "nest build",
         "build:prod": "nest build",
         "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",

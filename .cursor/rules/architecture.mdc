@@ -1,0 +1,26 @@
+---
+description: Arquitectura del proyecto: Kong, Casdoor, NestJS, Next.js, microservicios, Prisma, Docker, SigNoz, UI/UX y buenas prácticas. Aplicar al inicio de requerimientos, mejoras o fixes.
+alwaysApply: true
+---
+
+# Arquitectura del proyecto
+
+Monorepo **e-commerce**: Kong (gateway), Casdoor (identidad), microservicios NestJS, Next.js (web-app), Prisma, Docker, observabilidad SigNoz.
+
+## Resumen por área
+
+- **Kong**: API Gateway :8010. JWT (Casdoor RS256), rate limiting (Redis), CORS, OpenTelemetry. Rule: `kong.mdc`.
+- **Casdoor**: IdP :8000. JWT para Kong; web-app OAuth/Password. Rule: `casdoor.mdc`.
+- **NestJS / Microservicios**: users, products, orders, notifications, payments. HTTP + gRPC/TCP/NATS; DB propia por servicio (Prisma). Rule: `nestjs-microservices.mdc`.
+- **Next.js**: web-app (React 19, Tailwind). API vía Kong. Rule: `nextjs-frontend.mdc`; UI/UX: `ui-ux.mdc`.
+- **Prisma**: ORM por servicio; migraciones, seeds, Outbox en orders. Rule: `prisma.mdc`.
+- **Docker**: docker-compose, servicios, healthchecks, env. Rule: `docker.mdc`.
+- **Observabilidad**: SigNoz + OpenTelemetry (OTLP). Rule: `observability-signoz.mdc`.
+- **Buenas prácticas**: TypeScript, seguridad, API, errores, logging, Git. Rule: `best-practices.mdc` (siempre activa).
+- **Tests**: Jest en `test/unit/`. Rule: `tests.mdc`.
+
+## Antes de implementar
+
+1. Revisar el **Skill** `project-architecture` (`.cursor/skills/project-architecture/SKILL.md`).
+2. Consultar `MASTER_GUIDE.md` (arranque, Casdoor, Kong, observabilidad, pruebas).
+3. Aplicar la rule específica del área que toques (Kong, Casdoor, NestJS, Next.js, Prisma, Docker, SigNoz, UI/UX, tests).

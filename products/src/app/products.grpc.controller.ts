@@ -1,4 +1,4 @@
-import { GrpcController, GrpcMethod } from 'nestjs-grpc';
+import { GrpcController, GrpcMethod, GrpcException } from 'nestjs-grpc';
 import { ProductsService } from '../modules/products/products.service';
 
 @GrpcController('ProductsService')
@@ -8,7 +8,9 @@ export class ProductsGrpcController {
   @GrpcMethod('FindOne')
   async findOne(data: { id: string }) {
     const product = await this.productsService.findOne(data.id);
-    if (!product) return null;
+    if (!product) {
+      throw GrpcException.notFound(`Product with ID ${data.id} not found`, { id: data.id });
+    }
     return {
       id: product.id,
       name: product.name,
@@ -20,7 +22,11 @@ export class ProductsGrpcController {
   @GrpcMethod('ValidateStock')
   async validateStock(data: { id: string; quantity: number }) {
     const product = await this.productsService.findOne(data.id);
-    if (!product || product.stock < data.quantity) {
+    if (!product) {
+      throw GrpcException.notFound(`Product with ID ${data.id} not found`, { id: data.id });
+    }
+
+    if (product.stock < data.quantity) {
       return { available: false };
     }
     return { available: true };

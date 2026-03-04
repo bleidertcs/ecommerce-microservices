@@ -1,0 +1,15 @@
+---
+description: API Gateway Kong: rutas, JWT, rate limiting, CORS, OpenTelemetry
+globs: kong/**/*
+alwaysApply: false
+---
+
+# Kong API Gateway
+
+- **Config**: `kong/config.yml` (declarativo, DB-less). Servicios y rutas bajo `/api/v1/{users|products|orders}`; strip_path: false.
+- **JWT**: Plugin `jwt` en rutas protegidas (users, orders). `key_claim_name: iss` (Casdoor). Clave pública RS256 en `jwt_secrets[].rsa_public_key`; sincronizar con Casdoor Certs.
+- **Request transformer**: Añadir header `x-user-id: $(jwt_claim_sub)` en rutas con JWT para que los microservicios reciban el usuario sin validar token.
+- **Rate limiting**: Plugin `rate-limiting`, policy `redis` (host: redis, port: 6379). Por IP (products) o por header `x-user-id` (users, orders). Límites por minuto definidos por ruta.
+- **CORS**: Plugin `cors` global; orígenes permitidos (ej. localhost:3000, :8010); incluir headers `Authorization`, `traceparent`, `tracestate`, `baggage`, `x-user-id`.
+- **OpenTelemetry**: Plugin `opentelemetry` en rutas a servicios; endpoint al SigNoz collector. Mantener para trazas end-to-end.
+- **Swagger**: Servicio `swagger-ui` en `/docs`; URLs de docs por servicio vía Kong. No exponer credenciales en config.

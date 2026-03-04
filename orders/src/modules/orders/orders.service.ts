@@ -6,6 +6,7 @@ import { DatabaseService } from '../../common/services/database.service';
 import { CircuitBreakerService } from '../../common/services/circuit-breaker.service';
 
 import { ConfigService } from '@nestjs/config';
+import { CreateOrderDto } from './dtos/create-order.dto';
 
 interface IUser {
   id: string;
@@ -65,7 +66,9 @@ export class OrdersService implements OnModuleInit {
     }
   }
 
-  async createOrder(userId: string, items: { productId: string; quantity: number }[]) {
+  async createOrder(userId: string, createOrderDto: CreateOrderDto) {
+    const { items, shippingAddress, paymentMethod } = createOrderDto;
+
     return this.databaseService.$transaction(async (tx) => {
       // 1. Validate User with Circuit Breaker
       try {
@@ -110,8 +113,8 @@ export class OrdersService implements OnModuleInit {
           subtotal: grandTotal,
           total: grandTotal,
           status: OrderStatus.PENDING,
-          shippingAddress: {}, // Default empty for now
-          paymentMethod: 'Credit Card',
+          shippingAddress: shippingAddress as any,
+          paymentMethod,
           items: {
             create: processedItems,
           },
@@ -128,6 +131,8 @@ export class OrdersService implements OnModuleInit {
             userId: order.userId,
             total: order.total,
             items: processedItems,
+            shippingAddress,
+            paymentMethod,
             timestamp: order.createdAt,
           },
         },
@@ -150,20 +155,43 @@ export class OrdersService implements OnModuleInit {
   }
 
   async payOrder(id: string) {
-    const order = await this.findOne(id);
-    if (!order) return null;
+    return this.databaseService.$transaction(async (tx) => {
+      const order = await tx.order.findUnique({
+        where: { id },
+        include: { items: true },
+      });
 
-    if (order.status !== OrderStatus.PENDING) {
-      throw new BadRequestException('Order cannot be paid in its current status');
-    }
+      if (!order) return null;
 
-    return this.databaseService.order.update({
-      where: { id },
-      data: {
-        status: OrderStatus.PAID,
-        paymentStatus: 'PAID' as any,
-      },
-      include: { items: true },
+      if (order.status !== OrderStatus.PENDING) {
+        throw new BadRequestException('Order cannot be paid in its current status');
+      }
+
+      const updatedOrder = await tx.order.update({
+        where: { id },
+        data: {
+          status: OrderStatus.PAID,
+          paymentStatus: 'PAID' as any,
+        },
+        include: { items: true },
+      });
+
+      // Create Outbox Event for order.paid
+      await tx.outbox.create({
+        data: {
+          type: 'order.paid',
+          payload: {
+            orderId: updatedOrder.id,
+            userId: updatedOrder.userId,
+            total: updatedOrder.total,
+            items: updatedOrder.items,
+            timestamp: new Date(),
+          },
+        },
+      });
+
+      this.logger.log(`Order ${id} paid and order.paid outbox event created`);
+      return updatedOrder;
     });
   }
 

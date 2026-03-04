@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { APP_FILTER } from '@nestjs/core';
 import { TerminusModule } from '@nestjs/terminus';
 
 import { CommonModule } from '../common/common.module';
@@ -8,6 +9,7 @@ import { ProductsGrpcController } from './products.grpc.controller';
 import { GrpcModule } from 'nestjs-grpc';
 import { ConfigService } from '@nestjs/config';
 import { join } from 'path';
+import { GrpcExceptionFilter } from '../common/filters/grpc-exception.filter';
 
 @Module({
     imports: [
@@ -32,6 +34,11 @@ import { join } from 'path';
         }),
     ],
     controllers: [AppController, ProductsGrpcController],
-    providers: [],
+    providers: [
+        {
+            provide: APP_FILTER,
+            useClass: GrpcExceptionFilter,
+        },
+    ],
 })
 export class AppModule {}

@@ -1,0 +1,14 @@
+---
+description: UI/UX en web-app: accesibilidad, consistencia, feedback, responsive, Tailwind
+globs: web-app/**/*.tsx, web-app/**/*.css
+alwaysApply: false
+---
+
+# UI/UX (web-app)
+
+- **Stack**: Next.js 16, React 19, Tailwind CSS 4. Componentes funcionales; estilos con clases Tailwind. Evitar CSS-in-JS o archivos .module.css salvo excepciones justificadas.
+- **Accesibilidad**: Atributos semánticos (labels, roles, aria-* cuando aplique). Contraste suficiente; focos visibles. Enlaces y botones claros (no solo color para información).
+- **Consistencia**: Reutilizar componentes de `src/components/` (layout, productos, UI). Misma paleta y espaciado; tokens de diseño en Tailwind (colores, fuentes, breakpoints). Botones y formularios con el mismo patrón.
+- **Feedback**: Estados de carga (skeletons o spinners) en listados y formularios. Mensajes de error claros y accionables. Confirmaciones en acciones destructivas. Toasts o mensajes inline según el caso.
+- **Responsive**: Diseño mobile-first; probar en distintos breakpoints. Navegación usable en móvil (menú colapsable si aplica).
+- **Rendimiento**: Evitar layout shifts; imágenes con dimensiones o aspect-ratio. Cargar datos necesarios por ruta; no bloquear la shell por datos secundarios.

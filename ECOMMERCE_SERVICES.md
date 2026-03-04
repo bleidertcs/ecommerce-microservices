@@ -45,12 +45,16 @@ graph TD
         Kong --> Users[Users :9001]
         Kong --> Products[Products :9002]
         Kong --> Orders[Orders :9003]
+        Kong --> Payments[Payments :9006]
     end
 
     subgraph "Comunicación"
         Orders --> |gRPC| Users
         Orders --> |gRPC| Products
-        Orders -.-> |Events| RMQ[RabbitMQ]
+        Orders -.-> |"Event: order.created"| RMQ[RabbitMQ]
+        RMQ -.-> |"Handle: order.created"| Payments
+        Payments -.-> |"Event: order.paid"| RMQ
+        RMQ -.-> |"Handle: order.paid"| Notifications[Notifications :9005]
     end
 
     subgraph "Observabilidad"
@@ -134,6 +138,47 @@ Gestión de órdenes de compra.
 - gRPC Server en puerto 50053 (interno)
 - gRPC Client (consume Users y Products)
 - RabbitMQ Publisher (eventos de órdenes)
+
+---
+
+### 4. **Payments Service** (Puerto 9006)
+
+Gestión de transacciones y estados de pago.
+
+**Características:**
+
+- ✅ Procesamiento de pagos (simulado)
+- ✅ Registro de transacciones con ID único
+- ✅ Integración con RabbitMQ (consumidor de `order.created`)
+- ✅ Notificación de pago exitoso (emisor de `order.paid`)
+- ✅ Historial de pagos por usuario
+
+**Base de Datos:** `payments` (PostgreSQL)
+
+**Comunicación:**
+
+- HTTP REST API (público vía Kong)
+- gRPC Server en puerto 50056 (interno)
+- RabbitMQ Consumer (`order.created`)
+- RabbitMQ Publisher (`order.paid`)
+
+---
+
+### 5. **Notifications Service** (Puerto 9005)
+
+Servicio de mensajería y notificaciones al cliente.
+
+**Características:**
+
+- ✅ Notificaciones de bienvenida (Email simulado)
+- ✅ Confirmaciones de orden
+- ✅ Confirmaciones de pago exitoso
+- ✅ Logs enriquecidos para trazabilidad
+
+**Comunicación:**
+
+- gRPC Server en puerto 50055 (interno)
+- RabbitMQ Consumer (`order.paid`, `user.created`)
 
 ---
 
@@ -291,12 +336,23 @@ Kong Gateway: http://localhost:8010
 | POST   | `/api/v1/orders`     | ✅ JWT | Crear orden    |
 | DELETE | `/api/v1/orders/:id` | ✅ JWT | Cancelar orden |
 
+### Payments Service
+
+| Método | Endpoint                       | Auth   | Descripción                  |
+| ------ | ------------------------------ | ------ | ---------------------------- |
+| GET    | `/api/v1/payments`             | ✅ JWT | Listar todos los pagos       |
+| GET    | `/api/v1/payments/my-payments` | ✅ JWT | Listar mis pagos             |
+| GET    | `/api/v1/payments/order/:id`   | ✅ JWT | Obtener pago por ID de orden |
+| GET    | `/api/v1/payments/:id`         | ✅ JWT | Obtener detalle de pago      |
+
 ### Health Endpoints (Directos)
 
 ```bash
 http://localhost:9001/health  # Users
 http://localhost:9002/health  # Products
 http://localhost:9003/health  # Orders
+http://localhost:9005/health  # Notifications
+http://localhost:9006/health  # Payments
 ```
 
 ---
@@ -369,6 +425,14 @@ El sistema utiliza patrones avanzados de arquitectura para asegurar la fiabilida
 - **Servicios Públicos**: Limitados por IP para evitar ataques de denegación de servicio (DoS).
 - **Servicios Protegidos**: Limitados por `x-user-id` (usuario específico) para asegurar un uso justo de los recursos.
 - **Persistencia con Redis**: El estado de los límites se comparte entre todas las instancias de Kong para una protección global coherente.
+
+### 🛡️ gRPC Error Handling (Estándar)
+
+El sistema utiliza un patrón estricto para la gestión de errores en gRPC:
+
+- **GrpcException**: Uso de la clase `GrpcException` de la librería `nestjs-grpc` para lanzar errores con códigos de estado estándar (NOT_FOUND, INVALID_ARGUMENT, etc.).
+- **Global Filter**: Implementación de `GrpcExceptionFilter` en cada microservicio para mapear automáticamente las excepciones al formato gRPC (code, message, details).
+- **Consistencia**: Garantiza que el `OrdersService` reciba errores semánticos correctos en lugar de genéricos `13 INTERNAL`.
 
 ### 🔄 Circuit Breaker (Resiliencia)
 

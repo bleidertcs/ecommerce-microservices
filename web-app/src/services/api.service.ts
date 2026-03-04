@@ -1,4 +1,4 @@
-import { Product, FilterParams, ProductsResponse } from "@/types/product.types";
+import { Product, FilterParams, CreateProductInput, UpdateProductInput } from "@/types/product.types";
 import { API_BASE_URL } from "@/lib/config";
 
 /**
@@ -6,14 +6,32 @@ import { API_BASE_URL } from "@/lib/config";
  */
 export class ApiService {
   private static async fetcher<T>(endpoint: string, options?: RequestInit): Promise<T> {
-    const isServer = typeof window === 'undefined';
-    // When on server, we might need different headers or handling
-    // but the API_BASE_URL already handles the host selection
-    
     const res = await fetch(`${API_BASE_URL}${endpoint}`, {
       ...options,
       headers: {
         'Content-Type': 'application/json',
+        ...options?.headers,
+      },
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(errorData.message || `API Error: ${res.status}`);
+    }
+
+    return res.json();
+  }
+
+  private static async fetcherWithAuth<T>(
+    endpoint: string,
+    token: string,
+    options?: RequestInit
+  ): Promise<T> {
+    const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
         ...options?.headers,
       },
     });
@@ -55,5 +73,27 @@ export class ApiService {
     });
   }
 
-  // Add other service methods as needed (Orders, Profile, etc.)
+  static async createProduct(data: CreateProductInput, token: string): Promise<Product> {
+    return this.fetcherWithAuth<Product>('/api/v1/products', token, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  static async updateProduct(
+    id: string,
+    data: UpdateProductInput,
+    token: string
+  ): Promise<Product> {
+    return this.fetcherWithAuth<Product>(`/api/v1/products/${id}`, token, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  static async deleteProduct(id: string, token: string): Promise<{ id: string }> {
+    return this.fetcherWithAuth<{ id: string }>(`/api/v1/products/${id}`, token, {
+      method: 'DELETE',
+    });
+  }
 }

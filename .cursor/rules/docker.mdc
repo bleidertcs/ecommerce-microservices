@@ -1,0 +1,14 @@
+---
+description: Docker y docker-compose: servicios, redes, healthchecks, variables de entorno
+globs: docker-compose.yml, **/Dockerfile, **/.env*
+alwaysApply: false
+---
+
+# Docker y Docker Compose
+
+- **Orquestación**: `docker-compose.yml` es la fuente de verdad. Red `bw-network`. Nombres de contenedor: `bw-<nombre>` (ej. bw-kong, bw-users-service).
+- **Servicios**: Kong, Redis, RabbitMQ, NATS, Casdoor + casdoor-db, PostgreSQL por microservicio (users-db, products-db, orders-db), users/products/orders/notifications/payments-service, web-app, SigNoz (zookeeper, clickhouse, init-clickhouse, signoz-telemetrystore-migrator, signoz, signoz-otel-collector), swagger-ui.
+- **Healthchecks**: Definidos en cada servicio; usar para `depends_on` con `condition: service_healthy` cuando aplique. Puertos expuestos documentados en comentarios (HTTP, gRPC, TCP, management).
+- **Variables**: Cada servicio con `env_file` (ej. `./orders/.env`) y `environment` para overrides (DATABASE_URL, REDIS_URL, NATS_URL, RABBITMQ_URL, OTEL_*). No commitear secretos; usar `${VAR}` o `.env` en raíz.
+- **Build**: Contexto por carpeta (ej. `./orders`), Dockerfile en cada servicio. Multi-stage si conviene para reducir tamaño. Ejecutar migraciones en entrypoint o antes de start si se requiere.
+- **Desarrollo**: Para tests y migraciones, ejecutar dentro del contenedor (ej. `docker-compose exec orders-service pnpm run test`) para paridad de entorno.

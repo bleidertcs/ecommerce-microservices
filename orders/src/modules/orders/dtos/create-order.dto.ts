@@ -25,4 +25,13 @@ export class CreateOrderDto {
   @ValidateNested({ each: true })
   @Type(() => OrderItemDto)
   items: OrderItemDto[];
+
+  @ApiProperty()
+  @IsNotEmpty()
+  shippingAddress: any;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  paymentMethod: string;
 }

@@ -1,0 +1,22 @@
+---
+description: Ubicación y convenciones de tests (Jest, unit/e2e)
+globs: **/test/**/*.ts, **/*.spec.ts
+alwaysApply: false
+---
+
+# Tests
+
+## Ubicación
+
+- **Unit tests**: `test/unit/*.spec.ts` (no bajo `src/`). Configuración Jest en `test/jest.json`.
+- Comando: `pnpm test`. Con cobertura: `pnpm run test --coverage`. Ejecución en contenedor recomendada: `docker-compose exec <service> pnpm run test`.
+
+## Convenciones
+
+- Patrón AAA (Arrange, Act, Assert). Mockear PrismaService, clientes microservicios (gRPC/NATS/RMQ) y ConfigService cuando sea necesario.
+- Cobertura mínima objetivo: 80%. Incluir casos límite y manejo de errores.
+- Naming: `describe` por módulo/clase; `it('should ...')` por comportamiento.
+
+## Referencia
+
+- Detalle de ejemplos y flujos en `.agent/skills/testing-quality/SKILL.md` si existe.

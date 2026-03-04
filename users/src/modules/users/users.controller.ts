@@ -1,4 +1,4 @@
-import { Controller, Get, Param, NotFoundException, Headers, UnauthorizedException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthUser } from '../../common/decorators/auth-user.decorator';
@@ -7,6 +7,12 @@ import { AuthUser } from '../../common/decorators/auth-user.decorator';
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
+
+  @Post()
+  @ApiOperation({ summary: 'Create a new user' })
+  async create(@Body() createUserDto: any) {
+    return this.usersService.create(createUserDto);
+  }
 
   @Get()
   @ApiBearerAuth()

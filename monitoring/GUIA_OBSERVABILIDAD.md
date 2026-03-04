@@ -9,7 +9,6 @@ Este repositorio utiliza **SigNoz** como plataforma all-in-one de observabilidad
 | **SigNoz**                | `bw-signoz`                | 8080      | UI + API de observabilidad            |
 | **SigNoz OTel Collector** | `bw-signoz-otel-collector` | 4317/4318 | Receptor OTLP (gRPC/HTTP)             |
 | **ClickHouse**            | `bw-clickhouse`            | -         | Database para logs, trazas y métricas |
-| **ZooKeeper**             | `bw-zookeeper`             | -         | Coordinación requerida por ClickHouse |
 
 ## Cómo levantar el stack
 

@@ -48,9 +48,16 @@ model Outbox {
   type        String   // Event type: e.g., "order.created"
   payload     Json     // Event data
   status      String   @default("PENDING") // PENDING, PROCESSED, FAILED
+  retryCount  Int      @default(0)
+  nextRetryAt DateTime @default(now())
   error       String?
+  
+  // Timestamps & Soft Delete
   createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
   processedAt DateTime?
+  isDeleted   Boolean  @default(false)
+  deletedAt   DateTime?
 
   @@map("outbox")
 }

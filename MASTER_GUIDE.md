@@ -18,11 +18,14 @@ graph TD
         Kong --> Users[Users Service :9001]
         Kong --> Products[Products Service :9002]
         Kong --> Orders[Orders Service :9003]
+        Kong --> Payments[Payments Service :9006]
     end
 
     subgraph "Transportes"
-        Orders -- "gRPC/TCP/NATS" --> Users
-        Orders -- "gRPC/TCP/NATS" --> Products
+        Orders -- "gRPC" --> Users
+        Orders -- "gRPC" --> Products
+        Orders -- "RMQ" --> Payments
+        Payments -- "RMQ" --> Notifications
     end
 
     subgraph "Persistencia y Eventos"
@@ -55,6 +58,7 @@ graph TD
     - **Users**: `DATABASE_URL="postgresql://admin:master123@localhost:15431/users?schema=public"`
     - **Products**: `DATABASE_URL="postgresql://admin:master123@localhost:15432/products?schema=public"`
     - **Orders**: `DATABASE_URL="postgresql://admin:master123@localhost:15433/orders?schema=public"`
+    - **Payments**: `DATABASE_URL="postgresql://admin:master123@localhost:15436/payments?schema=public"`
 
 3.  **Migraciones y Seeding (Prisma)**:
     Recomendamos ejecutar las migraciones dentro de los contenedores para asegurar paridad de entorno y evitar problemas de configuración local.
@@ -73,6 +77,9 @@ graph TD
     # Órdenes
     docker-compose exec orders-service npx prisma migrate dev --name init
     docker-compose exec orders-service npx prisma db seed
+
+    # Pagos
+    docker-compose exec payments-service npx prisma migrate dev --name init
     ```
 
     **Opción B: Local (Desarrollo rápido)**
@@ -99,7 +106,7 @@ graph TD
 
 1.  **Levantar infraestructura básica**:
     ```bash
-    docker-compose up -d redis rabbitmq users-db products-db orders-db
+    docker-compose up -d redis rabbitmq nats users-db products-db orders-db payments-db
     ```
 2.  **Levantar Identidad y Gateway**:
     ```bash
@@ -111,7 +118,7 @@ graph TD
     ```
 4.  **Levantar Microservicios**:
     ```bash
-    docker-compose up -d users-service products-service orders-service
+    docker-compose up -d users-service products-service orders-service payments-service notifications-service
     ```
 
 ### 💡 Configuración Dinámica de Transportes
@@ -173,6 +180,7 @@ Cada microservicio expone su propia documentación interactiva via Swagger. Pued
 - **Users Service**: [http://localhost:9001/api/docs](http://localhost:9001/api/docs)
 - **Products Service**: [http://localhost:9002/api/docs](http://localhost:9002/api/docs)
 - **Orders Service**: [http://localhost:9003/api/docs](http://localhost:9003/api/docs)
+- **Payments Service**: [http://localhost:9006/api/docs](http://localhost:9006/api/docs)
 
 > [!TIP]
 > Para probar endpoints protegidos en Swagger, obtén un token de Casdoor y usa el botón **Authorize** arriba a la derecha en la UI de Swagger.

@@ -22,10 +22,18 @@ services:
     networks:
       - bw-network
     depends_on:
-      - redis
-      - users-service
-      - products-service
-      - orders-service
+      redis:
+        condition: service_healthy
+      signoz-otel-collector:
+        condition: service_started
+      users-service:
+        condition: service_started
+      products-service:
+        condition: service_started
+      orders-service:
+        condition: service_started
+      payments-service:
+        condition: service_started
     healthcheck:
       test: ["CMD", "kong", "health"]
       interval: 30s
@@ -322,6 +330,8 @@ services:
     depends_on:
       users-db:
         condition: service_healthy
+      signoz-otel-collector:
+        condition: service_started
     networks:
       - bw-network
     healthcheck:
@@ -379,6 +389,8 @@ services:
     depends_on:
       products-db:
         condition: service_healthy
+      signoz-otel-collector:
+        condition: service_started
     networks:
       - bw-network
     healthcheck:
@@ -433,11 +445,14 @@ services:
       - DATABASE_URL=postgresql://admin:master123@orders-db:5432/orders?schema=public
       - REDIS_URL=redis://redis:6379
       - NATS_URL=nats://nats:4222
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
     depends_on:
       orders-db:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+      signoz-otel-collector:
+        condition: service_started
     networks:
       - bw-network
     healthcheck:
@@ -505,6 +520,91 @@ services:
       retries: 3
       start_period: 40s
 
+  # Notifications Service
+  notifications-service:
+    build:
+      context: ./notifications
+      dockerfile: Dockerfile
+    container_name: bw-notifications-service
+    restart: unless-stopped
+    ports:
+      - "9005:9005"
+      - "50055:50055"
+    env_file:
+      - ./notifications/.env
+    environment:
+      - OTEL_SERVICE_NAME=notifications-service
+      - OTEL_EXPORTER_OTLP_ENDPOINT=signoz-otel-collector:4317
+      - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+      - OTEL_EXPORTER_OTLP_INSECURE=true
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      signoz-otel-collector:
+        condition: service_started
+    networks:
+      - bw-network
+
+  # Payments Service
+  payments-service:
+    build:
+      context: ./payments
+      dockerfile: Dockerfile
+    container_name: bw-payments-service
+    restart: unless-stopped
+    ports:
+      - "9006:9006"
+      - "50056:50056"
+    env_file:
+      - ./payments/.env
+    environment:
+      - OTEL_SERVICE_NAME=payments-service
+      - OTEL_EXPORTER_OTLP_ENDPOINT=signoz-otel-collector:4317
+      - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+      - OTEL_EXPORTER_OTLP_INSECURE=true
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - DATABASE_URL=postgresql://admin:master123@payments-db:5432/payments?schema=public
+    depends_on:
+      payments-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      signoz-otel-collector:
+        condition: service_started
+    networks:
+      - bw-network
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget --no-verbose --tries=1 --spider http://localhost:9006/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  payments-db:
+    image: postgres:15-alpine
+    container_name: bw-payments-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: master123
+      POSTGRES_DB: payments
+    volumes:
+      - payments_data:/var/lib/postgresql/data
+    networks:
+      - bw-network
+    ports:
+      - "15436:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d payments"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   # Swagger UI - API Documentation
   swagger-ui:
     image: swaggerapi/swagger-ui
@@ -512,7 +612,7 @@ services:
     restart: unless-stopped
     environment:
       # Aggregated docs for all microservices via Kong
-      URLS: "[{url: '/api/v1/users/docs-json', name: 'Users'}, {url: '/api/v1/products/docs-json', name: 'Products'}, {url: '/api/v1/orders/docs-json', name: 'Orders'}]"
+      URLS: "[{url: '/api/v1/users/docs-json', name: 'Users'}, {url: '/api/v1/products/docs-json', name: 'Products'}, {url: '/api/v1/orders/docs-json', name: 'Orders'}, {url: '/api/v1/payments/docs-json', name: 'Payments'}]"
       BASE_URL: "/docs"
     networks:
       - bw-network
@@ -532,3 +632,4 @@ volumes:
   users_data:
   products_data:
   orders_data:
+  payments_data:

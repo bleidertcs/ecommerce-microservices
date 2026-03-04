@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, NotFoundException, Headers, Patch, BadRequestException, UseGuards, Req, UnauthorizedException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, NotFoundException, Patch, BadRequestException, UseGuards, UnauthorizedException } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { CreateOrderDto } from './dtos/create-order.dto';
@@ -7,7 +7,7 @@ import { AuthUser } from '../../common/decorators/auth-user.decorator';
 @ApiTags('Orders')
 @Controller('orders')
 export class OrdersController {
-  constructor(private readonly ordersService: OrdersService) {}
+  constructor(private readonly ordersService: OrdersService) { }
 
   @Post()
   @ApiBearerAuth()
@@ -17,7 +17,7 @@ export class OrdersController {
     @Body() createOrderDto: CreateOrderDto
   ) {
     if (!user || !user.id) throw new UnauthorizedException('User identity not found');
-    return this.ordersService.createOrder(user.id, createOrderDto.items);
+    return this.ordersService.createOrder(user.id, createOrderDto);
   }
 
   @Get()

@@ -1,0 +1,26 @@
+---
+description: Convenciones del frontend Next.js (web-app)
+globs: web-app/**/*.ts, web-app/**/*.tsx
+alwaysApply: false
+---
+
+# Next.js Frontend (web-app)
+
+## Stack
+
+- Next.js 16, React 19, Tailwind CSS 4. Componentes funcionales; estilos con Tailwind.
+- Cliente API: llamadas a `NEXT_PUBLIC_API_URL` (Kong en desarrollo: `http://localhost:8010`). Rutas bajo `/api/v1/` (users, products, orders).
+- Autenticación: Casdoor (OAuth/Password). Token en sesión/cookies; enviar `Authorization: Bearer <token>` a Kong.
+
+## Estructura
+
+- `src/app/`: rutas (App Router). Layout y estilos globales en `layout.tsx` y `globals.css`.
+- Componentes reutilizables en `src/components/` (layout, productos, UI). Evitar lógica de negocio pesada en componentes; extraer hooks o servicios si aplica.
+
+## Observabilidad
+
+- OpenTelemetry para frontend (OTLP HTTP) configurado hacia SigNoz collector. Mantener instrumentación activa en desarrollo para trazas end-to-end.
+
+## Buenas prácticas
+
+- No hardcodear URLs de API; usar variables de entorno. Manejar estados de carga y error en llamadas a la API. Respuestas tipadas (TypeScript) para contratos con backend.

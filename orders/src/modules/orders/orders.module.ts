@@ -43,7 +43,7 @@ import { join } from 'path';
             options: {
               package: 'users',
               protoPath: join(__dirname, '../../protos/users.proto'),
-              url: 'bw-users-service:50051',
+              url: configService.get<string>('USERS_SERVICE_URL', 'users-service:50051'),
             },
           };
         },
@@ -70,7 +70,7 @@ import { join } from 'path';
             options: {
               package: 'products',
               protoPath: join(__dirname, '../../protos/products.proto'),
-              url: 'bw-products-service:50052',
+              url: configService.get<string>('PRODUCTS_SERVICE_URL', 'products-service:50052'),
             },
           };
         },

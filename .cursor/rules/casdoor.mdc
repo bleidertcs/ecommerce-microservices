@@ -1,0 +1,13 @@
+---
+description: Identidad Casdoor: JWT, aplicaciones, certificados, integración con Kong
+globs: **/.env*, **/auth.config.ts, web-app/**/*
+alwaysApply: false
+---
+
+# Casdoor (Identity Provider)
+
+- **Rol**: Emisión de JWT para login (Password, Authorization Code). Kong valida los tokens con la clave pública de Casdoor; los microservicios no validan JWT en rutas que pasan por Kong con plugin JWT.
+- **Config**: Casdoor en `:8000`; BD PostgreSQL (`casdoor-db`). Variables `CASDOOR_ENDPOINT`, `CASDOOR_DB_PASSWORD`. En web-app: client_id, client_secret y callback para OAuth.
+- **Certificados**: Kong usa la **public key** del cert de la aplicación (Identity > Certs en Casdoor). Actualizar `kong/config.yml` `jwt_secrets[].rsa_public_key` y `issuer` si cambia el endpoint. Scripts opcionales: `scripts/extract-pubkey.ps1`, `scripts/save-cert.ps1`.
+- **Aplicación**: Redirect URLs (ej. `http://localhost:3000/callback`), Grant Types (Authorization Code, Password). Organización: habilitar "Enable privilege consent" si se requiere registro.
+- **Auth en servicios**: `auth.config.ts` en microservicios solo para validación interna cuando se llame al servicio sin Kong (ej. Swagger directo). En producción, confiar en `x-user-id` inyectado por Kong.

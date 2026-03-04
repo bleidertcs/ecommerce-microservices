@@ -6,36 +6,35 @@ import Footer from "@/components/layout/Footer";
 import { Providers } from "@/app/providers";
 
 const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+    variable: "--font-geist-sans",
+    subsets: ["latin"],
 });
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+    variable: "--font-geist-mono",
+    subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "Lumina | Premium E-Commerce",
-  description: "Experience the next generation of shopping.",
+    title: "Lumina | Premium E-Commerce",
+    description: "Experience the next generation of shopping.",
 };
 
 export default function RootLayout({
-  children,
+    children,
 }: Readonly<{
-  children: React.ReactNode;
+    children: React.ReactNode;
 }>) {
-  return (
-    <html lang="en">
-      <body>
-        <Providers>
-          <Navbar />
-          <main style={{ minHeight: '100vh', paddingTop: '100px' }}>
-            {children}
-          </main>
-          <Footer />
-        </Providers>
-      </body>
-    </html>
-  );
+    return (
+        <html lang="en">
+            <body className={`${geistSans.variable} ${geistMono.variable}`}>
+                <Providers>
+                    <Navbar />
+                    <main className="min-h-screen pt-20 sm:pt-[100px]">{children}</main>
+                    <Footer />
+                </Providers>
+            </body>
+        </html>
+    );
 }
+

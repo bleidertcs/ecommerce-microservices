@@ -1,0 +1,14 @@
+---
+description: Prisma ORM: schema, migraciones, seeds, convenciones por microservicio
+globs: **/prisma/**/*, **/schema.prisma
+alwaysApply: false
+---
+
+# Prisma
+
+- **Alcance**: Cada microservicio tiene su propia base PostgreSQL y su carpeta `prisma/` (schema.prisma, migrations, opcional seed).
+- **Schema**: UUID para PK (`@id @default(uuid())`). Incluir `createdAt`, `updatedAt`. Soft deletes con `isDeleted`/`deletedAt` si aplica. Enums para conjuntos fijos. Relaciones explícitas; usar JSON solo cuando sea necesario.
+- **Migraciones**: Siempre `prisma migrate dev` (desarrollo) o `migrate deploy` (producción). Nombres descriptivos: `prisma migrate dev --name add_outbox_table`. No editar archivos generados en `migrations/`. Lock: `migration_lock.toml` por proyecto.
+- **Generación**: Tras cambiar schema ejecutar `pnpm prisma:generate` (o `prisma generate`). El cliente se usa en servicios (PrismaService inyectado).
+- **Seeds**: `prisma/seed.ts` idempotente; documentar cantidades. Configurar en `package.json` ("prisma": {"seed": "..."}). Ejecutar con `pnpm prisma:seed` o `docker-compose exec <service> npx prisma db seed`.
+- **Transactional Outbox**: En orders, tabla `outbox` en el mismo schema; escribir en la misma transacción que el dominio; worker lee y publica a RabbitMQ.

@@ -1,0 +1,31 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Payment {
+  id              String        @id @default(uuid())
+  orderId         String        // Referencia a Order en orders-service
+  userId          String        // Referencia a User en users-service
+  amount          Float
+  currency        String        @default("USD")
+  status          PaymentStatus @default(PENDING)
+  transactionId   String?       // ID de la pasarela o simulación
+  paymentMethod   String
+  metadata        Json?         // Datos extra (items snapshot, etc.)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@map("payments")
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  PAID
+  FAILED
+  REFUNDED
+}

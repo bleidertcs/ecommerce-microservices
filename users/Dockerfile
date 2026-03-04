@@ -1,5 +1,5 @@
 # Multi-stage build for optimal image size
-FROM node:lts-alpine AS base
+FROM node:20-alpine AS base
 RUN apk add --no-cache libc6-compat
 RUN npm install -g pnpm
 ENV CI=true
@@ -8,19 +8,21 @@ ENV CI=true
 FROM base AS builder
 RUN apk add --no-cache wget openssl
 WORKDIR /app
+ARG DATABASE_URL=postgresql://build:build@localhost:5432/build
+ENV DATABASE_URL=$DATABASE_URL
 
 # Copy package files
-COPY package.json pnpm-lock.yaml* ./
+COPY package.json pnpm-lock.yaml* .npmrc ./
 COPY prisma ./prisma/
 
 # Install dependencies (no frozen lockfile to allow platform adjustments)
-RUN pnpm install --ignore-scripts
+RUN pnpm install --no-frozen-lockfile --ignore-scripts
 
 # Copy source code
 COPY . .
 
 # Generate Prisma client and build application
-RUN pnpm prisma:generate
+RUN npx prisma generate
 RUN pnpm proto:generate
 RUN pnpm build
 

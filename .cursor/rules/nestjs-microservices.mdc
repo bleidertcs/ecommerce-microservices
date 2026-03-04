@@ -1,0 +1,31 @@
+---
+description: Estándares NestJS para microservicios (users, products, orders, notifications, payments)
+globs: users/**/*.ts, products/**/*.ts, orders/**/*.ts, notifications/**/*.ts, payments/**/*.ts
+alwaysApply: false
+---
+
+# NestJS Microservicios
+
+## Estructura por servicio
+
+- `src/main.ts`: bootstrap, OpenTelemetry primero, Express + microservicios (TCP, NATS, RMQ según servicio), prefijo `api`, versionado `v1`, ValidationPipe global, Swagger en no-producción.
+- `src/app/app.module.ts`: módulo raíz. ConfigModule, health, módulos de dominio.
+- Controllers: solo enrutado; lógica en Services. DTOs con class-validator/class-transformer.
+- Comunicación con otros servicios: `ClientsModule.registerAsync` (gRPC/TCP/NATS), inyectar cliente por nombre (ej. `USERS_PACKAGE`, `PRODUCTS_PACKAGE`).
+
+## Base de datos y eventos
+
+- Prisma por servicio. Migraciones con `prisma migrate`; no editar migraciones generadas. UUID como PK; `createdAt`/`updatedAt`.
+- Orders: patrón **Transactional Outbox** (tabla `outbox` + `OutboxWorker`) para publicar eventos a RabbitMQ de forma consistente.
+
+## Autenticación
+
+- JWT validado en Kong (Casdoor, issuer en auth.config). Servicios reciben `x-user-id` inyectado por Kong. No validar JWT dentro del microservicio en rutas que ya pasan por Kong con plugin JWT.
+
+## Observabilidad
+
+- Iniciar SDK OpenTelemetry en la primera línea de `main.ts`. Winston con `OpenTelemetryTransportV3` para correlación logs-traces. No loguear datos sensibles.
+
+## Tests
+
+- Unit tests en `test/unit/*.spec.ts`. Jest config en `test/jest.json`. Mockear dependencias externas (Prisma, clientes gRPC/NATS/RMQ). Ejecutar con `pnpm test` (o en contenedor: `docker-compose exec <service> pnpm run test`).

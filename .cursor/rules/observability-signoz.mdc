@@ -1,0 +1,14 @@
+---
+description: Observabilidad con SigNoz: OpenTelemetry, traces, métricas, logs, OTLP
+globs: **/tracing.ts, **/main.ts, monitoring/**/*, **/otel*
+alwaysApply: false
+---
+
+# Observabilidad (SigNoz + OpenTelemetry)
+
+- **Stack**: SigNoz (UI :8080), OTel Collector, ClickHouse. Config en `monitoring/signoz/` (otel-collector-config.yaml, clickhouse-*.xml). Ver `monitoring/GUIA_OBSERVABILIDAD.md` si existe.
+- **Exportación**: Servicios envían telemetría por OTLP (gRPC :4317 o HTTP :4318). Variables: `OTEL_SERVICE_NAME`, `OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_EXPORTER_OTLP_PROTOCOL`, `OTEL_EXPORTER_OTLP_INSECURE`.
+- **Microservicios NestJS**: Iniciar SDK en la **primera línea** de `main.ts` (antes de imports de Nest). Usar `@opentelemetry/*` (sdk-node, auto-instrumentations-node, exporter-*-otlp-grpc, instrumentation-winston). Winston con `OpenTelemetryTransportV3` para correlación logs–traces. Ignorar en health: `/health`, `/api/health`.
+- **Web-app**: OTLP HTTP hacia el collector; instrumentación fetch y XHR para trazas del frontend.
+- **Kong**: Plugin `opentelemetry` en rutas; mismo collector. No duplicar spans innecesariamente.
+- **Buenas prácticas**: No loguear PII ni tokens. Usar atributos semánticos estándar. Mantener nombres de servicio consistentes (`OTEL_SERVICE_NAME`).
