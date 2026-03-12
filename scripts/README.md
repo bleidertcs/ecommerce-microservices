@@ -63,20 +63,20 @@ Simula una carga de tráfico realista para poner a prueba la resiliencia del sis
 
 ## 🔐 3. Fetch Casdoor Certs (`fetch-casdoor-certs.sh/ps1`)
 
-Extrae la clave pública de Casdoor necesaria para configurar el plugin de JWT en Kong.
+Extrae la clave pública de Casdoor desde su endpoint JWKS y, opcionalmente, actualiza la configuración de Kong.
 
 ### Qué hace:
 
-Conecta con la API de Casdoor, busca el certificado **RS256** y extrae la clave pública en formato PEM, lista para copiar y pegar en la configuración de Kong (`kong/config.yml`).
+Conecta con `http://localhost:8000/.well-known/jwks`, extrae el certificado **RS256** activo y lo formatea como una clave pública PEM. Si se usa el flag `-UpdateConfig`, actualiza automáticamente el archivo `kong/config.yml` con la indentación correcta.
 
 ### Cómo usar:
 
 ```bash
 # Windows (PowerShell)
-./fetch-casdoor-certs.ps1
+./scripts/fetch-casdoor-certs.ps1 -UpdateConfig
 
 # Bash / Linux
-./fetch-casdoor-certs.sh
+./scripts/fetch-casdoor-certs.sh --update-config
 ```
 
 ---

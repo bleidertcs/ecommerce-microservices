@@ -92,18 +92,25 @@ Kong needs the Casdoor Public Key to verify token signatures. Use one of the two
 
 ### Method B: Automated (Via Script)
 
-We provide a PowerShell script to fetch the key and format it for Kong automatically.
+We provide a PowerShell script to fetch the key from the Casdoor JWKS endpoint and format it for Kong automatically.
 
-1. Open a PowerShell terminal.
-2. Run the script:
+1. Open a PowerShell terminal in the root directory.
+2. Run the script with the `-UpdateConfig` flag to automatically update `kong/config.yml`:
    ```powershell
-   ./scripts/fetch-casdoor-certs.ps1 -CasdoorUrl "http://localhost:8000"
+   ./scripts/fetch-casdoor-certs.ps1 -CasdoorUrl "http://localhost:8000" -UpdateConfig
    ```
-3. Copy the output and update your `kong/config.yml`:
+3. The script will:
+   - Fetch the public keys from `/.well-known/jwks`.
+   - Extract the active RS256 certificate.
+   - Format it as a PEM block.
+   - Find the `jwt_secrets` section in `kong/config.yml` and replace the `rsa_public_key` with the correct content and indentation.
+
+> [!TIP]
+> After running the script, your `kong/config.yml` should look similar to this (don't forget to verify the `key` match):
 
 ```yaml
 jwt_secrets:
-  - consumer: test-user
+  - consumer: [CONSUMER_NAME]
     key: "http://localhost:8000" # Must match exactly the 'iss' claim in your token
     algorithm: RS256
     rsa_public_key: |

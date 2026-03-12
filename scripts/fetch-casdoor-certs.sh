@@ -2,47 +2,70 @@
 
 # Configuration
 CASDOOR_URL=${1:-"http://localhost:8000"}
+UPDATE_CONFIG=false
 
-echo "Fetching certificates from $CASDOOR_URL..."
+# Simple argument parsing
+for arg in "$@"; do
+    if [ "$arg" == "--update-config" ] || [ "$arg" == "-UpdateConfig" ]; then
+        UPDATE_CONFIG=true
+    fi
+done
+
+echo "Fetching certificates from $CASDOOR_URL/.well-known/jwks..."
 
 # Fetch certificates using curl
-RESPONSE=$(curl -s "$CASDOOR_URL/api/get-certs?owner=admin&pageSize=100")
+RESPONSE=$(curl -s "$CASDOOR_URL/.well-known/jwks")
 
-# Check if response is valid (simple check for "ok")
-if [[ $RESPONSE != *"\"status\":\"ok\""* ]]; then
-    echo "Error: Failed to fetch certificates or invalid response."
-    echo "Response: $RESPONSE"
-    exit 1
-fi
-
-# Extract RS256 certificate using jq if available, otherwise grep/sed (harder but standard envs might not have jq)
-# Assuming a standard environment, we'll try a python one-liner fallback if jq isn't there, or just simple grep for the specific project structure.
-# Since we are in a dev environment, let's look for the RS256 type and extract publicKey.
-
-# Attempting to use grep/sed/awk for universal compatibility without jq
-# Find the object where "type":"RS256" and then extract "publicKey"
-# This is fragile with regex on JSON, but serves the immediate need without dependencies.
-# A better approach for a dev tool: assume node or python is present.
-# Since this is a NestJS repo, Node is present.
-
+# Extract RS256 certificate using Node (standard in this repo)
 PUBLIC_KEY=$(node -e "
-    const response = $RESPONSE;
-    if (response.status !== 'ok') process.exit(1);
-    const cert = response.data.find(c => c.type === 'RS256');
-    if (!cert) { console.error('No RS256 cert found'); process.exit(1); }
-    console.log(cert.publicKey);
+    const data = $RESPONSE;
+    if (!data.keys) {
+        console.error('Invalid JWKS response');
+        process.exit(1);
+    }
+    const key = data.keys.find(k => k.kty === 'RSA' && k.use === 'sig' && k.x5c);
+    if (!key) {
+        console.error('No suitable RSA key found in JWKS');
+        process.exit(1);
+    }
+    const cert = key.x5c[0];
+    const pem = '-----BEGIN PUBLIC KEY-----\n' + 
+                cert.match(/.{1,64}/g).join('\n') + 
+                '\n-----END PUBLIC KEY-----';
+    console.log(pem);
 ")
 
 if [ $? -ne 0 ]; then
-    echo "Error processing JSON or no RS256 key found."
+    echo "Error processing JWKS or no RSA key found."
     exit 1
 fi
 
-echo ""
 echo -e "\033[0;32m--- CASDOOR PUBLIC KEY (RS256) ---\033[0m"
 echo "$PUBLIC_KEY"
 echo -e "\033[0;32m----------------------------------\033[0m"
-echo ""
-echo -e "\033[1;33mUsage in Kong (jwt_secrets):\033[0m"
-echo "rsa_public_key: |"
-echo "$PUBLIC_KEY" | while IFS= read -r line; do echo "  $line"; done
+
+if [ "$UPDATE_CONFIG" = true ]; then
+    CONFIG_FILE="kong/config.yml"
+    if [ -f "$CONFIG_FILE" ]; then
+        echo "Updating $CONFIG_FILE..."
+        
+        # Prepare the key with indentation for YAML
+        INDENTED_KEY=$(echo "$PUBLIC_KEY" | sed 's/^/    /')
+        
+        # Use sed to replace the rsa_public_key block
+        # This is a bit complex in bash/sed, we'll use a python one-liner for safety with multi-line regex
+        python3 -c "
+import re, sys
+path = '$CONFIG_FILE'
+with open(path, 'r') as f: content = f.read()
+new_key = \"\"\"$INDENTED_KEY\"\"\"
+pattern = r'(rsa_public_key:\s*\|)\n(\s+-----BEGIN PUBLIC KEY-----[\s\S]+?-----END PUBLIC KEY-----)'
+updated = re.sub(pattern, r'\1\n' + new_key, content)
+with open(path, 'w') as f: f.write(updated)
+"
+        echo "Configuration updated successfully."
+    else
+        echo "Error: $CONFIG_FILE not found."
+    fi
+fi
+

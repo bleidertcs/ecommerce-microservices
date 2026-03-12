@@ -34,8 +34,9 @@ Restaurar archivos `.env` desde los ejemplos en cada carpeta que uses (ver Fase 
 
 1. **Crear `.env` en la raíz del proyecto** (obligatorio para `docker-compose`). Debe incluir al menos:
    - `CASDOOR_DB_PASSWORD` — contraseña de la base de datos de Casdoor.
-   - `CASDOOR_ENDPOINT` — URL de Casdoor (ej. `http://casdoor:8000` para uso desde contenedores).
-   Después de configurar Casdoor (Fase 6) añade: `CASDOOR_CLIENT_ID`, `CASDOOR_CLIENT_SECRET` (y opcionalmente en raíz para scripts: `CASDOOR_ORGANIZATION`, `CASDOOR_APPLICATION`).
+   - `CASDOOR_DB_PASSWORD` — contraseña de la base de datos de Casdoor.
+   - `CASDOOR_ENDPOINT` — [IMPORTANTE] Para desarrollo local, usa `http://localhost:8000` para asegurar que el navegador cargue correctamente los recursos. Si se usa dentro de contenedores para comunicación SSR, usa `http://casdoor:8000`.
+   Después de configurar Casdoor (Fase 6) añade: `CASDOOR_CLIENT_ID`, `CASDOOR_CLIENT_SECRET`.
    Puedes copiar desde `.env.example` en la raíz y ajustar valores.
 
 2. **Crear `.env` en cada servicio** copiando desde su `.env.example`:
@@ -113,11 +114,11 @@ Espera a que Casdoor responda en `http://localhost:8000` y, si aplica, que SigNo
 
 ### Fase 7: Configurar Kong (clave pública JWT)
 
-1. Con Casdoor levantado, ejecuta:
-   - Windows: `./scripts/fetch-casdoor-certs.ps1`
-   - Linux/macOS: `./scripts/fetch-casdoor-certs.sh`
-2. Copia la clave pública mostrada y pégala en `kong/config.yml` en la sección `jwt_secrets`, bajo `rsa_public_key:` (formato multi línea con indentación).
-3. Comprueba que el valor `key` en `jwt_secrets` coincida con el claim `iss` del JWT que emite Casdoor (por ejemplo `http://localhost:8000`).
+1. Con Casdoor levantado, ejecuta el script de sincronización automática:
+   - Windows: `./scripts/fetch-casdoor-certs.ps1 -UpdateConfig`
+   - Linux/macOS: `./scripts/fetch-casdoor-certs.sh -UpdateConfig` (si está disponible)
+2. El script actualizará automáticamente `kong/config.yml` con la clave pública más reciente y la indentación correcta.
+3. Comprueba que el valor `key` en `jwt_secrets` (en `kong/config.yml`) coincida con el claim `iss` del JWT que emite Casdoor (normalmente `http://localhost:8000`).
 
 ### Fase 8: Levantar el stack completo
 

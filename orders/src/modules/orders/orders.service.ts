@@ -197,6 +197,26 @@ export class OrdersService implements OnModuleInit {
     });
   }
 
+  async updateOrderStatusToPaid(orderId: string) {
+    const order = await this.databaseService.order.findUnique({
+      where: { id: orderId },
+    });
+
+    if (!order || order.status === OrderStatus.PAID) {
+      return;
+    }
+
+    await this.databaseService.order.update({
+      where: { id: orderId },
+      data: {
+        status: OrderStatus.PAID,
+        paymentStatus: 'PAID' as any,
+      },
+    });
+
+    this.logger.log(`Order ${orderId} status successfully updated to PAID via async event`);
+  }
+
   async findByUser(userId: string) {
     return this.databaseService.order.findMany({
       where: { userId },

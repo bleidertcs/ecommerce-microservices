@@ -1,4 +1,5 @@
 import { Controller, Get, Post, Body, Param, NotFoundException, Patch, BadRequestException, UseGuards, UnauthorizedException } from '@nestjs/common';
+import { EventPattern, Payload } from '@nestjs/microservices';
 import { OrdersService } from './orders.service';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { CreateOrderDto } from './dtos/create-order.dto';
@@ -50,5 +51,12 @@ export class OrdersController {
     const order = await this.ordersService.payOrder(id);
     if (!order) throw new NotFoundException('Order not found');
     return order;
+  }
+
+  @EventPattern('order.paid')
+  async handleOrderPaid(@Payload() payload: { orderId: string, paymentStatus: string }) {
+    if (payload.paymentStatus === 'PAID') {
+      await this.ordersService.updateOrderStatusToPaid(payload.orderId);
+    }
   }
 }
