@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package cart;
+
+service CartService {
+  rpc Ping (Empty) returns (PingResponse) {}
+}
+
+message Empty {}
+
+message PingResponse {
+  string message = 1;
+}

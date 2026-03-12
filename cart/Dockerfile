@@ -1,0 +1,56 @@
+# Multi-stage build for optimal image size
+FROM node:20-alpine AS base
+RUN apk add --no-cache libc6-compat
+RUN npm install -g pnpm
+ENV CI=true
+
+# Build the source code
+FROM base AS builder
+RUN apk add --no-cache wget openssl
+WORKDIR /app
+ARG DATABASE_URL=postgresql://build:build@localhost:5432/build
+ENV DATABASE_URL=$DATABASE_URL
+
+# Copy package files
+COPY package.json pnpm-lock.yaml* .npmrc ./
+COPY prisma ./prisma/
+COPY prisma.config.js ./
+
+# Install dependencies
+RUN pnpm install --no-frozen-lockfile --ignore-scripts
+
+# Copy source code
+COPY . .
+
+# Generate Prisma client and build application
+RUN npx prisma generate
+RUN pnpm build
+
+# Production image, copy all the files and run next
+FROM base AS runner
+RUN apk add --no-cache wget openssl
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV APP_NAME=cart-service
+
+# Create a non-root user
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nestjs
+
+# Copy built application and dependencies from builder
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/prisma.config.js ./
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/prisma ./prisma
+
+# Set correct permissions
+RUN chown -R nestjs:nodejs /app
+
+USER nestjs
+
+# Expose ports for HTTP and gRPC
+EXPOSE 9007 50057
+
+CMD ["node", "dist/main.js"]
