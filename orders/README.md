@@ -6,7 +6,7 @@ Este microservicio orquestra la creación y gestión de pedidos, garantizando la
 
 - **Gestión de Pedidos**: Ciclo de vida completo desde la creación hasta el cumplimiento.
 - **Patrones de Resiliencia**: Implementación de **Circuit Breaker** y **Transactional Outbox**.
-- **Comunicación Híbrida**: Usa gRPC/TCP/NATS para consultas síncronas y RabbitMQ para eventos.
+- **Comunicación Síncrona**: Usa gRPC exclusivamente para consultas síncronas y RabbitMQ para eventos.
 - **Observabilidad Avanzada**: Trazado distribuido completo para rastrear pedidos a través de múltiples servicios.
 
 ---
@@ -15,7 +15,7 @@ Este microservicio orquestra la creación y gestión de pedidos, garantizando la
 
 - **Backend**: NestJS 10.
 - **Persistencia**: PostgreSQL + Prisma ORM.
-- **Messaging**: RabbitMQ + NATS.
+- **Messaging**: RabbitMQ.
 - **Observabilidad**: OpenTelemetry SDK + SigNoz.
 
 ---

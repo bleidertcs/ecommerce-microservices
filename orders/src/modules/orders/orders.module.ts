@@ -25,19 +25,6 @@ import { join } from 'path';
         name: 'USERS_PACKAGE',
         inject: [ConfigService],
         useFactory: (configService: ConfigService) => {
-          const transport = configService.get<string>('USERS_TRANSPORT', 'grpc');
-          if (transport === 'tcp') {
-            return {
-              transport: Transport.TCP,
-              options: { host: 'bw-users-service', port: 3001 },
-            };
-          }
-          if (transport === 'nats') {
-            return {
-              transport: Transport.NATS,
-              options: { servers: [configService.get<string>('NATS_URL')] },
-            };
-          }
           return {
             transport: Transport.GRPC,
             options: {
@@ -52,19 +39,6 @@ import { join } from 'path';
         name: 'PRODUCTS_PACKAGE',
         inject: [ConfigService],
         useFactory: (configService: ConfigService) => {
-          const transport = configService.get<string>('PRODUCTS_TRANSPORT', 'grpc');
-          if (transport === 'tcp') {
-            return {
-              transport: Transport.TCP,
-              options: { host: 'bw-products-service', port: 3002 },
-            };
-          }
-          if (transport === 'nats') {
-            return {
-              transport: Transport.NATS,
-              options: { servers: [configService.get<string>('NATS_URL')] },
-            };
-          }
           return {
             transport: Transport.GRPC,
             options: {

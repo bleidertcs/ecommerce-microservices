@@ -17,4 +17,9 @@
             <port>2181</port>
         </node>
     </zookeeper>
+
+    <macros>
+        <shard>0</shard>
+        <replica>clickhouse</replica>
+    </macros>
 </clickhouse>

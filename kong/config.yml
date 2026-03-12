@@ -58,7 +58,7 @@ services:
         plugins:
           - name: opentelemetry
             config:
-              endpoint: http://signoz-otel-collector:4317
+              endpoint: http://bw-signoz-otel-collector:4317
               resource_attributes:
                 service.name: kong-gateway
           - name: jwt
@@ -92,7 +92,7 @@ services:
         plugins:
           - name: opentelemetry
             config:
-              endpoint: http://signoz-otel-collector:4317
+              endpoint: http://bw-signoz-otel-collector:4317
               resource_attributes:
                 service.name: kong-gateway
           - name: rate-limiting
@@ -112,7 +112,7 @@ services:
         plugins:
           - name: opentelemetry
             config:
-              endpoint: http://signoz-otel-collector:4317
+              endpoint: http://bw-signoz-otel-collector:4317
               resource_attributes:
                 service.name: kong-gateway
           - name: jwt
@@ -152,7 +152,7 @@ services:
         plugins:
           - name: opentelemetry
             config:
-              endpoint: http://signoz-otel-collector:4317
+              endpoint: http://bw-signoz-otel-collector:4317
               resource_attributes:
                 service.name: kong-gateway
           - name: jwt
@@ -167,6 +167,46 @@ services:
           - name: rate-limiting
             config:
               minute: 30
+              policy: redis
+              limit_by: header
+              header_name: x-user-id
+              redis:
+                host: redis
+                port: 6379
+
+  - name: cart-service
+    url: http://bw-cart-service:9007
+    routes:
+      - name: cart-docs
+        paths:
+          - /api/v1/cart/docs
+        strip_path: false
+        protocols: ["http", "https"]
+        methods: ["GET"]
+      - name: cart-routes
+        paths:
+          - /api/v1/cart
+        strip_path: false
+        protocols: ["http", "https"]
+        methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
+        plugins:
+          - name: opentelemetry
+            config:
+              endpoint: http://bw-signoz-otel-collector:4317
+              resource_attributes:
+                service.name: kong-gateway
+          - name: jwt
+            config:
+              claims_to_verify: ["exp"]
+              key_claim_name: iss
+          - name: request-transformer
+            config:
+              add:
+                headers:
+                  - x-user-id:$(jwt_claim_sub)
+          - name: rate-limiting
+            config:
+              minute: 60
               policy: redis
               limit_by: header
               header_name: x-user-id
@@ -192,7 +232,7 @@ services:
         plugins:
           - name: opentelemetry
             config:
-              endpoint: http://signoz-otel-collector:4317
+              endpoint: http://bw-signoz-otel-collector:4317
               resource_attributes:
                 service.name: kong-gateway
           - name: jwt

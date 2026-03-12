@@ -14,7 +14,12 @@ export class ResponseInterceptor implements NestInterceptor {
         private readonly i18n: I18nService,
     ) {}
 
-    intercept(context: ExecutionContext, next: CallHandler): Observable<IApiResponse<unknown>> {
+    intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+        // Skip interceptor for gRPC/Microservice calls to avoid "Connection dropped" issues
+        if (context.getType().toString() === 'rpc') {
+            return next.handle();
+        }
+
         const messageKey = this.reflector.get<string>(MESSAGE_KEY_METADATA, context.getHandler());
 
         const messageDto = this.reflector.get<new () => any>(

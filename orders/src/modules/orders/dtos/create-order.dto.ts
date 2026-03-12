@@ -9,6 +9,11 @@ class OrderItemDto {
   productId: string;
 
   @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  productName: string;
+
+  @ApiProperty()
   @IsNumber()
   @Min(1)
   quantity: number;

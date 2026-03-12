@@ -13,7 +13,7 @@ Al iniciar **cualquier requerimiento, mejora o fix** en este repositorio, aplica
 |------|------|------------------|
 | Kong | `kong.mdc` | kong/** |
 | Casdoor | `casdoor.mdc` | .env*, auth.config.ts, web-app |
-| NestJS / Microservicios | `nestjs-microservices.mdc` | users, products, orders, notifications, payments |
+| NestJS / Microservicios | `nestjs-microservices.mdc` | users, products, orders, notifications, payments, cart |
 | Next.js | `nextjs-frontend.mdc` | web-app |
 | Prisma | `prisma.mdc` | prisma/** |
 | Docker | `docker.mdc` | docker-compose.yml, Dockerfile, .env* |
@@ -22,7 +22,15 @@ Al iniciar **cualquier requerimiento, mejora o fix** en este repositorio, aplica
 | Buenas prácticas | `best-practices.mdc` | Siempre activa |
 | Tests | `tests.mdc` | test/**, *.spec.ts |
 
-## 3. Referencia operativa
+## 3. Sub-agentes (especialistas)
+
+Para tareas por dominio, usar el **sub-agente** adecuado. Skill de referencia:
+
+- **Skill** `sub-agents` (`.cursor/skills/sub-agents/SKILL.md`): índice de sub-agentes, cuándo invocar cada uno, skills y rules asociados.
+
+Sub-agentes definidos: Kong/Gateway, Casdoor/Identidad, NestJS/Microservicios, Next.js/Frontend, Prisma/Datos, Docker/Infra, Observabilidad (SigNoz), Tests, Seguridad, Scripts/Automatización, Guía general. Invocar vía @skill o pidiendo explícitamente el especialista.
+
+## 4. Referencia operativa
 
 Para arranque, Casdoor, Kong, observabilidad y pruebas: **MASTER_GUIDE.md**.
 

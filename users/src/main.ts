@@ -5,7 +5,8 @@ otr_sdk.start();
 import { Logger, ValidationPipe, VersioningType } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
-import { Transport } from '@nestjs/microservices';
+import { Transport, MicroserviceOptions } from '@nestjs/microservices';
+import { join } from 'path';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import express from 'express';
 import helmet from 'helmet';
@@ -81,18 +82,14 @@ async function bootstrap() {
     );
 
     // Microservices
-    app.connectMicroservice({
-        transport: Transport.TCP,
+    // gRPC server — native NestJS transport (replaces buggy nestjs-grpc library)
+    app.connectMicroservice<MicroserviceOptions>({
+        transport: Transport.GRPC,
         options: {
-            host: '0.0.0.0',
-            port: configService.get<number>('tcp.port'),
-        },
-    });
-
-    app.connectMicroservice({
-        transport: Transport.NATS,
-        options: {
-            servers: [configService.get<string>('nats.url')],
+            package: configService.get<string>('grpc.package', 'users'),
+            // At runtime __dirname = /app/dist, so proto is at /app/src/protos/
+            protoPath: join(__dirname, '../src/protos/users.proto'),
+            url: configService.get<string>('grpc.url', '0.0.0.0:50051'),
         },
     });
 
@@ -131,8 +128,6 @@ async function bootstrap() {
 
     logger.log(`🚀 ${appName} started at http://${host}:${port}`);
     logger.log(`🔌 gRPC server started at ${configService.get<string>('grpc.url')}`);
-    logger.log(`🔌 TCP server started at 0.0.0.0:${configService.get<number>('tcp.port')}`);
-    logger.log(`🔌 NATS server connected to ${configService.get<string>('nats.url')}`);
 
     if (env !== 'production') {
         logger.log(`📖 Swagger: http://${host}:${port}/docs`);

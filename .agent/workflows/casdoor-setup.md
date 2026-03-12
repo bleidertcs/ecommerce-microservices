@@ -4,12 +4,12 @@ description: Configuración inicial y gestión de Casdoor como Identity Provider
 
 # Workflow: Setup y Gestión de Casdoor
 
-Este workflow detalla cómo configurar Casdoor después del despliegue inicial.
+Este workflow detalla cómo configurar Casdoor después del despliegue inicial. En un **setup en máquina nueva**, este paso corresponde a la **Fase 6** (y la clave pública para Kong a la **Fase 7**) de la sección **1. Setup en máquina nueva** de [MASTER_GUIDE.md](../../MASTER_GUIDE.md).
 
 ## 1. Acceso Inicial
 
 - URL: `http://localhost:8000`
-- Credenciales por defecto: `admin` / `123`
+- Credenciales por defecto: `admin` / `123123` (en algunas versiones de Casdoor puede ser `admin` / `123`)
 
 ## 2. Configuración de Organización
 

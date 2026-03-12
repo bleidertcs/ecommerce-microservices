@@ -1,10 +1,139 @@
 # 📖 Guía Completa de Ecosistema: Microservicios E-commerce
 
-Esta guía detalla la configuración integral del sistema, incluyendo **Casdoor** (Identidad), **Kong** (Gateway), **SigNoz** (Observabilidad) y los microservicios de **Users, Products y Orders**.
+Esta guía detalla la configuración integral del sistema, incluyendo **Casdoor** (Identidad), **Kong** (Gateway), **SigNoz** (Observabilidad) y los microservicios de **Users, Products, Orders y Payments**.
 
 ---
 
-## 🏗️ 1. Arquitectura General
+## 🚀 1. Setup en máquina nueva
+
+Sigue estos pasos en orden para levantar el ambiente desde cero (o después de una limpieza completa).
+
+### Fase 0: Prerrequisitos
+
+- **Docker** y **Docker Compose** instalados.
+- **Node.js** >= 18 (para migraciones/scripts locales).
+- **pnpm** (para ejecutar scripts de setup o migraciones locales).
+
+### Fase 1: Limpieza (solo si ya tenías el proyecto levantado)
+
+Si quieres partir de cero en la misma máquina:
+
+```bash
+docker-compose down -v
+```
+
+Opcional, limpieza más agresiva:
+
+```bash
+docker system prune -a --volumes -f
+```
+
+Restaurar archivos `.env` desde los ejemplos en cada carpeta que uses (ver Fase 2).
+
+### Fase 2: Variables de entorno
+
+1. **Crear `.env` en la raíz del proyecto** (obligatorio para `docker-compose`). Debe incluir al menos:
+   - `CASDOOR_DB_PASSWORD` — contraseña de la base de datos de Casdoor.
+   - `CASDOOR_ENDPOINT` — URL de Casdoor (ej. `http://casdoor:8000` para uso desde contenedores).
+   Después de configurar Casdoor (Fase 6) añade: `CASDOOR_CLIENT_ID`, `CASDOOR_CLIENT_SECRET` (y opcionalmente en raíz para scripts: `CASDOOR_ORGANIZATION`, `CASDOOR_APPLICATION`).
+   Puedes copiar desde `.env.example` en la raíz y ajustar valores.
+
+2. **Crear `.env` en cada servicio** copiando desde su `.env.example`:
+   - `users/.env`
+   - `products/.env`
+   - `orders/.env`
+   - `payments/.env`
+   - `notifications/.env`
+   - `cart/.env`
+   - `web-app/.env`
+   Cuando tengas Client ID y Client Secret de Casdoor, actualiza la raíz y `web-app/.env`.
+
+### Fase 3: Levantar infraestructura base
+
+```bash
+docker-compose up -d users-db products-db orders-db payments-db cart-db redis rabbitmq
+```
+
+Espera a que los healthchecks de las bases de datos pasen (`docker-compose ps`).
+
+### Fase 4: Migraciones Prisma
+
+Elige una opción.
+
+**Opción A: Dentro de contenedores (recomendado)**
+
+Primero levanta los servicios para tener las imágenes (o usa `docker-compose run` con el servicio correspondiente). Con las DBs ya levantadas (Fase 3):
+
+```bash
+# Users
+docker-compose run --rm users-service npx prisma migrate deploy
+docker-compose run --rm users-service npx prisma db seed
+
+# Products
+docker-compose run --rm products-service npx prisma migrate deploy
+docker-compose run --rm products-service npx prisma db seed
+
+# Orders
+docker-compose run --rm orders-service npx prisma migrate deploy
+docker-compose run --rm orders-service npx prisma db seed
+
+# Payments (solo migraciones; no hay seed)
+docker-compose run --rm payments-service npx prisma migrate deploy
+
+# Cart (solo migraciones; no hay seed)
+docker-compose run --rm cart-service npx prisma migrate deploy
+```
+
+**Opción B: Local (con pnpm)**
+
+Con `DATABASE_URL` apuntando a `localhost` y los puertos mapeados (15431, 15432, 15433, 15436):
+
+```bash
+cd users && pnpm run prisma:generate && pnpm run prisma:migrate && pnpm run prisma:seed && cd ..
+cd products && pnpm run prisma:generate && pnpm run prisma:migrate && pnpm run prisma:seed && cd ..
+cd orders && pnpm run prisma:generate && pnpm run prisma:migrate && pnpm run prisma:seed && cd ..
+cd payments && pnpm run prisma:generate && pnpm run prisma:migrate && cd ..
+cd cart && pnpm run prisma:generate && pnpm run prisma:migrate && cd ..
+```
+
+### Fase 5: Levantar Casdoor y observabilidad
+
+```bash
+docker-compose up -d casdoor-db casdoor zookeeper init-clickhouse clickhouse signoz-telemetrystore-migrator signoz signoz-otel-collector
+```
+
+Espera a que Casdoor responda en `http://localhost:8000` y, si aplica, que SigNoz esté disponible en `http://localhost:8080`.
+
+### Fase 6: Configurar Casdoor
+
+1. Abre **http://localhost:8000** e inicia sesión (por defecto `admin` / `123123`; en algunas versiones puede ser `admin` / `123`).
+2. **Identity** > **Organizations**: edita `built-in` y habilita **"Enable privilege consent"**.
+3. **Identity** > **Applications**: edita `app-built-in`. Añade en **Redirect URLs** `http://localhost:3000/callback`. En **Grant Types** habilita **Authorization Code** y **Password**.
+4. Copia **Client ID** y **Client Secret** y actualiza el `.env` de la raíz y el de `web-app/.env`.
+
+### Fase 7: Configurar Kong (clave pública JWT)
+
+1. Con Casdoor levantado, ejecuta:
+   - Windows: `./scripts/fetch-casdoor-certs.ps1`
+   - Linux/macOS: `./scripts/fetch-casdoor-certs.sh`
+2. Copia la clave pública mostrada y pégala en `kong/config.yml` en la sección `jwt_secrets`, bajo `rsa_public_key:` (formato multi línea con indentación).
+3. Comprueba que el valor `key` en `jwt_secrets` coincida con el claim `iss` del JWT que emite Casdoor (por ejemplo `http://localhost:8000`).
+
+### Fase 8: Levantar el stack completo
+
+```bash
+docker-compose up -d --build
+```
+
+Verifica el estado con `docker-compose ps` y los healthchecks de Kong, microservicios y web-app.
+
+### Fase 9: Verificación
+
+Usa el **Checklist de verificación** al final de esta guía (Casdoor JWT, Kong, SigNoz, outbox).
+
+---
+
+## 🏗️ 2. Arquitectura General
 
 ```mermaid
 graph TD
@@ -14,7 +143,7 @@ graph TD
         Kong --> |JWT Auth| CD[Casdoor IDP :8000]
     end
 
-    subgraph "Microservicios (Hybrid: gRPC/TCP/NATS)"
+    subgraph "Microservicios (gRPC Exclusivo)"
         Kong --> Users[Users Service :9001]
         Kong --> Products[Products Service :9002]
         Kong --> Orders[Orders Service :9003]
@@ -33,7 +162,6 @@ graph TD
         Orders -- "Async Events" --> RMQ[RabbitMQ]
         Products & Users --- PDB[(Service DBs)]
         Users & Products & Orders --- Redis[(Redis Cache)]
-        NATS[NATS Broker] --- Users & Products & Orders
     end
 
     subgraph "Observabilidad Stack"
@@ -45,68 +173,11 @@ graph TD
 
 ---
 
----
-
-## 🚀 2. Guía de Iniciación paso a paso
-
-1.  **Preparar Infraestructura**:
-    ```bash
-    docker-compose up -d users-db products-db orders-db redis rabbitmq nats
-    ```
-2.  **Configurar Variables de Entorno**:
-    Asegúrate de que cada microservicio (`/users`, `/products`, `/orders`) tenga un archivo `.env` con la `DATABASE_URL` apuntando a los puertos mapeados (`15431`, `15432`, `15433` respectivamente) para poder correr migraciones desde el host:
-    - **Users**: `DATABASE_URL="postgresql://admin:master123@localhost:15431/users?schema=public"`
-    - **Products**: `DATABASE_URL="postgresql://admin:master123@localhost:15432/products?schema=public"`
-    - **Orders**: `DATABASE_URL="postgresql://admin:master123@localhost:15433/orders?schema=public"`
-    - **Payments**: `DATABASE_URL="postgresql://admin:master123@localhost:15436/payments?schema=public"`
-
-3.  **Migraciones y Seeding (Prisma)**:
-    Recomendamos ejecutar las migraciones dentro de los contenedores para asegurar paridad de entorno y evitar problemas de configuración local.
-
-    **Opción A: Vía Docker (Recomendado)**
-
-    ```bash
-    # Usuarios
-    docker-compose exec users-service npx prisma migrate dev --name init
-    docker-compose exec users-service npx prisma db seed
-
-    # Productos
-    docker-compose exec products-service npx prisma migrate dev --name init
-    docker-compose exec products-service npx prisma db seed
-
-    # Órdenes
-    docker-compose exec orders-service npx prisma migrate dev --name init
-    docker-compose exec orders-service npx prisma db seed
-
-    # Pagos
-    docker-compose exec payments-service npx prisma migrate dev --name init
-    ```
-
-    **Opción B: Local (Desarrollo rápido)**
-    Si tienes `pnpm` instalado localmente, puedes usar los archivos `.env` (que apuntan a `localhost` por defecto):
-
-    ```bash
-    cd users; pnpm run prisma:migrate; pnpm run prisma:seed; cd ..
-    cd products; pnpm run prisma:migrate; pnpm run prisma:seed; cd ..
-    cd orders; pnpm run prisma:migrate; pnpm run prisma:seed; cd ..
-    ```
-
-4.  **Levantar el Resto del Ecosistema**:
-
-    ```bash
-    docker-compose up -d --build
-    ```
-
-    > [!IMPORTANT]
-    > Los servicios de **Casdoor** ahora corren como `user: root` para evitar problemas de permisos en volúmenes montados desde Windows/WSL.
-
----
-
-## 📦 3. Paso 1: Levantamiento del Ambiente
+## 📦 3. Levantamiento del ambiente por capas
 
 1.  **Levantar infraestructura básica**:
     ```bash
-    docker-compose up -d redis rabbitmq nats users-db products-db orders-db payments-db
+    docker-compose up -d redis rabbitmq users-db products-db orders-db payments-db cart-db
     ```
 2.  **Levantar Identidad y Gateway**:
     ```bash
@@ -114,12 +185,38 @@ graph TD
     ```
 3.  **Levantar Observabilidad**:
     ```bash
-    docker-compose up -d zookeeper clickhouse schema-migrator-sync schema-migrator-async signoz signoz-otel-collector
+    docker-compose up -d zookeeper init-clickhouse clickhouse signoz-telemetrystore-migrator signoz signoz-otel-collector
     ```
 4.  **Levantar Microservicios**:
     ```bash
-    docker-compose up -d users-service products-service orders-service payments-service notifications-service
+    docker-compose up -d users-service products-service orders-service payments-service notifications-service cart-service
     ```
+
+    **Nota:** El servicio **notifications-service** expone el puerto **9015** en el host (mapea al 9005 interno) para evitar conflictos con otros procesos. Si necesitas acceder a la API de notificaciones directamente, usa `http://localhost:9015`. **cart-service** expone HTTP en **9007** y gRPC en **50057**; la API de carrito vía Kong es `http://localhost:8010/api/v1/cart`.
+
+### 🛒 Cart y Notifications
+
+**Cart (carrito):**
+
+- Base de datos: `cart-db` (PostgreSQL, puerto host `15437`, base `cart`).
+- Servicio: `cart-service` (HTTP `9007`, gRPC `50057`). Requiere `cart/.env` (copiar de `cart/.env.example`) y migraciones aplicadas.
+- Migraciones (con `cart-db` levantado):  
+  `docker-compose run --rm cart-service npx prisma migrate deploy`  
+  O local: `cd cart && pnpm run prisma:generate && pnpm run prisma:migrate`.
+- API vía Kong: `http://localhost:8010/api/v1/cart` (JWT requerido). Docs: `http://localhost:8010/api/v1/cart/docs`.
+
+**Notifications:**
+
+- Servicio: `notifications-service`. En el host expone el puerto **9015** (mapeo `9015:9005`) para no colisionar con otros procesos. Acceso directo: `http://localhost:9015`.
+- Depende de RabbitMQ. No tiene base de datos propia.
+
+Para levantar solo cart y notifications una vez el resto del stack está arriba:
+
+```bash
+docker-compose up -d cart-db cart-service notifications-service
+```
+
+(Aplicar migraciones de cart antes si es la primera vez; ver arriba.)
 
 ### 💡 Configuración Dinámica de Transportes
 
@@ -127,14 +224,14 @@ El `Orders Service` puede alternar entre transportes para comunicarse con `Users
 
 - Edita `orders/.env`:
   ```env
-  USERS_TRANSPORT=grpc  # opciones: grpc, tcp, nats
+  USERS_TRANSPORT=grpc  # Estándar obligatorio
   PRODUCTS_TRANSPORT=grpc
   ```
 - Reinicia: `docker-compose restart orders-service`
 
 ---
 
-## 🔐 3. Paso 2: Configuración de Casdoor
+## 🔐 4. Configuración de Casdoor
 
 ### A. Acceso Inicial
 
@@ -165,7 +262,7 @@ El `Orders Service` puede alternar entre transportes para comunicarse con `Users
 
 ---
 
-## 🌉 4. Paso 3: Configuración de Kong
+## 🌉 5. Configuración de Kong
 
 Kong está configurado en modo DB-less. Para aplicar cambios, edita `kong/config.yml`.
 
@@ -173,7 +270,7 @@ Kong está configurado en modo DB-less. Para aplicar cambios, edita `kong/config
 
 ---
 
-## 📖 5. Documentación de API (Swagger)
+## 📖 6. Documentación de API (Swagger)
 
 Cada microservicio expone su propia documentación interactiva via Swagger. Puedes probar los endpoints directamente (sin pasar por Kong) para depuración rápida:
 
@@ -187,7 +284,7 @@ Cada microservicio expone su propia documentación interactiva via Swagger. Pued
 
 ---
 
-## 📊 6. Paso 4: Guía de Observabilidad (SigNoz Native)
+## 📊 7. Observabilidad (SigNoz)
 
 El sistema utiliza **SigNoz** como plataforma de observabilidad all-in-one para gestionar logs, trazas y métricas mediante el estándar **OpenTelemetry**.
 
@@ -208,7 +305,7 @@ Acceso: `http://localhost:8080` (crear usuario en primer acceso).
 
 ---
 
-## 🧪 7. Paso 6: Guía de Pruebas (Testing)
+## 🧪 8. Pruebas (Testing)
 
 Las pruebas están diseñadas para ejecutarse dentro de los contenedores para asegurar paridad con el entorno de ejecución, aunque también pueden correrse localmente.
 
@@ -249,7 +346,7 @@ Si prefieres ejecutar las pruebas sin Docker (requiere `pnpm` instalado localmen
 
 ---
 
-## 🔌 8. Paso 7: Guía de Uso (cURLs)
+## 🔌 9. Guía de Uso (cURLs)
 
 ### A. Obtener Token de Acceso
 
@@ -300,7 +397,7 @@ curl -X POST http://localhost:8010/api/v1/orders \
 
 ---
 
-## ✅ Checklist de Verificación
+## ✅ 10. Checklist de verificación
 
 - [ ] ¿Casdoor emite tokens JWT RS256?
 - [ ] ¿Kong tiene la clave pública correcta de Casdoor?

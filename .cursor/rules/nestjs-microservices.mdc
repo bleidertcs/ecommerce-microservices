@@ -1,6 +1,6 @@
 ---
-description: Estándares NestJS para microservicios (users, products, orders, notifications, payments)
-globs: users/**/*.ts, products/**/*.ts, orders/**/*.ts, notifications/**/*.ts, payments/**/*.ts
+description: Estándares NestJS para microservicios (users, products, orders, notifications, payments, cart)
+globs: users/**/*.ts, products/**/*.ts, orders/**/*.ts, notifications/**/*.ts, payments/**/*.ts, cart/**/*.ts
 alwaysApply: false
 ---
 
@@ -8,10 +8,10 @@ alwaysApply: false
 
 ## Estructura por servicio
 
-- `src/main.ts`: bootstrap, OpenTelemetry primero, Express + microservicios (TCP, NATS, RMQ según servicio), prefijo `api`, versionado `v1`, ValidationPipe global, Swagger en no-producción.
+- `src/main.ts`: bootstrap, OpenTelemetry primero, Express + microservicios (gRPC, RMQ según servicio), prefijo `api`, versionado `v1`, ValidationPipe global, Swagger en no-producción.
 - `src/app/app.module.ts`: módulo raíz. ConfigModule, health, módulos de dominio.
 - Controllers: solo enrutado; lógica en Services. DTOs con class-validator/class-transformer.
-- Comunicación con otros servicios: `ClientsModule.registerAsync` (gRPC/TCP/NATS), inyectar cliente por nombre (ej. `USERS_PACKAGE`, `PRODUCTS_PACKAGE`).
+- Comunicación con otros servicios: `ClientsModule.registerAsync` (gRPC preferido), inyectar cliente por nombre (ej. `USERS_PACKAGE`, `PRODUCTS_PACKAGE`, `CART_PACKAGE`).
 
 ## Base de datos y eventos
 

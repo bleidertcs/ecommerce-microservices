@@ -6,26 +6,31 @@ Esta guía detalla los scripts disponibles en la raíz del proyecto para automat
 
 ## 🚀 1. Setup Ecommerce (`setup-ecommerce.sh/ps1`)
 
-Este script es fundamental para el primer despliegue o cuando se desea resetear la base de datos a un estado conocido con datos de prueba realistas.
+Este script es fundamental para el primer despliegue o cuando se desea resetear las bases de datos a un estado conocido con datos de prueba realistas. **Para el flujo completo de levantamiento en máquina nueva** (limpieza, variables de entorno, Casdoor, Kong, etc.), sigue la sección **1. Setup en máquina nueva** de [MASTER_GUIDE.md](../MASTER_GUIDE.md).
 
 ### Qué hace:
 
-1.  **Genera Clientes Prisma**: Ejecuta `prisma generate` en cada microservicio (`users`, `products`, `orders`).
-2.  **Aplica Migraciones**: Sincroniza el esquema de la base de datos local con los archivos `schema.prisma`.
-3.  **Seed de Datos**: Pobla la base de datos con:
+1.  **Genera Clientes Prisma**: Ejecuta `prisma generate` en cada microservicio (`users`, `products`, `orders`, `payments`).
+2.  **Aplica Migraciones**: Sincroniza el esquema de la base de datos local con los archivos `schema.prisma` en users, products, orders y payments.
+3.  **Seed de Datos** (donde exista): Pobla las bases de datos con:
     - 50 Usuarios (vía Faker).
     - 100 Productos con categorías.
     - 200 Órdenes de prueba.
+    - Payments: solo migraciones (sin seed).
 
 ### Cómo usar:
 
+Ejecuta desde la **raíz del proyecto**:
+
 ```bash
 # Windows (PowerShell)
-./setup-ecommerce.ps1
+./scripts/setup-ecommerce.ps1
 
 # Linux / MacOS / Git Bash
-./setup-ecommerce.sh
+./scripts/setup-ecommerce.sh
 ```
+
+Requisitos: las bases de datos deben estar levantadas (p. ej. `docker-compose up -d users-db products-db orders-db payments-db`) y los archivos `.env` en cada servicio con `DATABASE_URL` apuntando a localhost (puertos 15431, 15432, 15433, 15436) si corres el script en local.
 
 ---
 

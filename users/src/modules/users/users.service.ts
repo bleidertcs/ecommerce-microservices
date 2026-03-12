@@ -65,6 +65,30 @@ export class UsersService implements OnModuleInit {
     return user;
   }
 
+  async syncUser(data: any) {
+    const user = await this.databaseService.user.upsert({
+      where: { id: data.id },
+      update: {
+        email: data.email,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        username: data.name || data.email,
+      },
+      create: {
+        id: data.id,
+        email: data.email,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        username: data.name || data.email,
+        password: 'sso_user_no_password',
+        shippingAddress: {},
+      },
+    });
+
+    this.logger.log(`User synced from IDP: ${user.id}`);
+    return user;
+  }
+
   async findAll() {
     return this.databaseService.user.findMany();
   }

@@ -2,75 +2,87 @@ import { resourceFromAttributes } from '@opentelemetry/resources';
 import { ATTR_SERVICE_NAME } from '@opentelemetry/semantic-conventions';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-grpc';
 import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-grpc';
-import { PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
+import { OTLPLogExporter } from '@opentelemetry/exporter-logs-otlp-grpc';
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
 import { diag, DiagConsoleLogger, DiagLogLevel } from '@opentelemetry/api';
 import { NodeSDK } from '@opentelemetry/sdk-node';
-import { OTLPLogExporter } from '@opentelemetry/exporter-logs-otlp-grpc';
 import { BatchLogRecordProcessor } from '@opentelemetry/sdk-logs';
+import { PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
 import { WinstonInstrumentation } from '@opentelemetry/instrumentation-winston';
+import { credentials } from '@grpc/grpc-js';
 
-// Enable OpenTelemetry debug logging
+// Enable OpenTelemetry diagnostics logging (WARN level in production)
 diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.WARN);
 
 const resource = resourceFromAttributes({
-    [ATTR_SERVICE_NAME]: process.env.OTEL_SERVICE_NAME || 'notifications-service',
+  [ATTR_SERVICE_NAME]: process.env.OTEL_SERVICE_NAME || 'notifications-service',
 });
 
-// Normalize endpoint: gRPC exporters in Node expect URL with scheme
-const rawEndpoint = process.env.OTEL_EXPORTER_OTLP_ENDPOINT || 'http://otel-collector:4317';
-const otlpEndpoint = rawEndpoint.startsWith('http://') || rawEndpoint.startsWith('https://')
+// Normalize endpoint: gRPC exporters in Node expect http://host:port format
+const rawEndpoint = process.env.OTEL_EXPORTER_OTLP_ENDPOINT || 'http://signoz-otel-collector:4317';
+const otlpEndpoint =
+  rawEndpoint.startsWith('http://') || rawEndpoint.startsWith('https://')
     ? rawEndpoint
     : `http://${rawEndpoint}`;
 
+// Insecure channel credentials for gRPC (required for non-TLS collectors)
+const insecureCreds = credentials.createInsecure();
+
 const traceExporter = new OTLPTraceExporter({
-    url: otlpEndpoint,
-});
-const metricExporter = new OTLPMetricExporter({
-    url: otlpEndpoint,
-});
-const logExporter = new OTLPLogExporter({
-    url: otlpEndpoint,
+  url: otlpEndpoint,
+  credentials: insecureCreds,
 });
 
-const metricReader = new PeriodicExportingMetricReader({
-    exporter: metricExporter,
-    exportIntervalMillis: 15000,
+const logExporter = new OTLPLogExporter({
+  url: otlpEndpoint,
+  credentials: insecureCreds,
+});
+
+// Explicit metric exporter — prevents auto-instrumentation from creating
+// an unconfigured PeriodicExportingMetricReader (which causes ECONNREFUSED)
+const metricExporter = new OTLPMetricExporter({
+  url: otlpEndpoint,
+  credentials: insecureCreds,
 });
 
 export const otr_sdk = new NodeSDK({
-    resource,
-    traceExporter,
-    metricReaders: [metricReader],
-    logRecordProcessors: [new BatchLogRecordProcessor(logExporter)],
-    instrumentations: [
-        getNodeAutoInstrumentations({
-            '@opentelemetry/instrumentation-fs': {
-                enabled: false,
-            },
-            // Enable HTTP instrumentation to generate metrics
-            '@opentelemetry/instrumentation-http': {
-                enabled: true,
-                ignoreIncomingRequestHook: req => {
-                    const url = req.url || '';
-                    return url === '/health' || url === '/api/health';
-                },
-            },
-            '@opentelemetry/instrumentation-express': {
-                enabled: true,
-            },
-        }),
-        new WinstonInstrumentation(),
-    ],
+  resource,
+  traceExporter,
+  metricReader: new PeriodicExportingMetricReader({
+    exporter: metricExporter,
+    exportIntervalMillis: 60_000, // export every 60s
+  }),
+  logRecordProcessors: [new BatchLogRecordProcessor(logExporter)],
+  instrumentations: [
+    getNodeAutoInstrumentations({
+      '@opentelemetry/instrumentation-fs': {
+        enabled: false, // Disable noisy fs instrumentation
+      },
+      '@opentelemetry/instrumentation-http': {
+        enabled: true,
+        ignoreIncomingRequestHook: (req) => {
+          const url = req.url || '';
+          return url === '/health' || url === '/api/health';
+        },
+      },
+      '@opentelemetry/instrumentation-express': {
+        enabled: true,
+      },
+      '@opentelemetry/instrumentation-grpc': {
+        enabled: true,
+      },
+    }),
+    new WinstonInstrumentation(),
+  ],
 });
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
-    otr_sdk
-        .shutdown()
-        .then(() => console.log('Tracing and metrics terminated'))
-        .catch(error => console.error('Error terminating tracing', error))
-        .finally(() => process.exit(0));
+  otr_sdk
+    .shutdown()
+    .then(() => console.log('Tracing, metrics, and logging terminated'))
+    .catch((error) => console.error('Error terminating OpenTelemetry SDK', error))
+    .finally(() => process.exit(0));
 });
 
-console.log('OpenTelemetry SDK initialized with metrics export interval: 15s');
+console.log(`OpenTelemetry SDK initialized → ${otlpEndpoint}`);

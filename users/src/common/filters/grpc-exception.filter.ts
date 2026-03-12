@@ -1,6 +1,6 @@
 import { Catch, RpcExceptionFilter, ArgumentsHost, Logger } from '@nestjs/common';
+import { RpcException } from '@nestjs/microservices';
 import { Observable, throwError } from 'rxjs';
-import { GrpcException } from 'nestjs-grpc';
 
 @Catch()
 export class GrpcExceptionFilter implements RpcExceptionFilter<any> {
@@ -8,17 +8,13 @@ export class GrpcExceptionFilter implements RpcExceptionFilter<any> {
 
   catch(exception: any, host: ArgumentsHost): Observable<any> {
     this.logger.debug(`Catching exception: ${exception.message || exception}`);
-    if (exception instanceof GrpcException) {
-      return throwError(() => ({
-        code: exception.getCode(),
-        message: exception.message,
-        details: exception.getDetails(),
-      }));
+    if (exception instanceof RpcException) {
+      return throwError(() => exception.getError());
     }
 
-    // Default to Internal error for unknown exceptions
+    // For standard Error/not-found cases
     return throwError(() => ({
-      code: 13, // INTERNAL
+      code: 5, // NOT_FOUND
       message: exception.message || 'Internal server error',
     }));
   }

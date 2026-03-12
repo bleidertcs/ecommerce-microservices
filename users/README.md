@@ -16,7 +16,7 @@ Este microservicio gestiona la identidad, perfiles y seguridad de los usuarios e
 - **Backend**: NestJS 10.
 - **Persistencia**: PostgreSQL + Prisma ORM.
 - **Observabilidad**: OpenTelemetry SDK + SigNoz.
-- **Inter-comunicación**: Servidor gRPC y NATS para peticiones síncronas.
+- **Inter-comunicación**: Servidor gRPC para peticiones síncronas.
 
 ---
 

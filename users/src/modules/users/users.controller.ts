@@ -14,6 +14,18 @@ export class UsersController {
     return this.usersService.create(createUserDto);
   }
 
+  @Post('sync')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Sync user from IDProvider to local DB' })
+  async syncUser(@AuthUser() user: any) {
+    if (!user || !user.id) {
+      throw new UnauthorizedException('User identity not found in token');
+    }
+    // AuthUser decorator provides verified JWT claims.
+    // The Casdoor token payload will be passed to syncUser.
+    return this.usersService.syncUser(user);
+  }
+
   @Get()
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all users' })

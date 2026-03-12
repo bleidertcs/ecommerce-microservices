@@ -6,7 +6,7 @@
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/bleidertcs/ecommerce-microservices)
 
-Una arquitectura de microservicios e-commerce avanzada construida con **NestJS**, **gRPC**, **TCP**, **NATS**, **RabbitMQ**, **Casdoor** (Identity Provider) y **Kong API Gateway**. El sistema cuenta con un stack de observabilidad moderno basado en **SigNoz** y **OpenTelemetry**.
+Una arquitectura de microservicios e-commerce avanzada construida con **NestJS**, **gRPC**, **RabbitMQ**, **Casdoor** (Identity Provider) y **Kong API Gateway**. El sistema cuenta con un stack de observabilidad moderno basado en **SigNoz** y **OpenTelemetry**.
 
 ---
 
@@ -36,7 +36,6 @@ graph TB
 
     subgraph "Messaging & Auth"
         RMQ[RabbitMQ - Asíncrono]
-        NATS[NATS - Síncrono/Alternativo]
         CD[Casdoor IDP]
     end
 
@@ -48,11 +47,8 @@ graph TB
 
     Users-.-RMQ
     Orders-.-RMQ
-    Orders-.- |gRPC/TCP/NATS| Users
-    Orders-.- |gRPC/TCP/NATS| Products
-    Users-.-NATS
-    Products-.-NATS
-    Orders-.-NATS
+    Orders-.- |gRPC| Users
+    Orders-.- |gRPC| Products
     Users & Products & Orders --- |OTLP| OT
     OT --- SN
     SN --- CH
@@ -64,7 +60,7 @@ graph TB
 
 - **👤 Users Service**: Gestión de perfiles, direcciones y métodos de pago.
 - **🏷️ Products Service**: Catálogo de productos, inventario y gestión de reviews.
-- **🛒 Orders Service**: Orquestación de pedidos con validación síncrona flexible vía **gRPC**, **TCP** o **NATS**.
+- **🛒 Orders Service**: Orquestación de pedidos con validación síncrona vía **gRPC**.
 
 ### 🛡️ Seguridad y Tráfico
 
@@ -90,6 +86,9 @@ graph TB
 | **Users Service**      | `9001`      | Microservicio de Usuarios          | [Swagger](http://localhost:9001/api/docs) |
 | **Products Service**   | `9002`      | Catálogo de Productos              | [Swagger](http://localhost:9002/api/docs) |
 | **Orders Service**     | `9003`      | Gestión de Pedidos                 | [Swagger](http://localhost:9003/api/docs) |
+| **Payments Service**   | `9006`      | Pagos                              | [Swagger](http://localhost:9006/api/docs) |
+| **Cart Service**      | `9007`      | Carrito de compras                 | [Swagger](http://localhost:9007/api/docs) |
+| **Notifications**     | `9015`      | Notificaciones (puerto host 9015)  | -                                         |
 | **SigNoz**             | `8080`      | Observabilidad unificada           | [UI](http://localhost:8080)               |
 | **RabbitMQ**           | `15672`     | Broker de Mensajería               | [UI](http://localhost:15672)              |
 

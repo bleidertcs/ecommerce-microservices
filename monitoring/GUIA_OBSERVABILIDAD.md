@@ -24,6 +24,8 @@ docker-compose up -d --build
 
 ## Integración técnica en NestJS
 
+Los microservicios exportan **trazas y logs** vía OTLP al collector. La exportación de **métricas** desde el Node SDK (`PeriodicExportingMetricReader`) está desactivada en los servicios para evitar que el proceso falle con `ECONNREFUSED` cuando el collector (puerto 4317) no está disponible o no está listo al arrancar. Las métricas en SigNoz siguen disponibles vía instrumentación automática y desde el collector.
+
 ### 1. Tracing
 
 Se utiliza el SDK de OpenTelemetry (`otr_sdk`) en `src/tracing.ts`. Se inicializa en `main.ts` antes de arrancar la aplicación para capturar instrumentaciones automáticas (HTTP, gRPC, Prisma, Redis).

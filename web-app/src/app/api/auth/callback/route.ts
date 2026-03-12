@@ -34,6 +34,28 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Failed to exchange code for token', detail: data }, { status: 500 });
     }
 
+    // Trigger User Synchronization to backend
+    try {
+      // Use internal Docker network to reach Kong API Gateway, or fallback to localhost
+      const apiUrl = process.env.API_URL || 'http://kong:8000';
+      const syncRes = await fetch(`${apiUrl}/api/v1/users/sync`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${data.access_token}`,
+        },
+      });
+
+      if (!syncRes.ok) {
+        console.error('Failed to sync user to backend:', await syncRes.text());
+        // We choose not to fail the login if sync fails, but log it
+      } else {
+        console.log('User synchronized successfully to backend.');
+      }
+    } catch (syncError) {
+      console.error('Error during user synchronization:', syncError);
+    }
+
     return NextResponse.json({ 
         token: data.access_token,
         id_token: data.id_token,

@@ -72,15 +72,17 @@ export class OrdersService implements OnModuleInit {
     return this.databaseService.$transaction(async (tx) => {
       // 1. Validate User with Circuit Breaker
       try {
+        this.logger.debug(`Validating user: ${userId}`);
         const user = await this.circuitBreakerService.fire(
           'users-service',
           (id: string) => firstValueFrom(this.usersService.findOne({ id })),
           userId,
         );
-        if (!user) throw new BadRequestException('User not found');
+        this.logger.debug(`User validation result: ${JSON.stringify(user)}`);
+        if (!user) throw new BadRequestException('User not found in Users microservice');
       } catch (e) {
-        this.logger.error(`Error validating user with Circuit Breaker: ${e.message}`);
-        throw new BadRequestException('User validation failed or service unavailable');
+        this.logger.error(`Error validating user [ID: ${userId}] with Circuit Breaker: ${e.message}`, e.stack);
+        throw new BadRequestException(`User validation failed: ${e.message}`);
       }
 
       const processedItems = [];
