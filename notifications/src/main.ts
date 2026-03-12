@@ -49,7 +49,7 @@ async function bootstrap() {
     });
 
     // Security
-    app.use(helmet({ contentSecurityPolicy: env === 'production' ? undefined : false }));
+    app.use(helmet());
 
     // Validation
     app.useGlobalPipes(
