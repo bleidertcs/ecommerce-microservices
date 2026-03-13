@@ -94,28 +94,54 @@ graph TB
 
 ---
 
-## ⚡ Inicio Rápido
+## 🚀 Levantamiento del Ambiente: "De Cero a 100"
 
-### 1. Requisitos
+Sigue estos pasos para tener el sistema operativo desde cero.
 
-- Docker & Docker Compose
-- Node.js >= 18 (para desarrollo local)
-- PowerShell o Bash para scripts de setup
+### 1. Preparación Inicial
+```bash
+# 1. Clonar el repositorio
+git clone <url-del-repo>
+cd nestjs-microservices
 
-### 2. Configuración y Despliegue Automático
+# 2. Configurar variables de entorno iniciales
+# Copia los .env de ejemplo en la raíz y en cada servicio
+cp .env.example .env
+# (Repetir para users, products, orders, payments, cart, web-app)
+```
 
-El proyecto incluye scripts que automatizan la generación de protos, clientes prisma y el despliegue:
+### 2. Elige tu camino
+
+#### ⚡ Opción A: Inicio Rápido (Recomendado)
+*Ideal para desarrolladores que quieren ver el sistema funcionando inmediatamente.*
+
+Usa los scripts de automatización que se encargan de generar clientes Prisma, correr migraciones y aplicar seeds:
 
 ```bash
 # En Windows (PowerShell)
 ./scripts/setup-ecommerce.ps1
+docker-compose up -d
 
 # En Linux/macOS
 chmod +x scripts/setup-ecommerce.sh
 ./scripts/setup-ecommerce.sh
+docker-compose up -d
 ```
+*Sigue las instrucciones finales del script para configurar Casdoor y Kong.*
 
-### 3. Acceso a Herramientas
+#### 📖 Opción B: Guía Detallada (Paso a Paso)
+*Ideal para entender la arquitectura, personalizar el despliegue o depurar problemas.*
+
+Consulta la **[MASTER_GUIDE.md](./MASTER_GUIDE.md)** para una explicación detallada de cada capa:
+1. Levantamiento de infraestructura base (Bases de datos, Redis, RabbitMQ).
+2. Ejecución manual de migraciones y seeds.
+3. Configuración manual de Casdoor y extracción de certificados.
+4. Despliegue de microservicios y observabilidad.
+
+---
+
+### 3. Acceso a Herramientas y Servicios
+Una vez levantado todo, estos son los puntos de acceso principales:
 
 - **API Gateway (Proxy)**: `http://localhost:8010`
 - **Casdoor (Auth/UI)**: `http://localhost:8000`

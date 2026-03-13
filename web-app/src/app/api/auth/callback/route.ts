@@ -37,7 +37,7 @@ export async function GET(request: Request) {
     // Trigger User Synchronization to backend
     try {
       // Use internal Docker network to reach Kong API Gateway, or fallback to localhost
-      const apiUrl = process.env.API_URL || 'http://kong:8000';
+      const apiUrl = process.env.INTERNAL_API_URL || 'http://kong:8010';
       const syncRes = await fetch(`${apiUrl}/api/v1/users/sync`, {
         method: 'POST',
         headers: {

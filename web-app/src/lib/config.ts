@@ -3,7 +3,7 @@
 // For client components (Browser): we use the public URL (Kong Gateway)
 
 // Internal URL for Server-Side Rendering (Only used in Node.js)
-const INTERNAL_API_URL = process.env.INTERNAL_API_URL || 'http://kong:8000';
+const INTERNAL_API_URL = process.env.INTERNAL_API_URL || 'http://kong:8010';
 
 // Public URL for Client-Side Requests (Used in the browser)
 const PUBLIC_API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8010';

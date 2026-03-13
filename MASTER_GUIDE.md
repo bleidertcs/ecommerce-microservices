@@ -1,136 +1,98 @@
-# 📖 Guía Completa de Ecosistema: Microservicios E-commerce
+# 📖 Guía Detallada: Configuración del Ecosistema
 
-Esta guía detalla la configuración integral del sistema, incluyendo **Casdoor** (Identidad), **Kong** (Gateway), **SigNoz** (Observabilidad) y los microservicios de **Users, Products, Orders y Payments**.
+Esta guía explica paso a paso cómo levantar el ambiente completo de forma manual. Esto es útil para entender las dependencias entre servicios y personalizar la configuración.
 
 ---
 
-## 🚀 1. Setup en máquina nueva
+## 🛠️ Fase 1: Entorno y Clonado
 
-Sigue estos pasos en orden para levantar el ambiente desde cero (o después de una limpieza completa).
+1. **Clonar el repositorio:**
+   ```bash
+   git clone <url-del-repo>
+   cd nestjs-microservices
+   ```
+2. **Prerrequisitos:**
+   - **Docker Desktop** (con Docker Compose).
+   - **Node.js >= 18** y **pnpm** (para comandos locales de Prisma).
+3. **Variables de Entorno (`.env`):**
+   - Copia `.env.example` a `.env` en la raíz.
+   - En cada carpeta de microservicio (`users`, `products`, etc.), copia su `.env.example` a `.env`.
+   - > [!IMPORTANT]
+     > En la raíz `.env`, asegúrate de que `CASDOOR_ENDPOINT` sea `http://localhost:8000`.
 
-### Fase 0: Prerrequisitos
+---
 
-- **Docker** y **Docker Compose** instalados.
-- **Node.js** >= 18 (para migraciones/scripts locales).
-- **pnpm** (para ejecutar scripts de setup o migraciones locales).
+## 🏗️ Fase 2: Infraestructura de Datos
 
-### Fase 1: Limpieza (solo si ya tenías el proyecto levantado)
-
-Si quieres partir de cero en la misma máquina:
-
-```bash
-docker-compose down -v
-```
-
-Opcional, limpieza más agresiva:
-
-```bash
-docker system prune -a --volumes -f
-```
-
-Restaurar archivos `.env` desde los ejemplos en cada carpeta que uses (ver Fase 2).
-
-### Fase 2: Variables de entorno
-
-1. **Crear `.env` en la raíz del proyecto** (obligatorio para `docker-compose`). Debe incluir al menos:
-   - `CASDOOR_DB_PASSWORD` — contraseña de la base de datos de Casdoor.
-   - `CASDOOR_DB_PASSWORD` — contraseña de la base de datos de Casdoor.
-   - `CASDOOR_ENDPOINT` — [IMPORTANTE] Para desarrollo local, usa `http://localhost:8000` para asegurar que el navegador cargue correctamente los recursos. Si se usa dentro de contenedores para comunicación SSR, usa `http://casdoor:8000`.
-   Después de configurar Casdoor (Fase 6) añade: `CASDOOR_CLIENT_ID`, `CASDOOR_CLIENT_SECRET`.
-   Puedes copiar desde `.env.example` en la raíz y ajustar valores.
-
-2. **Crear `.env` en cada servicio** copiando desde su `.env.example`:
-   - `users/.env`
-   - `products/.env`
-   - `orders/.env`
-   - `payments/.env`
-   - `notifications/.env`
-   - `cart/.env`
-   - `web-app/.env`
-   Cuando tengas Client ID y Client Secret de Casdoor, actualiza la raíz y `web-app/.env`.
-
-### Fase 3: Levantar infraestructura base
+Primero, levantamos los servicios que los microservicios necesitan para arrancar:
 
 ```bash
 docker-compose up -d users-db products-db orders-db payments-db cart-db redis rabbitmq
 ```
 
-Espera a que los healthchecks de las bases de datos pasen (`docker-compose ps`).
+**Verificación:** Ejecuta `docker-compose ps` y asegúrate de que todas las bases de datos digan `(healthy)`.
 
-### Fase 4: Migraciones Prisma
+---
 
-Elige una opción.
+## 📑 Fase 3: Esquema de Datos (Prisma)
 
-**Opción A: Dentro de contenedores (recomendado)**
+Con las bases de datos listas, aplicamos el esquema y los datos iniciales (Seeds) para tener productos y usuarios de prueba.
 
-Primero levanta los servicios para tener las imágenes (o usa `docker-compose run` con el servicio correspondiente). Con las DBs ya levantadas (Fase 3):
-
+**Ejecución vía Docker (Recomendado):**
 ```bash
-# Users
+# Repetir para cada servicio (users, products, orders)
 docker-compose run --rm users-service npx prisma migrate deploy
 docker-compose run --rm users-service npx prisma db seed
 
-# Products
 docker-compose run --rm products-service npx prisma migrate deploy
 docker-compose run --rm products-service npx prisma db seed
 
-# Orders
-docker-compose run --rm orders-service npx prisma migrate deploy
-docker-compose run --rm orders-service npx prisma db seed
-
-# Payments (solo migraciones; no hay seed)
+# Payments y Cart solo requieren migrate (sin seed)
 docker-compose run --rm payments-service npx prisma migrate deploy
-
-# Cart (solo migraciones; no hay seed)
 docker-compose run --rm cart-service npx prisma migrate deploy
 ```
 
-**Opción B: Local (con pnpm)**
+---
 
-Con `DATABASE_URL` apuntando a `localhost` y los puertos mapeados (15431, 15432, 15433, 15436):
+## 🔐 Fase 4: Identidad (Casdoor)
 
-```bash
-cd users && pnpm run prisma:generate && pnpm run prisma:migrate && pnpm run prisma:seed && cd ..
-cd products && pnpm run prisma:generate && pnpm run prisma:migrate && pnpm run prisma:seed && cd ..
-cd orders && pnpm run prisma:generate && pnpm run prisma:migrate && pnpm run prisma:seed && cd ..
-cd payments && pnpm run prisma:generate && pnpm run prisma:migrate && cd ..
-cd cart && pnpm run prisma:generate && pnpm run prisma:migrate && cd ..
-```
-
-### Fase 5: Levantar Casdoor y observabilidad
+Levantamos el proveedor de identidad para habilitar la autenticación.
 
 ```bash
-docker-compose up -d casdoor-db casdoor zookeeper init-clickhouse clickhouse signoz-telemetrystore-migrator signoz signoz-otel-collector
+docker-compose up -d casdoor-db casdoor
 ```
 
-Espera a que Casdoor responda en `http://localhost:8000` y, si aplica, que SigNoz esté disponible en `http://localhost:8080`.
-
-### Fase 6: Configurar Casdoor
-
-1. Abre **http://localhost:8000** e inicia sesión (por defecto `admin` / `123123`; en algunas versiones puede ser `admin` / `123`).
-2. **Identity** > **Organizations**: edita `built-in` y habilita **"Enable privilege consent"**.
-3. **Identity** > **Applications**: edita `app-built-in`. Añade en **Redirect URLs** `http://localhost:3000/callback`. En **Grant Types** habilita **Authorization Code** y **Password**.
-4. Copia **Client ID** y **Client Secret** y actualiza el `.env` de la raíz y el de `web-app/.env`.
-
-### Fase 7: Configurar Kong (clave pública JWT)
-
-1. Con Casdoor levantado, ejecuta el script de sincronización automática:
+1. Accede a `http://localhost:8000` (`admin` / `123123`).
+2. **Organización:** En **Identity > Organizations**, edita `built-in` y activa **"Enable privilege consent"**.
+3. **Aplicación:** En **Identity > Applications**, edita `app-built-in`.
+   - Añade `http://localhost:3000/callback` en **Redirect URLs**.
+   - Habilita `Authorization Code` y `Password`.
+4. **Sincronización de Keys:** Ejecuta el script para que Kong obtenga la llave pública de Casdoor:
    - Windows: `./scripts/fetch-casdoor-certs.ps1 -UpdateConfig`
-   - Linux/macOS: `./scripts/fetch-casdoor-certs.sh -UpdateConfig` (si está disponible)
-2. El script actualizará automáticamente `kong/config.yml` con la clave pública más reciente y la indentación correcta.
-3. Comprueba que el valor `key` en `jwt_secrets` (en `kong/config.yml`) coincida con el claim `iss` del JWT que emite Casdoor (normalmente `http://localhost:8000`).
+   - Linux/macOS: `sh scripts/fetch-casdoor-certs.sh -UpdateConfig` (ajustar según disponibilidad).
 
-### Fase 8: Levantar el stack completo
+---
+
+## 📊 Fase 5: Observabilidad y Gateway
 
 ```bash
-docker-compose up -d --build
+# Levantar SigNoz y Kong
+docker-compose up -d signoz signoz-otel-collector clickhouse kong
 ```
 
-Verifica el estado con `docker-compose ps` y los healthchecks de Kong, microservicios y web-app.
+---
 
-### Fase 9: Verificación
+## 🚀 Fase 6: Despliegue de Microservicios
 
-Usa el **Checklist de verificación** al final de esta guía (Casdoor JWT, Kong, SigNoz, outbox).
+Finalmente, levantamos la lógica de negocio y la Web App:
+
+```bash
+docker-compose up -d users-service products-service orders-service payments-service notifications-service cart-service web-app
+```
+
+---
+
+## ✅ Fase 7: Validación del Sistema
 
 ---
 
@@ -256,10 +218,16 @@ El `Orders Service` puede alternar entre transportes para comunicarse con `Users
 
 ### D. Extraer Clave Pública para Kong
 
-1. Ve a **Identity** > **Certs**.
-2. Selecciona el certificado que usa tu aplicación (por defecto `cert-built-in`).
-3. Haz clic en el botón de edición y copia el contenido de **Public key**.
-4. Pega esta clave en `kong/config.yml` bajo la sección `rsa_public_key`.
+Kong (a través de su plugin JWT en modo RS256) requiere estrictamente una **Llave Pública RSA** (`-----BEGIN PUBLIC KEY-----`) y no el Certificado X.509 original de Casdoor. Si pegas el certificado puro, Kong fallará al arrancar (`init_by_lua error`).
+
+Para extraer e inyectar la llave automáticamente:
+1. Asegúrate de que tu contenedor Casdoor esté corriendo en `http://localhost:8000`.
+2. Ejecuta el script de extracción (Node.js o PowerShell):
+   ```bash
+   node -e "const crypto=require('crypto'); fetch('http://localhost:8000/.well-known/jwks').then(r=>r.json()).then(j => { const x5c = j.keys[0].x5c[0]; const cert = '-----BEGIN CERTIFICATE-----\n' + x5c.match(/.{1,64}/g).join('\n') + '\n-----END CERTIFICATE-----'; const pubKey = crypto.createPublicKey(cert).export({type: 'spki', format: 'pem'}); console.log(pubKey); })"
+   ```
+   *También puedes usar `.\scripts\fetch-casdoor-certs.ps1 -UpdateConfig` en PowerShell.*
+3. Reemplaza el bloque `rsa_public_key:` en `kong/config.yml` con el output generado (`-----BEGIN PUBLIC KEY----- ...`).
 
 ---
 

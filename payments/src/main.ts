@@ -32,7 +32,7 @@ async function bootstrap() {
     const logger = new Logger('Bootstrap');
 
     const appName = configService.get<string>('APP_NAME', 'Payments Service');
-    const port = configService.get<number>('PORT', 9006);
+    const port = configService.get<number>('HTTP_PORT', 9006);
     const env = configService.get<string>('NODE_ENV', 'development');
     const rabbitmqUrl = configService.getOrThrow<string>('RABBITMQ_URL');
 
