@@ -28,10 +28,14 @@ Esta guía detallada explica la configuración de extremo a extremo para usar **
 
 Para una configuración completa desde cero, consulta la **[MASTER_GUIDE.md](./MASTER_GUIDE.md#fase-4-identidad-casdoor)**.
 
-### Puntos de Atención:
-- **Enable privilege consent**: Obligatorio en la organización.
-- **Grant Types**: Habilitar `Authorization Code`, `Refresh Token` y `Password`.
-- **Redirect URLs**: Debe incluir `http://localhost:3000/callback`.
+### Puntos Críticos para que Funcione el Login/Registro Nativos:
+- **Organización (Identity > Organizations)**:
+  - **Enable privilege consent**: Indispensable para que los usuarios registrados adquieran permisos por defecto.
+- **Aplicación (Identity > Applications)**:
+  - **Enable sign up**: Habilitar esta casilla permite el registro (`Sign Up`) desde tu Web. Sin ella, los usuarios solo podrán ingresar si el Admin los creó manualmente.
+  - **Providers**: En la misma configuración de la Aplicación, en la parte inferior, DEBES agregar como mínimo el proveedor de contraseña (`provider_pass_...` o equivalente) al panel de "Providers". Si esta tabla está vacía, tu pantalla de Login/Registro se mostrará en blanco.
+  - **Grant Types**: Seleccionar `Authorization Code` (flujo Next.js Auth), `Refresh Token` (mantener sesión) y `Password` (útil para pruebas de API con Swagger).
+  - **Redirect URLs**: Mapear `http://localhost:3000/callback` rigurosamente.
 
 ---
 

@@ -208,15 +208,21 @@ El `Orders Service` puede alternar entre transportes para comunicarse con `Users
 3. > [!IMPORTANT]
    > Para permitir el registro de nuevos usuarios en esta organización, habilita la opción **"Enable privilege consent"** (Tiene consentimiento de privilegios). Esto es necesario porque los usuarios de la organización `built-in` tienen permisos globales.
 
-### C. Configuración de Aplicación
+### D. Configuración para Desarrollo Local
 
-1. Ve a **Identity** > **Applications**.
-2. Edita la aplicación `app-built-in`.
-3. **Redirect URLs**: Añade `http://localhost:3000/callback`.
-4. **Grant Types**: Asegúrate de que `Authorization Code` y `Password` estén habilitados.
-5. Copia el **Client ID** y **Client Secret** al archivo `.env` raíz y `web-app/.env`.
+> [!IMPORTANT]
+> **Consistencia de Client ID:** Es común que al reinstalar Casdoor o recrear la base de datos, el `Client ID` y `Client Secret` cambien. Si recibes el error **"Invalid client_id"** al intentar loguearte:
+> 1. Extrae los valores reales directamente de la DB:
+>    ```bash
+>    docker exec bw-casdoor-db psql -U casdoor -d casdoor -c "SELECT name, client_id, client_secret FROM application WHERE name = 'app-built-in';"
+>    ```
+> 2. Asegúrate de que estos valores coincidan en:
+>    - El archivo `.env` en la raíz.
+>    - El archivo `web-app/.env` (ambos `CASDOOR_CLIENT_ID` y `NEXT_PUBLIC_CASDOOR_CLIENT_ID`).
+>    - El `Dockerfile` del `web-app` hornea estas variables en tiempo de construcción, por lo que **DEBES RECONSTRUIR EL CONTENEDOR** si los cambias:
+>      `docker compose build web-app --no-cache && docker compose up -d web-app`
 
-### D. Extraer Clave Pública para Kong
+### E. Extraer Clave Pública para Kong
 
 Kong (a través de su plugin JWT en modo RS256) requiere estrictamente una **Llave Pública RSA** (`-----BEGIN PUBLIC KEY-----`) y no el Certificado X.509 original de Casdoor. Si pegas el certificado puro, Kong fallará al arrancar (`init_by_lua error`).
 
@@ -375,6 +381,19 @@ curl -X POST http://localhost:8010/api/v1/orders \
 - [ ] ¿Ves trazas en SigNoz (Traces) al hacer una petición?
 - [ ] ¿Los dashboards de servicios individuales muestran métricas RED?
 - [ ] ¿La tabla `outbox` en la DB de Orders se vacía correctamente?
+- [ ] ¿Los `NEXT_PUBLIC_` env vars del `web-app` coinciden con la DB de Casdoor?
+
+---
+
+## 🛠️ Solución de Problemas Comunes
+
+### Error: "Invalid client_id" en la redirección a Casdoor
+- **Causa:** El `web-app` está usando un `client_id` antiguo o por defecto que no coincide con el de la base de datos de Casdoor.
+- **Solución:** Sigue los pasos de la **Fase 4.D**. Es crítico recordar que `web-app` requiere reconstruirse (`--no-cache`) para aplicar cambios en variables `NEXT_PUBLIC_`.
+
+### Error: Casdoor Login en blanco o sin campos de Password
+- **Causa:** No hay proveedores de identidad configurados en la aplicación de Casdoor.
+- **Solución:** En Casdoor UI, ve a la aplicación `app-built-in` y en la sección **Providers**, añade un proveedor de tipo `Static` o `Database`.
 
 ---
 
