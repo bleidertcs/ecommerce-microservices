@@ -43,7 +43,7 @@ export class OrdersService implements OnModuleInit {
     @Inject('USERS_PACKAGE') private usersClient: any,
     @Inject('PRODUCTS_PACKAGE') private productsClient: any,
     @Inject('RABBITMQ_SERVICE') private rmqClient: ClientProxy,
-  ) {}
+  ) { }
 
   async onModuleInit() {
     const usersTransport = this.configService.get<string>('USERS_TRANSPORT', 'grpc');
@@ -70,19 +70,28 @@ export class OrdersService implements OnModuleInit {
     const { items, shippingAddress, paymentMethod } = createOrderDto;
 
     return this.databaseService.$transaction(async (tx) => {
-      // 1. Validate User with Circuit Breaker
+      // 1. Best-effort User validation with Circuit Breaker (do not block order creation)
       try {
-        this.logger.debug(`Validating user: ${userId}`);
+        this.logger.debug(`Validating user (best-effort): ${userId}`);
         const user = await this.circuitBreakerService.fire(
           'users-service',
           (id: string) => firstValueFrom(this.usersService.findOne({ id })),
           userId,
         );
         this.logger.debug(`User validation result: ${JSON.stringify(user)}`);
-        if (!user) throw new BadRequestException('User not found in Users microservice');
-      } catch (e) {
-        this.logger.error(`Error validating user [ID: ${userId}] with Circuit Breaker: ${e.message}`, e.stack);
-        throw new BadRequestException(`User validation failed: ${e.message}`);
+        if (!user) {
+          this.logger.warn(
+            `User ${userId} not found in Users microservice during order creation. Proceeding without strict user validation.`,
+          );
+        }
+      } catch (e: unknown) {
+        const error = e as { message?: string; stack?: string };
+        const message = error.message ?? 'Unknown error';
+
+        this.logger.warn(
+          `Best-effort user validation failed for [ID: ${userId}]. Proceeding with order creation. Reason: ${message}`,
+          error.stack,
+        );
       }
 
       const processedItems = [];

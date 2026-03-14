@@ -1,0 +1,954 @@
+name: nestjs-microservices
+services:
+  cart-db:
+    container_name: bw-cart-db
+    environment:
+      POSTGRES_DB: cart
+      POSTGRES_PASSWORD: master123
+      POSTGRES_USER: admin
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U admin -d cart
+      timeout: 5s
+      interval: 10s
+      retries: 5
+    image: postgres:15-alpine
+    networks:
+      bw-network: null
+    ports:
+      - mode: ingress
+        target: 5432
+        published: "15437"
+        protocol: tcp
+    restart: unless-stopped
+    volumes:
+      - type: volume
+        source: cart_data
+        target: /var/lib/postgresql/data
+        volume: {}
+  cart-service:
+    build:
+      context: C:\Desarrollo\Gateway\nestjs-microservices\cart
+      dockerfile: Dockerfile
+    container_name: bw-cart-service
+    depends_on:
+      cart-db:
+        condition: service_healthy
+        required: true
+      redis:
+        condition: service_healthy
+        required: true
+      signoz-otel-collector:
+        condition: service_started
+        required: true
+    environment:
+      APP_NAME: Cart Service
+      DATABASE_URL: postgresql://admin:master123@cart-db:5432/cart?schema=public
+      GRPC_URL: 0.0.0.0:50057
+      HTTP_HOST: 0.0.0.0
+      HTTP_PORT: "9007"
+      NODE_ENV: development
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://signoz-otel-collector:4317
+      OTEL_EXPORTER_OTLP_INSECURE: "true"
+      OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+      OTEL_SERVICE_NAME: cart-service
+      PRODUCTS_GRPC_URL: products-service:50052
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      REDIS_URL: redis://redis:6379
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - wget --no-verbose --tries=1 --spider http://localhost:9007/health || exit 1
+      timeout: 10s
+      interval: 30s
+      retries: 3
+      start_period: 40s
+    networks:
+      bw-network: null
+    ports:
+      - mode: ingress
+        target: 9007
+        published: "9007"
+        protocol: tcp
+      - mode: ingress
+        target: 50057
+        published: "50057"
+        protocol: tcp
+    restart: unless-stopped
+  casdoor:
+    container_name: bw-casdoor
+    depends_on:
+      casdoor-db:
+        condition: service_healthy
+        required: true
+    environment:
+      casdoorEndpoint: http://localhost:8000
+      dataSourceName: user=casdoor password=casdoor_pass123 host=casdoor-db port=5432 sslmode=disable dbname=casdoor
+      dbName: casdoor
+      driverName: postgres
+    image: casbin/casdoor:latest
+    networks:
+      bw-network: null
+    ports:
+      - mode: ingress
+        target: 8000
+        published: "8000"
+        protocol: tcp
+    restart: unless-stopped
+  casdoor-db:
+    container_name: bw-casdoor-db
+    environment:
+      POSTGRES_DB: casdoor
+      POSTGRES_PASSWORD: casdoor_pass123
+      POSTGRES_USER: casdoor
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U casdoor -d casdoor
+      timeout: 5s
+      interval: 10s
+      retries: 5
+    image: postgres:15-alpine
+    networks:
+      bw-network: null
+    restart: unless-stopped
+    volumes:
+      - type: volume
+        source: casdoor_database
+        target: /var/lib/postgresql/data
+        volume: {}
+  clickhouse:
+    container_name: bw-clickhouse
+    depends_on:
+      init-clickhouse:
+        condition: service_completed_successfully
+        required: true
+      zookeeper:
+        condition: service_healthy
+        required: true
+    environment:
+      CLICKHOUSE_SKIP_USER_SETUP: "1"
+    healthcheck:
+      test:
+        - CMD
+        - wget
+        - --spider
+        - -q
+        - 0.0.0.0:8123/ping
+      timeout: 5s
+      interval: 30s
+      retries: 3
+    image: clickhouse/clickhouse-server:25.5.6
+    networks:
+      bw-network: null
+    restart: unless-stopped
+    tty: true
+    volumes:
+      - type: volume
+        source: clickhouse_data
+        target: /var/lib/clickhouse
+        volume: {}
+      - type: volume
+        source: clickhouse_user_scripts
+        target: /var/lib/clickhouse/user_scripts
+        volume: {}
+      - type: bind
+        source: C:\Desarrollo\Gateway\nestjs-microservices\monitoring\signoz\clickhouse-config.xml
+        target: /etc/clickhouse-server/config.d/logging.xml
+        read_only: true
+        bind: {}
+      - type: bind
+        source: C:\Desarrollo\Gateway\nestjs-microservices\monitoring\signoz\clickhouse-users.xml
+        target: /etc/clickhouse-server/users.d/logging.xml
+        read_only: true
+        bind: {}
+      - type: bind
+        source: C:\Desarrollo\Gateway\nestjs-microservices\monitoring\signoz\clickhouse-cluster.xml
+        target: /etc/clickhouse-server/config.d/clickhouse-cluster.xml
+        read_only: true
+        bind: {}
+  init-clickhouse:
+    command:
+      - bash
+      - -c
+      - |
+        version="v0.0.1"
+        node_os=$$(uname -s | tr '[:upper:]' '[:lower:]')
+        node_arch=$$(uname -m | sed s/aarch64/arm64/ | sed s/x86_64/amd64/)
+        echo "Fetching histogram-binary for $${node_os}/$${node_arch}"
+        cd /tmp
+        wget -O histogram-quantile.tar.gz "https://github.com/SigNoz/signoz/releases/download/histogram-quantile%2F$${version}/histogram-quantile_$${node_os}_$${node_arch}.tar.gz"
+        tar -xvzf histogram-quantile.tar.gz
+        mv histogram-quantile /var/lib/clickhouse/user_scripts/histogramQuantile
+    container_name: bw-init-clickhouse
+    image: clickhouse/clickhouse-server:25.5.6
+    networks:
+      bw-network: null
+    restart: on-failure
+    volumes:
+      - type: volume
+        source: clickhouse_user_scripts
+        target: /var/lib/clickhouse/user_scripts
+        volume: {}
+  kong:
+    container_name: bw-kong
+    depends_on:
+      cart-service:
+        condition: service_started
+        required: true
+      orders-service:
+        condition: service_started
+        required: true
+      payments-service:
+        condition: service_started
+        required: true
+      products-service:
+        condition: service_started
+        required: true
+      redis:
+        condition: service_started
+        required: true
+      users-service:
+        condition: service_started
+        required: true
+    environment:
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_LISTEN: 0.0.0.0:8001
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /var/lib/kong/kong.yml
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_PROXY_LISTEN: 0.0.0.0:8010
+    healthcheck:
+      test:
+        - CMD
+        - kong
+        - health
+      timeout: 10s
+      interval: 30s
+      retries: 3
+    image: kong:latest
+    networks:
+      bw-network: null
+    ports:
+      - mode: ingress
+        target: 8010
+        published: "8010"
+        protocol: tcp
+      - mode: ingress
+        target: 8443
+        published: "8443"
+        protocol: tcp
+      - mode: ingress
+        target: 8001
+        published: "8001"
+        protocol: tcp
+    restart: unless-stopped
+    volumes:
+      - type: bind
+        source: C:\Desarrollo\Gateway\nestjs-microservices\kong\config.yml
+        target: /var/lib/kong/kong.yml
+        read_only: true
+        bind: {}
+  nats:
+    command:
+      - -m
+      - "8222"
+    container_name: bw-nats
+    healthcheck:
+      test:
+        - CMD
+        - wget
+        - --no-verbose
+        - --tries=1
+        - --spider
+        - http://localhost:8222/varz
+      timeout: 5s
+      interval: 10s
+      retries: 3
+    image: nats:2.10-alpine
+    networks:
+      bw-network: null
+    ports:
+      - mode: ingress
+        target: 4222
+        published: "4222"
+        protocol: tcp
+      - mode: ingress
+        target: 8222
+        published: "8222"
+        protocol: tcp
+    restart: unless-stopped
+  notifications-service:
+    build:
+      context: C:\Desarrollo\Gateway\nestjs-microservices\notifications
+      dockerfile: Dockerfile
+    container_name: bw-notifications-service
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+        required: true
+      signoz-otel-collector:
+        condition: service_started
+        required: true
+    environment:
+      APP_NAME: Notifications Service
+      GRPC_URL: 0.0.0.0:50055
+      HTTP_HOST: 0.0.0.0
+      HTTP_PORT: "9005"
+      NODE_ENV: development
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://signoz-otel-collector:4317
+      OTEL_EXPORTER_OTLP_INSECURE: "true"
+      OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+      OTEL_SERVICE_NAME: notifications-service
+      RABBITMQ_QUEUE: ecommerce_events
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+    networks:
+      bw-network: null
+    ports:
+      - mode: ingress
+        target: 9005
+        published: "9015"
+        protocol: tcp
+      - mode: ingress
+        target: 50055
+        published: "50055"
+        protocol: tcp
+    restart: unless-stopped
+  orders-db:
+    container_name: bw-orders-db
+    environment:
+      POSTGRES_DB: orders
+      POSTGRES_PASSWORD: master123
+      POSTGRES_USER: admin
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U admin -d orders
+      timeout: 5s
+      interval: 10s
+      retries: 5
+    image: postgres:15-alpine
+    networks:
+      bw-network: null
+    ports:
+      - mode: ingress
+        target: 5432
+        published: "15433"
+        protocol: tcp
+    restart: unless-stopped
+    volumes:
+      - type: volume
+        source: orders_data
+        target: /var/lib/postgresql/data
+        volume: {}
+  orders-service:
+    build:
+      context: C:\Desarrollo\Gateway\nestjs-microservices\orders
+      dockerfile: Dockerfile
+    container_name: bw-orders-service
+    depends_on:
+      orders-db:
+        condition: service_healthy
+        required: true
+      rabbitmq:
+        condition: service_healthy
+        required: true
+      signoz-otel-collector:
+        condition: service_started
+        required: true
+    environment:
+      APP_NAME: Orders Service
+      CASDOOR_PUBLIC_KEY: |-
+        -----BEGIN PUBLIC KEY-----
+        MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAta0Y1GyUMXlI6MOBvhCA
+        Vyl3QAkjbJxFm30D3O7d25GRLrop9GqFLExiMFxNC591zIDMglW5sKRc8wAoNOS8
+        QTfHWFB22UmTuz9HhOvWqqDM5d+6I3nZXHQJDS3+Mrq/QReZOCH0Lgd8ktZ9fkUP
+        cL6HW4GJ6vbbHFRpUmn0p3gmzvV8svE12HkyXkR7p8tu6sYpHQw1wjegdsqStvEd
+        f7ExZ0JZnhUTgjKLHZZN08Mnt5kLHmXQHjdLP6LdEU9wL+Wp0B0XJVvELw2G+gOX
+        BvJcO3C2L9j4WNHQKFfk9Zpehzo+s222khmp8t9n9kOeRtAZ3OXzMaWttjpoght4
+        R8fHU7jS0OOYHA7kUsUyj4cJhz0yPLvxkhvy8l5NnAuNElAG6dBWf+a9PeUPMEUo
+        5x9yeMS0lmJhrv6MO7srqswKoivi48NN7JNc4eNmxnOYwhvSQxrzujWTvA2rr8Jc
+        g6Y9rOiy+qipkuRu52FyfkR5qxYEJZp+L4m+qgXEoC8ujBIMvYJ++4zFLdshfdBn
+        iaKrNu8cXE72ousZQLSQF22qApCWufWFgJ8rQX/XiRC/lYNQuQ/LHIVjxA0b07id
+        wFLsGL19tPEzatR0ZFofwIDNswjlF3p97KByV6FbOG0QVGQLQcLNDJaZH3znnMyB
+        bGUZmpRXRxKlZzOypk4WzJcCAwEAAQ==
+        -----END PUBLIC KEY-----
+      DATABASE_URL: postgresql://admin:master123@orders-db:5432/orders?schema=public
+      GRPC_URL: 0.0.0.0:50053
+      HTTP_HOST: 0.0.0.0
+      HTTP_PORT: "9003"
+      NODE_ENV: development
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://signoz-otel-collector:4317
+      OTEL_EXPORTER_OTLP_INSECURE: "true"
+      OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+      OTEL_SERVICE_NAME: orders-service
+      PRODUCTS_TRANSPORT: grpc
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      REDIS_KEY_PREFIX: 'orders:'
+      REDIS_URL: redis://redis:6379
+      USERS_TRANSPORT: grpc
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - wget --no-verbose --tries=1 --spider http://localhost:9003/health || exit 1
+      timeout: 10s
+      interval: 30s
+      retries: 3
+      start_period: 40s
+    networks:
+      bw-network: null
+    ports:
+      - mode: ingress
+        target: 9003
+        published: "9003"
+        protocol: tcp
+      - mode: ingress
+        target: 50053
+        published: "50053"
+        protocol: tcp
+      - mode: ingress
+        target: 3003
+        published: "3003"
+        protocol: tcp
+    restart: unless-stopped
+  payments-db:
+    container_name: bw-payments-db
+    environment:
+      POSTGRES_DB: payments
+      POSTGRES_PASSWORD: master123
+      POSTGRES_USER: admin
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U admin -d payments
+      timeout: 5s
+      interval: 10s
+      retries: 5
+    image: postgres:15-alpine
+    networks:
+      bw-network: null
+    ports:
+      - mode: ingress
+        target: 5432
+        published: "15436"
+        protocol: tcp
+    restart: unless-stopped
+    volumes:
+      - type: volume
+        source: payments_data
+        target: /var/lib/postgresql/data
+        volume: {}
+  payments-service:
+    build:
+      context: C:\Desarrollo\Gateway\nestjs-microservices\payments
+      dockerfile: Dockerfile
+    container_name: bw-payments-service
+    depends_on:
+      payments-db:
+        condition: service_healthy
+        required: true
+      rabbitmq:
+        condition: service_healthy
+        required: true
+      signoz-otel-collector:
+        condition: service_started
+        required: true
+    environment:
+      APP_NAME: Payments Service
+      DATABASE_URL: postgresql://admin:master123@payments-db:5432/payments?schema=public
+      GRPC_URL: 0.0.0.0:50056
+      HTTP_HOST: 0.0.0.0
+      HTTP_PORT: "9006"
+      NODE_ENV: development
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://signoz-otel-collector:4317
+      OTEL_EXPORTER_OTLP_INSECURE: "true"
+      OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+      OTEL_SERVICE_NAME: payments-service
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - wget --no-verbose --tries=1 --spider http://localhost:9006/health || exit 1
+      timeout: 10s
+      interval: 30s
+      retries: 3
+      start_period: 40s
+    networks:
+      bw-network: null
+    ports:
+      - mode: ingress
+        target: 9006
+        published: "9006"
+        protocol: tcp
+      - mode: ingress
+        target: 50056
+        published: "50056"
+        protocol: tcp
+    restart: unless-stopped
+  products-db:
+    container_name: bw-products-db
+    environment:
+      POSTGRES_DB: products
+      POSTGRES_PASSWORD: master123
+      POSTGRES_USER: admin
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U admin -d products
+      timeout: 5s
+      interval: 10s
+      retries: 5
+    image: postgres:15-alpine
+    networks:
+      bw-network: null
+    ports:
+      - mode: ingress
+        target: 5432
+        published: "15432"
+        protocol: tcp
+    restart: unless-stopped
+    volumes:
+      - type: volume
+        source: products_data
+        target: /var/lib/postgresql/data
+        volume: {}
+  products-service:
+    build:
+      context: C:\Desarrollo\Gateway\nestjs-microservices\products
+      dockerfile: Dockerfile
+    container_name: bw-products-service
+    depends_on:
+      products-db:
+        condition: service_healthy
+        required: true
+      signoz-otel-collector:
+        condition: service_started
+        required: true
+    environment:
+      APP_NAME: Products Service
+      CASDOOR_PUBLIC_KEY: |-
+        -----BEGIN PUBLIC KEY-----
+        MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAta0Y1GyUMXlI6MOBvhCA
+        Vyl3QAkjbJxFm30D3O7d25GRLrop9GqFLExiMFxNC591zIDMglW5sKRc8wAoNOS8
+        QTfHWFB22UmTuz9HhOvWqqDM5d+6I3nZXHQJDS3+Mrq/QReZOCH0Lgd8ktZ9fkUP
+        cL6HW4GJ6vbbHFRpUmn0p3gmzvV8svE12HkyXkR7p8tu6sYpHQw1wjegdsqStvEd
+        f7ExZ0JZnhUTgjKLHZZN08Mnt5kLHmXQHjdLP6LdEU9wL+Wp0B0XJVvELw2G+gOX
+        BvJcO3C2L9j4WNHQKFfk9Zpehzo+s222khmp8t9n9kOeRtAZ3OXzMaWttjpoght4
+        R8fHU7jS0OOYHA7kUsUyj4cJhz0yPLvxkhvy8l5NnAuNElAG6dBWf+a9PeUPMEUo
+        5x9yeMS0lmJhrv6MO7srqswKoivi48NN7JNc4eNmxnOYwhvSQxrzujWTvA2rr8Jc
+        g6Y9rOiy+qipkuRu52FyfkR5qxYEJZp+L4m+qgXEoC8ujBIMvYJ++4zFLdshfdBn
+        iaKrNu8cXE72ousZQLSQF22qApCWufWFgJ8rQX/XiRC/lYNQuQ/LHIVjxA0b07id
+        wFLsGL19tPEzatR0ZFofwIDNswjlF3p97KByV6FbOG0QVGQLQcLNDJaZH3znnMyB
+        bGUZmpRXRxKlZzOypk4WzJcCAwEAAQ==
+        -----END PUBLIC KEY-----
+      DATABASE_URL: postgresql://admin:master123@products-db:5432/products?schema=public
+      GRPC_URL: 0.0.0.0:50052
+      HTTP_HOST: 0.0.0.0
+      HTTP_PORT: "9002"
+      NODE_ENV: development
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://signoz-otel-collector:4317
+      OTEL_EXPORTER_OTLP_INSECURE: "true"
+      OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+      OTEL_SERVICE_NAME: products-service
+      REDIS_KEY_PREFIX: 'products:'
+      REDIS_URL: redis://redis:6379
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - wget --no-verbose --tries=1 --spider http://localhost:9002/health || exit 1
+      timeout: 10s
+      interval: 30s
+      retries: 3
+      start_period: 40s
+    networks:
+      bw-network: null
+    ports:
+      - mode: ingress
+        target: 9002
+        published: "9002"
+        protocol: tcp
+      - mode: ingress
+        target: 50052
+        published: "50052"
+        protocol: tcp
+      - mode: ingress
+        target: 3002
+        published: "3002"
+        protocol: tcp
+    restart: unless-stopped
+  rabbitmq:
+    container_name: bw-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_PASS: guest
+      RABBITMQ_DEFAULT_USER: guest
+    healthcheck:
+      test:
+        - CMD
+        - rabbitmq-diagnostics
+        - -q
+        - ping
+      timeout: 5s
+      interval: 10s
+      retries: 3
+    image: rabbitmq:3-management-alpine
+    networks:
+      bw-network: null
+    ports:
+      - mode: ingress
+        target: 5672
+        published: "5672"
+        protocol: tcp
+      - mode: ingress
+        target: 15672
+        published: "15672"
+        protocol: tcp
+    restart: unless-stopped
+    volumes:
+      - type: volume
+        source: rabbitmq_data
+        target: /var/lib/rabbitmq
+        volume: {}
+  redis:
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+      - --maxmemory
+      - 256mb
+      - --maxmemory-policy
+      - allkeys-lru
+    container_name: bw-redis
+    healthcheck:
+      test:
+        - CMD
+        - redis-cli
+        - ping
+      timeout: 5s
+      interval: 10s
+      retries: 3
+    image: redis:7-alpine
+    networks:
+      bw-network: null
+    ports:
+      - mode: ingress
+        target: 6379
+        published: "6379"
+        protocol: tcp
+    restart: unless-stopped
+    volumes:
+      - type: volume
+        source: redis_data
+        target: /data
+        volume: {}
+  signoz:
+    container_name: bw-signoz
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+        required: true
+    environment:
+      DEPLOYMENT_TYPE: docker-standalone-amd
+      GODEBUG: netdns=go
+      SIGNOZ_ALERTMANAGER_PROVIDER: signoz
+      SIGNOZ_SQLSTORE_SQLITE_PATH: /var/lib/signoz/signoz.db
+      SIGNOZ_TELEMETRYSTORE_CLICKHOUSE_DSN: tcp://clickhouse:9000
+      SIGNOZ_TOKENIZER_JWT_SECRET: super_secret_jwt_signoz_key_for_local_dev_12345
+      STORAGE: clickhouse
+      TELEMETRY_ENABLED: "false"
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - wget --no-verbose --tries=1 --spider http://localhost:8080/api/v1/health || exit 1
+      timeout: 10s
+      interval: 30s
+      retries: 3
+    image: signoz/signoz:v0.112.1
+    networks:
+      bw-network: null
+    ports:
+      - mode: ingress
+        target: 8080
+        published: "8080"
+        protocol: tcp
+    restart: unless-stopped
+    volumes:
+      - type: volume
+        source: signoz_data
+        target: /var/lib/signoz
+        volume: {}
+  signoz-otel-collector:
+    command:
+      - -c
+      - |
+        /signoz-otel-collector migrate sync check &&
+        /signoz-otel-collector --config=/etc/otel-collector-config.yaml
+    container_name: bw-signoz-otel-collector
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+        required: true
+      signoz:
+        condition: service_started
+        required: true
+    entrypoint:
+      - /bin/sh
+    environment:
+      LOW_CARDINAL_EXCEPTION_GROUPING: "false"
+      OTEL_RESOURCE_ATTRIBUTES: host.name=bw-signoz-otel-collector,os.type=linux
+      SIGNOZ_OTEL_COLLECTOR_CLICKHOUSE_CLUSTER: cluster
+      SIGNOZ_OTEL_COLLECTOR_CLICKHOUSE_DSN: tcp://clickhouse:9000
+      SIGNOZ_OTEL_COLLECTOR_CLICKHOUSE_REPLICATION: "true"
+      SIGNOZ_OTEL_COLLECTOR_TIMEOUT: 10m
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - bash -c 'true > /dev/tcp/127.0.0.1/13133'
+      timeout: 5s
+      interval: 30s
+      retries: 3
+    image: signoz/signoz-otel-collector:v0.142.0
+    networks:
+      bw-network: null
+    ports:
+      - mode: ingress
+        target: 4317
+        published: "4317"
+        protocol: tcp
+      - mode: ingress
+        target: 4318
+        published: "4318"
+        protocol: tcp
+    restart: unless-stopped
+    volumes:
+      - type: bind
+        source: C:\Desarrollo\Gateway\nestjs-microservices\monitoring\signoz\otel-collector-config.yaml
+        target: /etc/otel-collector-config.yaml
+        read_only: true
+        bind: {}
+      - type: bind
+        source: /var/lib/docker/containers
+        target: /var/lib/docker/containers
+        read_only: true
+        bind: {}
+  signoz-telemetrystore-migrator:
+    command:
+      - -c
+      - |
+        /signoz-otel-collector migrate bootstrap &&
+        /signoz-otel-collector migrate sync up &&
+        /signoz-otel-collector migrate async up
+    container_name: bw-signoz-telemetrystore-migrator
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+        required: true
+    entrypoint:
+      - /bin/sh
+    environment:
+      SIGNOZ_OTEL_COLLECTOR_CLICKHOUSE_CLUSTER: cluster
+      SIGNOZ_OTEL_COLLECTOR_CLICKHOUSE_DSN: tcp://clickhouse:9000
+      SIGNOZ_OTEL_COLLECTOR_CLICKHOUSE_REPLICATION: "true"
+      SIGNOZ_OTEL_COLLECTOR_TIMEOUT: 10m
+    image: signoz/signoz-otel-collector:v0.142.0
+    networks:
+      bw-network: null
+    restart: on-failure
+  swagger-ui:
+    container_name: bw-swagger-ui
+    environment:
+      BASE_URL: /docs
+      URLS: '[{url: ''/api/v1/users/docs-json'', name: ''Users''}, {url: ''/api/v1/products/docs-json'', name: ''Products''}, {url: ''/api/v1/orders/docs-json'', name: ''Orders''}, {url: ''/api/v1/payments/docs-json'', name: ''Payments''}, {url: ''/api/v1/cart/docs-json'', name: ''Cart''}]'
+    image: swaggerapi/swagger-ui
+    networks:
+      bw-network: null
+    restart: unless-stopped
+  users-db:
+    container_name: bw-users-db
+    environment:
+      POSTGRES_DB: users
+      POSTGRES_PASSWORD: master123
+      POSTGRES_USER: admin
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U admin -d users
+      timeout: 5s
+      interval: 10s
+      retries: 5
+    image: postgres:15-alpine
+    networks:
+      bw-network: null
+    ports:
+      - mode: ingress
+        target: 5432
+        published: "15431"
+        protocol: tcp
+    restart: unless-stopped
+    volumes:
+      - type: volume
+        source: users_data
+        target: /var/lib/postgresql/data
+        volume: {}
+  users-service:
+    build:
+      context: C:\Desarrollo\Gateway\nestjs-microservices\users
+      dockerfile: Dockerfile
+    container_name: bw-users-service
+    depends_on:
+      signoz-otel-collector:
+        condition: service_started
+        required: true
+      users-db:
+        condition: service_healthy
+        required: true
+    environment:
+      APP_NAME: Users Service
+      CASDOOR_PUBLIC_KEY: |-
+        -----BEGIN PUBLIC KEY-----
+        MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAta0Y1GyUMXlI6MOBvhCA
+        Vyl3QAkjbJxFm30D3O7d25GRLrop9GqFLExiMFxNC591zIDMglW5sKRc8wAoNOS8
+        QTfHWFB22UmTuz9HhOvWqqDM5d+6I3nZXHQJDS3+Mrq/QReZOCH0Lgd8ktZ9fkUP
+        cL6HW4GJ6vbbHFRpUmn0p3gmzvV8svE12HkyXkR7p8tu6sYpHQw1wjegdsqStvEd
+        f7ExZ0JZnhUTgjKLHZZN08Mnt5kLHmXQHjdLP6LdEU9wL+Wp0B0XJVvELw2G+gOX
+        BvJcO3C2L9j4WNHQKFfk9Zpehzo+s222khmp8t9n9kOeRtAZ3OXzMaWttjpoght4
+        R8fHU7jS0OOYHA7kUsUyj4cJhz0yPLvxkhvy8l5NnAuNElAG6dBWf+a9PeUPMEUo
+        5x9yeMS0lmJhrv6MO7srqswKoivi48NN7JNc4eNmxnOYwhvSQxrzujWTvA2rr8Jc
+        g6Y9rOiy+qipkuRu52FyfkR5qxYEJZp+L4m+qgXEoC8ujBIMvYJ++4zFLdshfdBn
+        iaKrNu8cXE72ousZQLSQF22qApCWufWFgJ8rQX/XiRC/lYNQuQ/LHIVjxA0b07id
+        wFLsGL19tPEzatR0ZFofwIDNswjlF3p97KByV6FbOG0QVGQLQcLNDJaZH3znnMyB
+        bGUZmpRXRxKlZzOypk4WzJcCAwEAAQ==
+        -----END PUBLIC KEY-----
+      DATABASE_URL: postgresql://admin:master123@users-db:5432/users?schema=public
+      GRPC_URL: 0.0.0.0:50051
+      HTTP_HOST: 0.0.0.0
+      HTTP_PORT: "9001"
+      NODE_ENV: development
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://signoz-otel-collector:4317
+      OTEL_EXPORTER_OTLP_INSECURE: "true"
+      OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+      OTEL_SERVICE_NAME: users-service
+      REDIS_KEY_PREFIX: 'users:'
+      REDIS_URL: redis://redis:6379
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - wget --no-verbose --tries=1 --spider http://localhost:9001/health || exit 1
+      timeout: 10s
+      interval: 30s
+      retries: 3
+      start_period: 40s
+    networks:
+      bw-network: null
+    ports:
+      - mode: ingress
+        target: 9001
+        published: "9001"
+        protocol: tcp
+      - mode: ingress
+        target: 50051
+        published: "50051"
+        protocol: tcp
+      - mode: ingress
+        target: 3001
+        published: "3001"
+        protocol: tcp
+    restart: unless-stopped
+  web-app:
+    build:
+      context: C:\Desarrollo\Gateway\nestjs-microservices\web-app
+      dockerfile: Dockerfile
+    container_name: bw-web-app
+    depends_on:
+      casdoor:
+        condition: service_started
+        required: true
+      kong:
+        condition: service_started
+        required: true
+    environment:
+      CASDOOR_APPLICATION: app-built-in
+      CASDOOR_CLIENT_ID: 25250d91fb04aaf80eb2
+      CASDOOR_CLIENT_SECRET: 8c1d80d324b5df29d8ced1a35d3a82ab7390a14a
+      CASDOOR_ENDPOINT: http://casdoor:8000
+      CASDOOR_ORGANIZATION: built-in
+      INTERNAL_API_URL: http://bw-kong:8010
+      NEXT_PUBLIC_API_URL: http://localhost:8010
+      NEXT_PUBLIC_CASDOOR_APPLICATION: app-built-in
+      NEXT_PUBLIC_CASDOOR_CLIENT_ID: 25250d91fb04aaf80eb2
+      NEXT_PUBLIC_CASDOOR_ORGANIZATION: built-in
+      NEXT_PUBLIC_CASDOOR_REDIRECT_URI: http://localhost:3000/callback
+      NEXT_PUBLIC_CASDOOR_URL: http://localhost:8000
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://signoz-otel-collector:4318
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_SERVICE_NAME: web-app
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - node -e "fetch('http://localhost:3000').then(() => process.exit(0)).catch(() => process.exit(1))"
+      timeout: 10s
+      interval: 30s
+      retries: 3
+      start_period: 40s
+    networks:
+      bw-network: null
+    ports:
+      - mode: ingress
+        target: 3000
+        published: "3000"
+        protocol: tcp
+    restart: unless-stopped
+  zookeeper:
+    container_name: bw-zookeeper
+    environment:
+      ALLOW_ANONYMOUS_LOGIN: "yes"
+      ZOO_AUTOPURGE_INTERVAL: "1"
+      ZOO_SERVER_ID: "1"
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - curl -s -m 2 http://localhost:8080/commands/ruok | grep error | grep null
+      timeout: 5s
+      interval: 30s
+      retries: 3
+    image: signoz/zookeeper:3.7.1
+    networks:
+      bw-network: null
+    restart: unless-stopped
+    user: root
+    volumes:
+      - type: volume
+        source: zookeeper_data
+        target: /bitnami/zookeeper
+        volume: {}
+networks:
+  bw-network:
+    name: nestjs-microservices_bw-network
+    driver: bridge
+volumes:
+  cart_data:
+    name: nestjs-microservices_cart_data
+  casdoor_database:
+    name: nestjs-microservices_casdoor_database
+  clickhouse_data:
+    name: nestjs-microservices_clickhouse_data
+  clickhouse_user_scripts:
+    name: nestjs-microservices_clickhouse_user_scripts
+  orders_data:
+    name: nestjs-microservices_orders_data
+  payments_data:
+    name: nestjs-microservices_payments_data
+  products_data:
+    name: nestjs-microservices_products_data
+  rabbitmq_data:
+    name: nestjs-microservices_rabbitmq_data
+  redis_data:
+    name: nestjs-microservices_redis_data
+  signoz_data:
+    name: nestjs-microservices_signoz_data
+  users_data:
+    name: nestjs-microservices_users_data
+  zookeeper_data:
+    name: nestjs-microservices_zookeeper_data

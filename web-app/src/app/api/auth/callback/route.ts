@@ -36,8 +36,12 @@ export async function GET(request: Request) {
 
     // Trigger User Synchronization to backend
     try {
-      // Use internal Docker network to reach Kong API Gateway, or fallback to localhost
-      const apiUrl = process.env.INTERNAL_API_URL || 'http://kong:8010';
+      // Use internal Docker network to reach Kong API Gateway when running in Docker,
+      // or fall back to the same base URL used by the frontend when running locally.
+      const apiUrl =
+        process.env.INTERNAL_API_URL ||
+        process.env.NEXT_PUBLIC_API_URL ||
+        'http://localhost:8010';
       const syncRes = await fetch(`${apiUrl}/api/v1/users/sync`, {
         method: 'POST',
         headers: {
@@ -56,10 +60,10 @@ export async function GET(request: Request) {
       console.error('Error during user synchronization:', syncError);
     }
 
-    return NextResponse.json({ 
-        token: data.access_token,
-        id_token: data.id_token,
-        refresh_token: data.refresh_token 
+    return NextResponse.json({
+      token: data.access_token,
+      id_token: data.id_token,
+      refresh_token: data.refresh_token
     });
   } catch (error) {
     console.error('Callback error:', error);

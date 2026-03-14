@@ -76,17 +76,41 @@ export default function CartPage() {
 
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.message || 'Failed to place order');
+        const backendMessage: string = err?.message || 'Failed to place order';
+
+        // Detect the specific case where the backend indicates that the user
+        // is not synchronized in the Users service and provide a clearer
+        // actionable message to the user.
+        if (
+          typeof backendMessage === 'string' &&
+          backendMessage.includes('User is not synchronized in the Users service')
+        ) {
+          throw new Error(
+            'Your profile is not synchronized. Please sign out and sign in again before checking out.',
+          );
+        }
+
+        throw new Error(backendMessage);
       }
 
       const data = await res.json();
-      alert('Order Placed Successfully! ID: ' + data.id);
+      const orderId =
+        data?.id ??
+        data?.orderId ??
+        data?.data?.id ??
+        null;
+
+      if (orderId) {
+        alert('Order Placed Successfully! ID: ' + orderId);
+      } else {
+        alert('Order Placed Successfully!');
+      }
       clearCart();
       router.push('/orders');
       
     } catch (error: any) {
       console.error(error);
-      alert('Checkout failed: ' + error.message);
+      alert('Checkout failed: ' + (error?.message || 'Unexpected error'));
     } finally {
       setLoading(false);
     }
