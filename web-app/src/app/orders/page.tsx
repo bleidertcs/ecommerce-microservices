@@ -4,6 +4,9 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import Button from '@/components/ui/Button';
 import Link from 'next/link';
+import { useToast } from '@/context/ToastContext';
+import { useModal } from '@/context/ModalContext';
+import Alert from '@/components/ui/Alert';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8010';
 
@@ -17,6 +20,8 @@ interface Order {
 
 export default function OrdersPage() {
   const { token, isAuthenticated } = useAuth();
+  const { success, error: toastError } = useToast();
+  const { showModal } = useModal();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -36,7 +41,7 @@ export default function OrdersPage() {
         }
       });
 
-      if (!res.ok) throw new Error('Failed to fetch orders');
+      if (!res.ok) throw new Error('No se pudieron cargar los pedidos');
       
       const data = await res.json();
       const orderList = Array.isArray(data) ? data : data.data || [];
@@ -61,14 +66,23 @@ export default function OrdersPage() {
 
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.message || 'Payment failed');
+        throw new Error(err.message || 'Error en el pago');
       }
 
       setOrders(prev =>
         prev.map(o => o.id === orderId ? { ...o, status: 'PAID' } : o)
       );
+      showModal({
+        type: 'success',
+        title: 'Créditos Verificados',
+        message: 'La transacción ha sido procesada con éxito. El estado de tu pedido ha sido actualizado.',
+      });
     } catch (err: any) {
-      alert('Payment failed: ' + err.message);
+      showModal({
+        type: 'error',
+        title: 'Error de Procesamiento',
+        message: 'No se pudo completar la transferencia de créditos: ' + err.message,
+      });
     } finally {
       setPayingId(null);
     }
@@ -78,9 +92,9 @@ export default function OrdersPage() {
     return (
       <div className="container section-padding animate-fade-in" style={{ textAlign: 'center' }}>
         <div className="glass-card auth-empty-state">
-           <h2 className="display-small">Unauthorized Access</h2>
-           <p className="text-muted" style={{ marginBottom: '32px' }}>Please establish your identity to view your order history.</p>
-           <Link href="/login"><Button variant="primary" glow>Sign In</Button></Link>
+           <h2 className="display-small">Acceso No Autorizado</h2>
+           <p className="text-muted" style={{ marginBottom: '32px' }}>Por favor, identifícate para ver tu historial de pedidos.</p>
+           <Link href="/login"><Button variant="primary" glow>Iniciar Sesión</Button></Link>
         </div>
       </div>
     );
@@ -102,9 +116,9 @@ export default function OrdersPage() {
 
   const getStatusInfo = (status: string) => {
     switch(status) {
-      case 'PAID': return { label: 'Secured', color: 'var(--success)' };
-      case 'PENDING': return { label: 'Awaiting', color: 'var(--warning)' };
-      case 'CANCELLED': return { label: 'Terminal', color: 'var(--danger)' };
+      case 'PAID': return { label: 'Pagado', color: 'var(--success)' };
+      case 'PENDING': return { label: 'Pendiente', color: 'var(--warning)' };
+      case 'CANCELLED': return { label: 'Cancelado', color: 'var(--danger)' };
       default: return { label: status, color: 'var(--muted)' };
     }
   };
@@ -112,16 +126,20 @@ export default function OrdersPage() {
   return (
     <div className="container section-padding animate-fade-in">
       <div className="orders-header">
-        <h1 className="display-medium">Order History</h1>
-        <p className="text-muted">A timeline of your tech acquisitions.</p>
+        <h1 className="display-medium">Historial de Pedidos</h1>
+        <p className="text-muted">Una línea de tiempo de tus adquisiciones tecnológicas.</p>
       </div>
       
-      {error && <div className="glass-card error-alert">Transmission Error: {error}</div>}
+      {error && (
+        <Alert type="error" className="mb-8">
+          Error en la transmisión: {error}
+        </Alert>
+      )}
 
       {orders.length === 0 ? (
         <div className="glass-card empty-orders">
-          <p className="text-muted" style={{ fontSize: '18px', marginBottom: '32px' }}>No transactions recorded in this cycle.</p>
-          <Link href="/products"><Button variant="primary" glow>Begin Acquisition</Button></Link>
+          <p className="text-muted" style={{ fontSize: '18px', marginBottom: '32px' }}>No se registraron transacciones en este ciclo.</p>
+          <Link href="/products"><Button variant="primary" glow>Iniciar Adquisición</Button></Link>
         </div>
       ) : (
         <div className="orders-grid">

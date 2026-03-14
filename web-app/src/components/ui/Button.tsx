@@ -6,7 +6,12 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     variant?: 'primary' | 'secondary' | 'outline' | 'glass' | 'danger';
     size?: 'sm' | 'md' | 'lg';
     children: React.ReactNode;
+    className?: string;
     glow?: boolean;
+    onClick?: React.MouseEventHandler<HTMLButtonElement>;
+    type?: 'submit' | 'button' | 'reset';
+    disabled?: boolean;
+    style?: React.CSSProperties;
 }
 
 export default function Button({

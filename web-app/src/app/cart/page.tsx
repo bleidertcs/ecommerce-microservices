@@ -7,12 +7,16 @@ import { useAuth } from '@/context/AuthContext';
 import Button from '@/components/ui/Button';
 import { useRouter } from 'next/navigation';
 import { getCasdoorLoginUrl } from '@/lib/casdoor-config';
+import { useToast } from '@/context/ToastContext';
+import { useModal } from '@/context/ModalContext';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8010';
 
 export default function CartPage() {
   const { cart, removeFromCart, updateQuantity, clearCart, cartTotal } = useCart();
   const { isAuthenticated, token } = useAuth();
+  const { success, warning, error: toastError } = useToast();
+  const { showModal } = useModal();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [shippingAddress, setShippingAddress] = useState({
@@ -39,7 +43,7 @@ export default function CartPage() {
     if (cart.length === 0) return;
 
     if (!shippingAddress.recipientName || !shippingAddress.street || !shippingAddress.city || !shippingAddress.state || !shippingAddress.zipCode || !shippingAddress.country || !shippingAddress.recipientPhone) {
-      alert('Please fill out all shipping address fields.');
+      warning('Por favor, completa todos los campos de la dirección de envío.');
       return;
     }
 
@@ -76,17 +80,14 @@ export default function CartPage() {
 
       if (!res.ok) {
         const err = await res.json();
-        const backendMessage: string = err?.message || 'Failed to place order';
+        const backendMessage: string = err?.message || 'Error al procesar el pedido';
 
-        // Detect the specific case where the backend indicates that the user
-        // is not synchronized in the Users service and provide a clearer
-        // actionable message to the user.
         if (
           typeof backendMessage === 'string' &&
           backendMessage.includes('User is not synchronized in the Users service')
         ) {
           throw new Error(
-            'Your profile is not synchronized. Please sign out and sign in again before checking out.',
+            'Tu perfil no está sincronizado. Por favor, cierra sesión e inicia de nuevo antes de finalizar la compra.',
           );
         }
 
@@ -100,17 +101,25 @@ export default function CartPage() {
         data?.data?.id ??
         null;
 
-      if (orderId) {
-        alert('Order Placed Successfully! ID: ' + orderId);
-      } else {
-        alert('Order Placed Successfully!');
-      }
+      showModal({
+        type: 'success',
+        title: '¡Transmisión Completada!',
+        message: orderId 
+          ? `Tu pedido con ID ${orderId} ha sido registrado en el nexo. Los artefactos están en camino.`
+          : 'Tu pedido ha sido registrado con éxito. Los artefactos han sido asegurados.',
+        confirmLabel: 'Ver mis órdenes',
+        onConfirm: () => router.push('/orders'),
+      });
+
       clearCart();
-      router.push('/orders');
       
-    } catch (error: any) {
-      console.error(error);
-      alert('Checkout failed: ' + (error?.message || 'Unexpected error'));
+    } catch (err: any) {
+      console.error(err);
+      showModal({
+        type: 'error',
+        title: 'Fallo en la Secuencia',
+        message: err?.message || 'Se ha producido un error inesperado en el núcleo de la transacción.',
+      });
     } finally {
       setLoading(false);
     }

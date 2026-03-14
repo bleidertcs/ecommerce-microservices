@@ -5,6 +5,8 @@ import { useAuth } from '@/context/AuthContext';
 import Button from '@/components/ui/Button';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
+import { useToast } from '@/context/ToastContext';
+import Alert from '@/components/ui/Alert';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8010';
 
@@ -35,6 +37,7 @@ interface Order {
 
 export default function OrderDetailsPage() {
   const { token, isAuthenticated } = useAuth();
+  const { success, error: toastError } = useToast();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -54,8 +57,8 @@ export default function OrderDetailsPage() {
         });
 
         if (!res.ok) {
-          if (res.status === 404) throw new Error('Order not found');
-          throw new Error('Failed to fetch order details');
+          if (res.status === 404) throw new Error('Pedido no encontrado');
+          throw new Error('Error al cargar los detalles del pedido');
         }
         
         const data = await res.json();
@@ -80,13 +83,13 @@ export default function OrderDetailsPage() {
         }
       });
 
-      if (!res.ok) throw new Error('Payment simulation failed');
+      if (!res.ok) throw new Error('La simulación de pago falló');
       
       const updatedOrder = await res.json();
       setOrder(updatedOrder.data || updatedOrder);
-      alert('Payment successful!');
+      success('¡Pago realizado con éxito!');
     } catch (err: any) {
-      alert(err.message);
+      toastError(err.message);
     } finally {
       setLoading(false);
     }
@@ -96,9 +99,9 @@ export default function OrderDetailsPage() {
     return (
       <div className="container section-padding" style={{ textAlign: 'center' }}>
         <div className="glass-card" style={{ padding: '80px 48px' }}>
-          <h2 className="display-small">Identification Required</h2>
-          <p className="text-muted" style={{ marginBottom: '32px' }}>Please establish your identity to access these records.</p>
-          <Link href="/login"><Button variant="primary" glow>Sign In</Button></Link>
+          <h2 className="display-small">Identificación Requerida</h2>
+          <p className="text-muted" style={{ marginBottom: '32px' }}>Por favor, identifícate para acceder a estos registros.</p>
+          <Link href="/login"><Button variant="primary" glow>Iniciar Sesión</Button></Link>
         </div>
       </div>
     );
@@ -114,10 +117,12 @@ export default function OrderDetailsPage() {
   if (error || !order) {
     return (
       <div className="container section-padding" style={{ textAlign: 'center' }}>
-        <div className="glass-card" style={{ padding: '60px', border: '1px solid var(--danger)' }}>
-          <h2 style={{ color: 'var(--danger)', marginBottom: '16px' }}>Terminal Error</h2>
-          <p className="text-muted" style={{ marginBottom: '24px' }}>{error || 'The requested acquisition record does not exist in our database.'}</p>
-          <Button variant="glass" onClick={() => router.push('/orders')}>Return to History</Button>
+        <div className="max-w-2xl mx-auto">
+          <Alert type="error" className="mb-6">
+            <h2 className="text-lg font-bold mb-2">Error de Terminal</h2>
+            <p>{error || 'El registro de adquisición solicitado no existe en nuestra base de datos.'}</p>
+          </Alert>
+          <Button variant="glass" onClick={() => router.push('/orders')}>Regresar al Historial</Button>
         </div>
       </div>
     );
@@ -128,12 +133,12 @@ export default function OrderDetailsPage() {
       <div className="order-details-header">
         <Link href="/orders" className="back-link">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-          History
+          Historial
         </Link>
-        <h1 className="display-small">Acquisition Matrix</h1>
+        <h1 className="display-small">Matriz de Adquisición</h1>
         <div className="order-badge">
            <span className="dot" style={{ backgroundColor: order.status === 'PAID' ? 'var(--success)' : 'var(--warning)' }}></span>
-           {order.status}
+           {order.status === 'PAID' ? 'PAGADO' : order.status}
         </div>
       </div>
 

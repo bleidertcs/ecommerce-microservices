@@ -2,6 +2,7 @@
 
 import React, { useState, useCallback } from 'react';
 import Button from '@/components/ui/Button';
+import Alert from '@/components/ui/Alert';
 import { CreateProductInput } from '@/types/product.types';
 
 interface ProductFormProps {
@@ -54,24 +55,24 @@ export default function ProductForm({
       const priceNum = parseFloat(price);
       const stockNum = parseInt(stock, 10);
       if (!name.trim()) {
-        setError('Name is required');
+        setError('El nombre es obligatorio');
         return;
       }
       if (isNaN(priceNum) || priceNum < 0) {
-        setError('Price must be a valid number ≥ 0');
+        setError('El precio debe ser un número válido ≥ 0');
         return;
       }
       if (isNaN(stockNum) || stockNum < 0) {
-        setError('Stock must be a valid integer ≥ 0');
+        setError('El stock debe ser un número entero válido ≥ 0');
         return;
       }
       const images = imagesText
         .split('\n')
-        .map((u) => u.trim())
+        .map((u: string) => u.trim())
         .filter(Boolean);
       const tags = tagsText
         .split(',')
-        .map((t) => t.trim())
+        .map((t: string) => t.trim())
         .filter(Boolean);
       try {
         await onSubmit({
@@ -87,7 +88,7 @@ export default function ProductForm({
           featured,
         });
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to save');
+        setError(err instanceof Error ? err.message : 'No se pudo guardar el producto');
       }
     },
     [name, description, price, stock, category, brand, sku, imagesText, tagsText, featured, onSubmit]
@@ -96,9 +97,9 @@ export default function ProductForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl">
       {error && (
-        <div className="bg-danger/10 border border-danger/30 text-danger rounded-xl px-4 py-3 text-sm font-medium">
+        <Alert type="error" className="mb-6">
           {error}
-        </div>
+        </Alert>
       )}
 
       <div>

@@ -5,6 +5,8 @@ import Button from '@/components/ui/Button';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
+import { useToast } from '@/context/ToastContext';
+import { useModal } from '@/context/ModalContext';
 
 import { API_BASE_URL } from '@/lib/config';
 
@@ -21,6 +23,8 @@ export default function ProductActions({
 }) {
     const { token, isAuthenticated } = useAuth();
     const { addToCart } = useCart();
+    const { success, error: toastError } = useToast();
+    const { showModal } = useModal();
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [added, setAdded] = useState(false);
@@ -33,6 +37,7 @@ export default function ProductActions({
             image: productImage,
         });
         setAdded(true);
+        success(`${productName || 'Producto'} añadido al carrito`);
         setTimeout(() => setAdded(false), 2000);
     };
 
@@ -70,16 +75,29 @@ export default function ProductActions({
 
             if (!res.ok) {
                 const err = await res.json();
-                alert('Order failed: ' + (err.message || 'Unknown error'));
+                showModal({
+                    type: 'error',
+                    title: 'Fallo en Adquisición',
+                    message: err.message || 'No se pudo procesar la orden directa.',
+                });
                 return;
             }
 
             const data = await res.json();
-            alert('Order Placed Successfully! ID: ' + data.id);
-            router.push('/orders');
-        } catch (error) {
-            console.error(error);
-            alert('Failed to place order');
+            showModal({
+                type: 'success',
+                title: 'Transferencia Exitosa',
+                message: `El artefacto ha sido adquirido. ID de Orden: ${data.id}`,
+                confirmLabel: 'Ver mis órdenes',
+                onConfirm: () => router.push('/orders'),
+            });
+        } catch (err: any) {
+            console.error(err);
+            showModal({
+                type: 'error',
+                title: 'Error de Sistema',
+                message: 'La secuencia de compra ha sido interrumpida inesperadamente.',
+            });
         } finally {
             setLoading(false);
         }
