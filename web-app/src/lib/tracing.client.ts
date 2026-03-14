@@ -55,8 +55,12 @@ export const initTracing = async () => {
       }),
     });
 
+    const otlpEndpoint =
+      typeof process.env.NEXT_PUBLIC_OTEL_EXPORTER_OTLP_ENDPOINT !== "undefined"
+        ? process.env.NEXT_PUBLIC_OTEL_EXPORTER_OTLP_ENDPOINT.replace(/\/$/, "")
+        : "http://localhost:4318";
     const exporter = new OTLPTraceExporter({
-      url: "http://localhost:4318/v1/traces",
+      url: `${otlpEndpoint}/v1/traces`,
     });
 
     provider.addSpanProcessor(new SimpleSpanProcessor(exporter));

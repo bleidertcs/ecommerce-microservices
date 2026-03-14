@@ -1,6 +1,7 @@
 import { Injectable, Logger, OnModuleInit, Inject, BadRequestException } from '@nestjs/common';
 import { OrderStatus } from '@prisma/client';
 import { ClientGrpc, ClientProxy } from '@nestjs/microservices';
+import { trace } from '@opentelemetry/api';
 import { firstValueFrom, Observable } from 'rxjs';
 import { DatabaseService } from '../../common/services/database.service';
 import { CircuitBreakerService } from '../../common/services/circuit-breaker.service';
@@ -148,6 +149,19 @@ export class OrdersService implements OnModuleInit {
           },
         },
       });
+
+      const tracer = trace.getTracer(
+        'orders-service',
+        process.env.OTEL_SERVICE_VERSION || process.env.npm_package_version || '0.0.0',
+      );
+      const span = tracer.startSpan('order.created', {
+        attributes: {
+          'order.id': order.id,
+          'order.total': order.total,
+          'user.id': userId,
+        },
+      });
+      span.end();
 
       this.logger.log(`Order ${order.id} and outbox event created within transaction`);
       return order;

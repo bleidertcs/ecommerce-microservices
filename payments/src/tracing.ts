@@ -16,6 +16,8 @@ diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.WARN);
 
 const resource = resourceFromAttributes({
   [ATTR_SERVICE_NAME]: process.env.OTEL_SERVICE_NAME || 'payments-service',
+  'service.version': process.env.OTEL_SERVICE_VERSION || process.env.npm_package_version || '0.0.0',
+  'deployment.environment': process.env.DEPLOYMENT_ENVIRONMENT || process.env.NODE_ENV || 'development',
 });
 
 // Normalize endpoint: gRPC exporters in Node expect http://host:port format

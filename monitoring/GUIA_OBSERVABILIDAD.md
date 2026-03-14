@@ -2,6 +2,8 @@
 
 Este repositorio utiliza **SigNoz** como plataforma all-in-one de observabilidad, basada en **OpenTelemetry** de forma nativa.
 
+> **Auditoría:** Para un análisis detallado de métricas, traces, logs y mejores prácticas OTEL/SigNoz, ver [AUDITORIA_SIGNOZ_OTEL.md](./AUDITORIA_SIGNOZ_OTEL.md).
+
 ## Componentes del Stack
 
 | Componente                | Contenedor                 | Puerto    | Descripción                           |
@@ -38,7 +40,14 @@ environment:
   - OTEL_EXPORTER_OTLP_ENDPOINT=signoz-otel-collector:4317
   - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
   - OTEL_EXPORTER_OTLP_INSECURE=true
+  # Opcionales (recomendados para filtrado en SigNoz):
+  - OTEL_SERVICE_VERSION=1.0.0
+  - DEPLOYMENT_ENVIRONMENT=local
 ```
+
+La web-app envía trazas desde el navegador al collector por OTLP HTTP. Configurar en `web-app/.env`:
+
+- `NEXT_PUBLIC_OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318` (desarrollo; sin trailing slash)
 
 ### 2. Logs
 
