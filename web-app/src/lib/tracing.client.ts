@@ -1,97 +1,81 @@
-"use client";
+import { trace, type Span, SpanStatusCode } from "@opentelemetry/api";
 
-console.log("🔥 tracing.client.ts: File loaded");
+const tracerName = "web-app-client";
 
 export const initTracing = async () => {
-  console.log("🔍 initTracing: Function entry");
-  if (typeof window === "undefined") {
-    console.log("🔍 initTracing: Server-side skip");
-    return;
-  }
-
-  console.log("🔍 initTracing: Client-side execution starting...");
+  if (typeof window === "undefined") return;
 
   try {
-    console.log("📦 initTracing: Starting Promise.all for imports");
     const [
-      sdkTraceWeb,
-      sdkTraceBase,
-      exporterOtlp,
-      instrumentation,
-      instrFetch,
-      instrXhr,
-      contextZone,
-      resources,
-      semconv,
+      { WebTracerProvider },
+      { SimpleSpanProcessor },
+      { OTLPTraceExporter },
+      { registerInstrumentations },
+      { FetchInstrumentation },
+      { XMLHttpRequestInstrumentation },
+      { ZoneContextManager },
+      { Resource },
+      { SEMRESATTRS_SERVICE_NAME, SEMRESATTRS_SERVICE_VERSION },
     ] = await Promise.all([
-      import("@opentelemetry/sdk-trace-web").catch(e => { console.error("❌ Failed import: sdk-trace-web", e); throw e; }),
-      import("@opentelemetry/sdk-trace-base").catch(e => { console.error("❌ Failed import: sdk-trace-base", e); throw e; }),
-      import("@opentelemetry/exporter-trace-otlp-http").catch(e => { console.error("❌ Failed import: exporter-otlp", e); throw e; }),
-      import("@opentelemetry/instrumentation").catch(e => { console.error("❌ Failed import: instrumentation", e); throw e; }),
-      import("@opentelemetry/instrumentation-fetch").catch(e => { console.error("❌ Failed import: instr-fetch", e); throw e; }),
-      import("@opentelemetry/instrumentation-xml-http-request").catch(e => { console.error("❌ Failed import: instr-xhr", e); throw e; }),
-      import("@opentelemetry/context-zone").catch(e => { console.error("❌ Failed import: context-zone", e); throw e; }),
-      import("@opentelemetry/resources").catch(e => { console.error("❌ Failed import: resources", e); throw e; }),
-      import("@opentelemetry/semantic-conventions").catch(e => { console.error("❌ Failed import: semconv", e); throw e; }),
+      import("@opentelemetry/sdk-trace-web"),
+      import("@opentelemetry/sdk-trace-base"),
+      import("@opentelemetry/exporter-trace-otlp-http"),
+      import("@opentelemetry/instrumentation"),
+      import("@opentelemetry/instrumentation-fetch"),
+      import("@opentelemetry/instrumentation-xml-http-request"),
+      import("@opentelemetry/context-zone"),
+      import("@opentelemetry/resources"),
+      import("@opentelemetry/semantic-conventions"),
     ]);
 
-    const { WebTracerProvider } = sdkTraceWeb;
-    const { SimpleSpanProcessor } = sdkTraceBase;
-    const { OTLPTraceExporter } = exporterOtlp;
-    const { registerInstrumentations } = instrumentation;
-    const { FetchInstrumentation } = instrFetch;
-    const { XMLHttpRequestInstrumentation } = instrXhr;
-    const { ZoneContextManager } = contextZone;
-    const { Resource } = resources;
-    const { SEMRESATTRS_SERVICE_NAME } = semconv;
-
-    console.log("✅ initTracing: OTel modules loaded successfully");
-
     const serviceName = "web-app";
+    const appVersion = process.env.NEXT_PUBLIC_APP_VERSION || "1.0.0";
+    const environment = process.env.NEXT_PUBLIC_ENV || "development";
 
     const provider = new WebTracerProvider({
       resource: new Resource({
         [SEMRESATTRS_SERVICE_NAME]: serviceName,
+        [SEMRESATTRS_SERVICE_VERSION]: appVersion,
+        ["deployment.environment"]: environment,
       }),
     });
 
     const otlpEndpoint =
-      typeof process.env.NEXT_PUBLIC_OTEL_EXPORTER_OTLP_ENDPOINT !== "undefined"
-        ? process.env.NEXT_PUBLIC_OTEL_EXPORTER_OTLP_ENDPOINT.replace(/\/$/, "")
-        : "http://localhost:4318";
+      process.env.NEXT_PUBLIC_OTEL_EXPORTER_OTLP_ENDPOINT?.replace(/\/$/, "") ||
+      "http://localhost:4318";
+
     const exporter = new OTLPTraceExporter({
       url: `${otlpEndpoint}/v1/traces`,
     });
 
     provider.addSpanProcessor(new SimpleSpanProcessor(exporter));
+    provider.register({ contextManager: new ZoneContextManager() });
 
-    provider.register({
-      contextManager: new ZoneContextManager(),
-    });
+    const corsUrls = [
+      /http:\/\/localhost:8010\/.*/,
+      /http:\/\/localhost:8000\/.*/,
+      /http:\/\/localhost:3000\/.*/,
+      /http:\/\/localhost:3004\/.*/,
+    ];
 
     registerInstrumentations({
       instrumentations: [
-        new FetchInstrumentation({
-          propagateTraceHeaderCorsUrls: [
-            /http:\/\/localhost:8010\/.*/,
-            /http:\/\/localhost:8000\/.*/,
-            /http:\/\/localhost:3000\/.*/,
-            /http:\/\/localhost:3004\/.*/,
-          ],
-        }),
-        new XMLHttpRequestInstrumentation({
-          propagateTraceHeaderCorsUrls: [
-            /http:\/\/localhost:8010\/.*/,
-            /http:\/\/localhost:8000\/.*/,
-            /http:\/\/localhost:3000\/.*/,
-            /http:\/\/localhost:3004\/.*/,
-          ],
-        }),
+        new FetchInstrumentation({ propagateTraceHeaderCorsUrls: corsUrls }),
+        new XMLHttpRequestInstrumentation({ propagateTraceHeaderCorsUrls: corsUrls }),
       ],
     });
 
-    console.log("🔭 initTracing: Web RUM Tracing initialized for", serviceName);
+    console.log(`🔭 Web RUM Tracing initialized: ${serviceName} (${environment})`);
   } catch (error) {
-    console.error("❌ initTracing: Fatal error during initialization:", error);
+    console.error("❌ initTracing failed:", error);
   }
+};
+
+/**
+ * Helper to record business events as spans
+ */
+export const trackEvent = (name: string, attributes: Record<string, any> = {}) => {
+  const tracer = trace.getTracer(tracerName);
+  const span = tracer.startSpan(name, { attributes });
+  span.end();
 };

@@ -7,8 +7,7 @@ import Link from 'next/link';
 import { useToast } from '@/context/ToastContext';
 import { useModal } from '@/context/ModalContext';
 import Alert from '@/components/ui/Alert';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8010';
+import { API_BASE_URL } from '@/lib/config';
 
 interface Order {
   id: string;

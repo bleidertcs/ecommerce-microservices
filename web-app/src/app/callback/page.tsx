@@ -12,12 +12,14 @@ function CallbackContent() {
   const { login } = useAuth();
   const { showModal } = useModal();
   const [loading, setLoading] = useState(true);
-
   const called = useRef(false);
-  
+
   useEffect(() => {
     const code = searchParams.get('code');
     const state = searchParams.get('state');
+    
+    // Optimization: Prefetch products immediately when entering the callback
+    router.prefetch('/products');
 
     if (!code || called.current) {
       if (!code) {

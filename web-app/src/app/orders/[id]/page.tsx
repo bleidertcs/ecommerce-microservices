@@ -7,8 +7,7 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useToast } from '@/context/ToastContext';
 import Alert from '@/components/ui/Alert';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8010';
+import { API_BASE_URL } from '@/lib/config';
 
 interface OrderItem {
   productId: string;

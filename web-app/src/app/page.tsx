@@ -1,19 +1,19 @@
-import Button from "@/components/ui/Button";
-import Link from "next/link";
-import ProductCard from "@/components/products/ProductCard";
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8010";
+import Link from 'next/link';
+import ProductCard from '@/components/products/ProductCard';
+import Button from '@/components/ui/Button';
+import { API_BASE_URL } from '@/lib/config';
 
 async function getFeaturedProducts() {
     try {
-        const res = await fetch(`${API_BASE}/api/v1/products`, {
-            cache: "no-store",
+        const res = await fetch(`${API_BASE_URL}/api/v1/products`, {
+            next: { revalidate: 3600 } // Revalidate every hour
         });
         if (!res.ok) return [];
         const json = await res.json();
         const products = Array.isArray(json) ? json : json.data || json.products || [];
         return products.slice(0, 4);
     } catch (error) {
+        console.error("Error fetching featured products:", error);
         return [];
     }
 }

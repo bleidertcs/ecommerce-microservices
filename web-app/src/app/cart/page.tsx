@@ -4,13 +4,14 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
+import { API_BASE_URL } from '@/lib/config';
 import Button from '@/components/ui/Button';
 import { useRouter } from 'next/navigation';
 import { getCasdoorLoginUrl } from '@/lib/casdoor-config';
 import { useToast } from '@/context/ToastContext';
 import { useModal } from '@/context/ModalContext';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8010';
+// Replaced local API_BASE_URL with imported version from @/lib/config
 
 export default function CartPage() {
   const { cart, removeFromCart, updateQuantity, clearCart, cartTotal } = useCart();

@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 
+/** Timeout for Casdoor token exchange (ms). Prevents login from hanging. */
+const CASDOOR_FETCH_TIMEOUT_MS = 15_000;
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get('code');
@@ -13,19 +16,22 @@ export async function GET(request: Request) {
     const clientId = process.env.CASDOOR_CLIENT_ID;
     const clientSecret = process.env.CASDOOR_CLIENT_SECRET;
 
-    // Exchange code for token
     const tokenUrl = new URL(`${casdoorEndpoint}/api/login/oauth/access_token`);
     tokenUrl.searchParams.append('grant_type', 'authorization_code');
     tokenUrl.searchParams.append('client_id', clientId || '');
     tokenUrl.searchParams.append('client_secret', clientSecret || '');
     tokenUrl.searchParams.append('code', code);
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), CASDOOR_FETCH_TIMEOUT_MS);
+
     const res = await fetch(tokenUrl.toString(), {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
+      signal: controller.signal,
     });
+
+    clearTimeout(timeoutId);
 
     const data = await res.json();
 
@@ -34,38 +40,39 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Failed to exchange code for token', detail: data }, { status: 500 });
     }
 
-    // Trigger User Synchronization to backend
-    try {
-      // Use internal Docker network to reach Kong API Gateway when running in Docker,
-      // or fall back to the same base URL used by the frontend when running locally.
-      const apiUrl =
-        process.env.INTERNAL_API_URL ||
-        process.env.NEXT_PUBLIC_API_URL ||
-        'http://localhost:8010';
-      const syncRes = await fetch(`${apiUrl}/api/v1/users/sync`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${data.access_token}`,
-        },
-      });
-
-      if (!syncRes.ok) {
-        console.error('Failed to sync user to backend:', await syncRes.text());
-        // We choose not to fail the login if sync fails, but log it
-      } else {
+    // Sync user to backend in background — do not block the response.
+    // The client gets the token immediately; sync completes asynchronously.
+    const { API_BASE_URL: apiUrl } = await import('@/lib/config');
+    fetch(`${apiUrl}/api/v1/users/sync`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${data.access_token}`,
+      },
+    })
+      .then((syncRes) => {
+        if (!syncRes.ok) {
+          return syncRes.text().then((text) => {
+            console.error('Failed to sync user to backend:', text);
+          });
+        }
         console.log('User synchronized successfully to backend.');
-      }
-    } catch (syncError) {
-      console.error('Error during user synchronization:', syncError);
-    }
+      })
+      .catch((syncError) => {
+        console.error('Error during user synchronization:', syncError);
+      });
 
     return NextResponse.json({
       token: data.access_token,
       id_token: data.id_token,
-      refresh_token: data.refresh_token
+      refresh_token: data.refresh_token,
     });
-  } catch (error) {
+  } catch (error: unknown) {
+    const err = error as { name?: string };
+    if (err.name === 'AbortError') {
+      console.error('Casdoor token exchange timed out');
+      return NextResponse.json({ error: 'Login timed out. Please try again.' }, { status: 504 });
+    }
     console.error('Callback error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
