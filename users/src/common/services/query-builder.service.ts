@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { DatabaseService } from './database.service';
-import { PaginatedResult, QueryBuilderOptions } from '../interfaces/query-builder.interface';
+import { DatabaseService } from '@/common/services/database.service';
+import { PaginatedResult, QueryBuilderOptions } from '@/common/interfaces/query-builder.interface';
 
 @Injectable()
 export class QueryBuilderService {

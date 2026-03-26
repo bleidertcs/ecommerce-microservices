@@ -17,7 +17,7 @@ function LoginRedirect() {
 
   return (
     <div className="redirect-container animate-fade-in">
-      <div className="glass-card redirect-card">
+      <div className="surface-card border border-border redirect-card">
         <div className="spinner"></div>
         <h2 className="display-small" style={{ fontSize: '24px' }}>Securing Connection</h2>
         <p className="text-muted">Establishing link with Lumina Core...</p>
@@ -40,7 +40,7 @@ function LoginRedirect() {
         .spinner {
           width: 48px;
           height: 48px;
-          border: 2px solid rgba(255, 255, 255, 0.05);
+          border: 2px solid var(--color-border);
           border-top-color: var(--primary);
           border-radius: 50%;
           animation: spin 1s linear infinite;

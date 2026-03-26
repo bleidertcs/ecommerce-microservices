@@ -1,23 +1,57 @@
-FROM node:20-alpine AS builder
+# Multi-stage build for optimal image size
+FROM node:22-alpine AS base
+RUN apk add --no-cache libc6-compat
+RUN npm install -g pnpm
+ENV CI=true
+
+# Build the source code
+FROM base AS builder
+RUN apk add --no-cache wget openssl
 WORKDIR /app
 ARG DATABASE_URL=postgresql://build:build@localhost:5432/build
 ENV DATABASE_URL=$DATABASE_URL
-RUN npm install -g pnpm
-COPY package.json pnpm-lock.yaml* .npmrc* ./
+
+# Copy package files
+COPY package.json pnpm-lock.yaml* .npmrc ./
 COPY prisma ./prisma/
 COPY prisma.config.js ./
-RUN pnpm install
-RUN npx prisma generate
+
+# Install dependencies (no frozen lockfile to allow platform adjustments)
+RUN pnpm install --no-frozen-lockfile --ignore-scripts
+
+# Copy source code
 COPY . .
+
+# Generate Prisma client and build application
+RUN npx prisma generate
 RUN pnpm build
 
-FROM node:20-alpine AS runner
+# Production image, copy all the files and run next
+FROM base AS runner
+RUN apk add --no-cache wget openssl
 WORKDIR /app
-COPY --from=builder /app/package.json ./
-COPY --from=builder /app/prisma.config.js ./
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/prisma ./prisma
 
+ENV NODE_ENV=production
+ENV APP_NAME=payments-service
+
+# Create a non-root user
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nestjs
+
+# Copy built application and dependencies from builder
+COPY --from=builder /app ./
+
+# Prune development dependencies to reduce image size
+RUN pnpm config set confirm-reinstall false
+RUN pnpm config set frozen-lockfile false
+RUN pnpm prune --prod --ignore-scripts
+
+# Set correct permissions
+RUN chown -R nestjs:nodejs /app
+
+USER nestjs
+
+# Expose ports for HTTP and gRPC
 EXPOSE 9006 50056
+
 CMD ["node", "dist/main.js"]

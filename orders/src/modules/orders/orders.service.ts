@@ -3,11 +3,11 @@ import { OrderStatus } from '@prisma/client';
 import { ClientGrpc, ClientProxy } from '@nestjs/microservices';
 import { trace } from '@opentelemetry/api';
 import { firstValueFrom, Observable } from 'rxjs';
-import { DatabaseService } from '../../common/services/database.service';
-import { CircuitBreakerService } from '../../common/services/circuit-breaker.service';
+import { DatabaseService } from '@/common/services/database.service';
+import { CircuitBreakerService } from '@/common/services/circuit-breaker.service';
 
 import { ConfigService } from '@nestjs/config';
-import { CreateOrderDto } from './dtos/create-order.dto';
+import { CreateOrderDto } from '@/modules/orders/dtos/create-order.dto';
 
 interface IUser {
   id: string;

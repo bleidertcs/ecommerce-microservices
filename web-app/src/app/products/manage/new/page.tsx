@@ -49,7 +49,7 @@ export default function NewProductPage() {
         <p className="text-muted text-sm">Create a new catalog entry with name, price, photo URLs, and more.</p>
       </div>
 
-      <div className="glass-card p-8 rounded-[20px] border border-white/10">
+      <div className="surface-card border border-border p-8 rounded-[20px] border border-border">
         <ProductForm
           onSubmit={handleSubmit}
           onCancel={() => router.push('/products/manage')}

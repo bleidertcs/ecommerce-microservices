@@ -1,7 +1,7 @@
 import { Injectable, Logger, Inject } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { ClientProxy } from '@nestjs/microservices';
-import { DatabaseService } from '../../common/services/database.service';
+import { DatabaseService } from '@/common/services/database.service';
 
 @Injectable()
 export class OutboxWorker {

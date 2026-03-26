@@ -50,13 +50,15 @@ const metricExporter = new OTLPMetricExporter({
 export const otr_sdk = new NodeSDK({
   resource,
   traceExporter,
-  metricReader: new PeriodicExportingMetricReader({
-    exporter: metricExporter,
-    exportIntervalMillis: 60_000, // export every 60s
-  }),
+  metricReaders: [
+    new PeriodicExportingMetricReader({
+      exporter: metricExporter,
+      exportIntervalMillis: 60_000, // export every 60s
+    })
+  ],
   logRecordProcessors: [new BatchLogRecordProcessor(logExporter)],
   instrumentations: [
-    getNodeAutoInstrumentations({
+    ...getNodeAutoInstrumentations({
       '@opentelemetry/instrumentation-fs': {
         enabled: false, // Disable noisy fs instrumentation
       },
@@ -71,9 +73,9 @@ export const otr_sdk = new NodeSDK({
         enabled: true,
       },
       '@opentelemetry/instrumentation-grpc': {
-        enabled: true,
+        enabled: false, // Disabled to avoid double-instrumentation issues
       },
-    }),
+    }).filter((instr) => !instr.instrumentationName.includes('grpc')),
     new WinstonInstrumentation(),
   ],
 });

@@ -1,5 +1,5 @@
 import { Global, Module } from '@nestjs/common';
-import { DatabaseService } from './services/database.service';
+import { DatabaseService } from '@/common/services/database.service';
 
 @Global()
 @Module({

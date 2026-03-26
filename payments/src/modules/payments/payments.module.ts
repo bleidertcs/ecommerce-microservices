@@ -1,10 +1,9 @@
 import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-import { PaymentsController } from './payments.controller';
-import { PaymentsService } from './payments.service';
-import { PaymentsGrpcController } from './payments.grpc.controller';
-import { UserIdMiddleware } from '../../common/middlewares/user-id.middleware';
+import { PaymentsController } from '@/modules/payments/payments.controller';
+import { PaymentsService } from '@/modules/payments/payments.service';
+import { UserIdMiddleware } from '@/common/middlewares/user-id.middleware';
 
 @Module({
   imports: [
@@ -24,12 +23,12 @@ import { UserIdMiddleware } from '../../common/middlewares/user-id.middleware';
       },
     ]),
   ],
-  controllers: [PaymentsController, PaymentsGrpcController],
+  controllers: [PaymentsController],
   providers: [PaymentsService],
   exports: [PaymentsService],
 })
 export class PaymentsModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {
-    consumer.apply(UserIdMiddleware).forRoutes('*');
+    consumer.apply(UserIdMiddleware).forRoutes('*path');
   }
 }

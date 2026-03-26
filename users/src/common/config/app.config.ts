@@ -1,5 +1,5 @@
 import { registerAs } from '@nestjs/config';
-import { IAppConfig } from '../interfaces/config.interface';
+import { IAppConfig } from '@/common/interfaces/config.interface';
 
 export default registerAs('app', (): IAppConfig => {
     const corsOriginsEnv = process.env.APP_CORS_ORIGINS;

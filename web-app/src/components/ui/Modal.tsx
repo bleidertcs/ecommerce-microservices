@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import Button from './Button';
+import Button from '@/components/ui/Button';
 
 export type ModalType = 'success' | 'error' | 'warning' | 'info' | 'confirm';
 

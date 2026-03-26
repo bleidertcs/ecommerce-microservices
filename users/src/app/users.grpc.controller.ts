@@ -1,6 +1,6 @@
 import { Controller, Logger } from '@nestjs/common';
 import { GrpcMethod, RpcException } from '@nestjs/microservices';
-import { UsersService } from '../modules/users/users.service';
+import { UsersService } from '@/modules/users/users.service';
 
 @Controller()
 export class UsersGrpcController {

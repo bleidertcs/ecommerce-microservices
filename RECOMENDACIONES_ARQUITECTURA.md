@@ -1,90 +1,78 @@
-# Recomendaciones de Mejora - Arquitectura e Infraestructura
+# 🚀 Recomendaciones de Arquitectura: Evolución a Nivel Amazon / Mercado Libre
 
-Este documento detalla las oportunidades de mejora identificadas para la arquitectura de microservicios, ordenadas por impacto y complejidad.
-
----
-
-## 🔒 1. Seguridad (Alta Prioridad)
-
-| Área                            | Estado Actual                                | Mejora Propuesta                                                                                              |
-| ------------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| **Secrets Management**          | Contraseñas en `docker-compose.yml` y `.env` | Usar **HashiCorp Vault** o **Docker Secrets** para no exponer credenciales en texto plano.                    |
-| **mTLS (Mutual TLS)**           | Comunicación interna en texto plano          | Habilitar TLS entre servicios, especialmente para gRPC. El **Kong Gateway** puede actuar como terminador TLS. |
-| **Rate Limiting Avanzado**      | ✅ Implementado (Redis)                      | Limitación por `x-user-id` (header) para servicios autenticados y por IP para públicos.                       |
-| **Escaneo de Vulnerabilidades** | No configurado                               | Añadir **Trivy** o **Snyk** al flujo de CI/CD para escanear imágenes Docker.                                  |
+Este documento detalla el análisis y las propuestas para elevar este ecosistema de microservicios a un estándar de e-commerce de clase mundial (Nivel Amazon/ML).
 
 ---
 
-## 🚀 2. Resiliencia y Disponibilidad
+## 🔍 1. Análisis de Brechas (Gaps)
 
-| Área                         | Estado Actual             | Mejora Propuesta                                                                                                      |
-| ---------------------------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| **Políticas de Reinicio**    | `restart: unless-stopped` | Configurar **Kubernetes** o **Docker Swarm** para orquestación real, con réplicas y auto-healing.                     |
-| **Circuit Breaker**          | ✅ Implementado (Opossum) | Integrado en `OrdersService` para llamadas gRPC a `Users` y `Products`.                                               |
-| **Pruebas de Caos**          | No configurado            | Introducir **Chaos Monkey** o **Litmus** para simular fallos de red/contenedores en staging.                          |
-| **Backups de Base de Datos** | No configurado            | Añadir un contenedor de backup (ej. `prodrigestivill/postgres-backup-local`) para respaldos automáticos a S3 o MinIO. |
-
----
-
-## 📦 3. Desarrollo y CI/CD
-
-| Área                    | Estado Actual               | Mejora Propuesta                                                                                                       |
-| ----------------------- | --------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| **Tests Automatizados** | Parcialmente implementados  | Crear un pipeline de CI (GitHub Actions / GitLab CI) que ejecute tests unitarios y de integración antes de cada merge. |
-| **Gestión de Protos**   | Duplicados en cada servicio | Centralizar los archivos `.proto` en un repositorio **Buf** o un paquete npm compartido.                               |
-| **Build Caching**       | No configurado              | Usar **BuildKit Cache Mounts** en Dockerfiles para acelerar rebuilds de `node_modules`.                                |
-| **Ambientes Múltiples** | Solo `local`/`development`  | Crear perfiles de `docker-compose.override.yml` para `staging` y `production`.                                         |
+| Característica | Estado Actual | Meta (Amazon / ML) | Impacto |
+| :--- | :--- | :--- | :--- |
+| **Búsqueda** | Básica (Prisma/DB) | **Meilisearch / Elasticsearch** con autocompletado y facetas. | Crítico |
+| **Personalización** | Estática | **Motor de Recomendaciones** basado en comportamiento real. | Alto |
+| **Logística** | Tracking básico | **Cálculo de entrega en tiempo real**, multi-almacén. | Medio |
+| **Reseñas** | Modelo simple | **Verified Purchase badges**, fotos/videos en reviews. | Alto |
+| **Marketplace** | Un solo vendedor (implícito) | **Panel de Vendedor**, comisiones y multi-vendedor. | Alto |
+| **UX / UI** | Glassmorphism elegante | **Functional High-Density UI**, filtros avanzados, Mega Menu. | Crítico |
 
 ---
 
-## 📊 4. Observabilidad (Nivel Avanzado)
+## 🏗️ 2. Mejoras de Arquitectura (Backend)
 
-| Area                           | Estado Actual             | Mejora Propuesta                                                                          |
-| ------------------------------ | ------------------------- | ----------------------------------------------------------------------------------------- |
-| **Dashboards SigNoz**          | Dashboard RED configurado | Crear dashboards personalizados para métricas de negocio (ej. "Órdenes por segundo").     |
-| **Alertas Proactivas**         | SigNoz Alerting activo    | Definir reglas de alerta (ej. "Latencia P99 > 500ms", "Tasa de Errores > 5%").            |
-| **Log Correlation (Trace ID)** | ✅ Implementado           | Correlación logs ↔ traces activa vía Winston y TraceID inyectado en SigNoz.               |
-| **Profiling Continuo**         | ✅ Implementado (SigNoz)  | Identificar cuellos de botella en CPU/Memoria de manera proactiva usando SigNoz Profiler. |
+### A. Implementación de un Motor de Búsqueda Dedicado
+Amazon no busca en su base de datos principal. Necesitas un **Search-Service** que utilice **Meilisearch** o **Elasticsearch**.
+- **Acción**: Sincronizar cambios de productos vía **RabbitMQ** para indexar en tiempo real.
+- **Beneficio**: Búsqueda instantánea, tolerancia a errores al escribir (typos), filtros dinámicos por marca, precio y atributos.
 
----
+### B. Sistema de Recomendaciones y Event-Sourcing
+Captura cada "clic" y cada "vista" de producto mediante eventos asíncronos.
+- **Acción**: Nuevo microservicio de **Analytics/ML** que procese eventos de RabbitMQ para generar una lista de "Productos que te podrían interesar".
+- **Stack Sugerido**: Redis para almacenamiento rápido de recomendaciones por usuario.
 
-## 🌐 5. Infraestructura de Red
-
-| Área                 | Estado Actual              | Mejora Propuesta                                                                                                                   |
-| -------------------- | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| **Service Mesh**     | No configurado             | Evaluar **Linkerd** (ligero) o **Istio** para gestión avanzada de tráfico, retries automáticos y observabilidad de red sin código. |
-| **DNS Interno**      | Docker Network por defecto | Para producción, usar un DNS interno dedicado para un descubrimiento de servicios más robusto.                                     |
-| **CDN / Caché HTTP** | No configurado             | Si expones APIs públicas, añadir una capa de caché (Varnish / Cloudflare) delante de Kong.                                         |
+### C. Evolución del Modelo de Datos (Prisma)
+- **SKU & Variantes**: Soporte para Tallos/Colores con stock independiente.
+- **Estructura de Árbol para Categorías**: Navegación multi-nivel (E.g. Electrónica > Smartphones > Accesorios).
 
 ---
 
-## Matriz de Prioridad
+## 🎨 3. Rediseño Frontend (Web-App: Digital Monolith)
 
-```
-                      IMPACTO
-              Bajo          Alto
-         ┌──────────┬──────────┐
-    Alta │ Protos   │ Secrets  │
-         │ Centrali-│ Manage-  │
-URGENCIA │ zados    │ ment     │
-         ├──────────┼──────────┤
-    Baja │ Service  │ CI/CD    │
-         │ Mesh     │ Pipeline │
-         └──────────┴──────────┘
-```
+Implementamos el sistema **"Digital Monolith"**, diseñado para ofrecer una estética de lujo técnico sin depender del negro puro ni de efectos decorativos innecesarios.
+
+### Estrategia de Diseño "Digital Monolith":
+1.  **Arquitectura de Superficies Tonal**: Se eliminan los gradientes y el negro puro. Utilizamos una paleta sofisticada de **Zinc y Slate** que define secciones mediante cambios de tono (**tonal shifts**) en lugar de bordes marcados.
+2.  **Soporte Nativo Light/Dark**: El sistema es 100% responsivo a las preferencias del sistema (`prefers-color-scheme`), manteniendo el mismo rigor estético y contraste en modo claro y oscuro.
+3.  **Jerarquía de Elevación**: La profundidad se logra mediante capas tonales (`surface`, `surface-elevated`). Los elementos interactivos flotan sutilmente con sombras ultra-difusas.
+4.  **Tipografía Editorial**: Uso de **Outfit** para encabezados de alto impacto y **Inter** para claridad en datos de alta densidad.
+5.  **Minimalismo Funcional**: Eliminación de "ruido visual". Cada elemento está alineado matemáticamente para una experiencia que se siente como un instrumento de precisión.
 
 ---
 
-## Próximos Pasos Recomendados
+## 🛠️ 4. Hoja de Ruta (Roadmap)
 
-1. **Inmediato**: Migrar secrets a Docker Secrets o variables de entorno seguras (no versionadas).
-2. **Corto Plazo**: Definir reglas de alerta en SigNoz para monitorear latencia y errores críticos.
-3. **Finalizado**: ✅ Rate Limiting avanzado (por usuario + Redis) implementado en Kong.
-4. **Finalizado**: ✅ Circuit Breaker implementado en servicios críticos.
-5. **Finalizado**: ✅ Transactional Outbox implementado para consistencia de eventos.
-6. **Medio Plazo**: Centralizar la gestión de archivos `.proto` en un paquete compartido.
-7. **Largo Plazo**: Evaluación de migración a Kubernetes (K8s).
+### Fase 1: Discovery & Search (Prioridad 1)
+- Levantar Meilisearch en Docker.
+- Crear el microservicio de Búsqueda.
+- Implementar el componente de búsqueda inteligente en el frontend.
+
+### Fase 2: Social & Trust (Prioridad 2)
+- Sistema de reseñas verificado.
+- Q&A en la página de producto.
+- Fotos de usuarios en las reviews.
+
+### Fase 3: Logistics & Marketplace (Prioridad 3)
+- Integración con APIs de envío.
+- Soporte para múltiples vendedores.
+- Panel administrativo avanzado.
 
 ---
 
-_Generado el 2026-02-01 por análisis de arquitectura experto._
+## 📊 5. Observabilidad de Negocio
+No solo midas el CPU. Usa **SigNoz** para medir:
+- **Tasa de Conversión**: ¿Cuántos entran vs cuántos compran?
+- **Abandono de Carrito**: ¿En qué paso se va el usuario?
+- **Latencia de búsqueda**: El tiempo es dinero.
+
+---
+
+_Documento generado por Antigravity AI - Estratega de Arquitectura_

@@ -3,15 +3,17 @@ import { Global, Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { AcceptLanguageResolver, I18nModule, QueryResolver } from 'nestjs-i18n';
-import configs from './config';
-import { ResponseInterceptor } from './interceptors/response.interceptor';
-import { ResponseExceptionFilter } from './filters/exception.filter';
+import envs from '@/config/envs';
+import AuthConfig from '@/common/config/auth.config';
+import RabbitmqConfig from '@/common/config/rabbitmq.config';
+import { ResponseInterceptor } from '@/common/interceptors/response.interceptor';
+import { ResponseExceptionFilter } from '@/common/filters/exception.filter';
 
 @Global()
 @Module({
     imports: [
         ConfigModule.forRoot({
-            load: configs,
+            load: [envs, AuthConfig, RabbitmqConfig],
             isGlobal: true,
             cache: true,
             envFilePath: ['.env'],
@@ -27,18 +29,17 @@ import { ResponseExceptionFilter } from './filters/exception.filter';
         }),
     ],
     providers: [
-        // Global Interceptors
         {
             provide: APP_INTERCEPTOR,
             useClass: ResponseInterceptor,
         },
-
-        // Global Exception Filters
         {
             provide: APP_FILTER,
             useClass: ResponseExceptionFilter,
         },
     ],
-    exports: [ConfigModule],
+    exports: [
+        ConfigModule,
+    ],
 })
 export class CommonModule {}

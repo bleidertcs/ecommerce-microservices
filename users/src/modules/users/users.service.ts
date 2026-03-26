@@ -1,6 +1,6 @@
 import { Injectable, Logger, OnModuleInit, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { DatabaseService } from '../../common/services/database.service';
+import { DatabaseService } from '@/common/services/database.service';
 import { faker } from '@faker-js/faker';
 
 @Injectable()

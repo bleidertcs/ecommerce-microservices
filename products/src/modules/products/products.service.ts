@@ -1,8 +1,8 @@
 import { Injectable, Logger, OnModuleInit, NotFoundException, ConflictException } from '@nestjs/common';
-import { DatabaseService } from '../../common/services/database.service';
+import { DatabaseService } from '@/common/services/database.service';
 import { faker } from '@faker-js/faker';
-import { CreateProductDto } from './dtos/create-product.dto';
-import { UpdateProductDto } from './dtos/update-product.dto';
+import { CreateProductDto } from '@/modules/products/dtos/create-product.dto';
+import { UpdateProductDto } from '@/modules/products/dtos/update-product.dto';
 
 @Injectable()
 export class ProductsService implements OnModuleInit {

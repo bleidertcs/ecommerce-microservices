@@ -2,14 +2,14 @@ import { Module } from '@nestjs/common';
 import { APP_FILTER } from '@nestjs/core';
 import { TerminusModule } from '@nestjs/terminus';
 
-import { CommonModule } from '../common/common.module';
-import { ProductsModule } from '../modules/products/products.module';
-import { AppController } from './app.controller';
-import { ProductsGrpcController } from './products.grpc.controller';
+import { CommonModule } from '@/common/common.module';
+import { ProductsModule } from '@/modules/products/products.module';
+import { AppController } from '@/app/app.controller';
+import { ProductsGrpcController } from '@/app/products.grpc.controller';
 import { GrpcModule } from 'nestjs-grpc';
 import { ConfigService } from '@nestjs/config';
 import { join } from 'path';
-import { GrpcExceptionFilter } from '../common/filters/grpc-exception.filter';
+import { GrpcExceptionFilter } from '@/common/filters/grpc-exception.filter';
 
 @Module({
     imports: [

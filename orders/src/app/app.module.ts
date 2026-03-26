@@ -2,10 +2,10 @@ import { Module } from '@nestjs/common';
 import { TerminusModule } from '@nestjs/terminus';
 import { ScheduleModule } from '@nestjs/schedule';
 
-import { CommonModule } from '../common/common.module';
-import { OrdersModule } from '../modules/orders/orders.module';
-import { AppController } from './app.controller';
-import { OrdersGrpcController } from './orders.grpc.controller';
+import { CommonModule } from '@/common/common.module';
+import { OrdersModule } from '@/modules/orders/orders.module';
+import { AppController } from '@/app/app.controller';
+import { OrdersGrpcController } from '@/app/orders.grpc.controller';
 import { GrpcModule } from 'nestjs-grpc';
 import { ConfigService } from '@nestjs/config';
 import { join } from 'path';

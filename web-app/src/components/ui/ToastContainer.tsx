@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import Toast from './Toast';
+import Toast from '@/components/ui/Toast';
 import { Toast as ToastType } from '@/context/ToastContext';
 
 interface ToastContainerProps {

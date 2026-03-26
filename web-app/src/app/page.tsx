@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import ProductCard from '@/components/products/ProductCard';
-import Button from '@/components/ui/Button';
+import HeroImage from '@/components/layout/HeroImage';
 import { API_BASE_URL } from '@/lib/config';
 
 async function getFeaturedProducts() {
@@ -11,6 +11,7 @@ async function getFeaturedProducts() {
         if (!res.ok) return [];
         const json = await res.json();
         const products = Array.isArray(json) ? json : json.data || json.products || [];
+        // The UI shows 4 products. We'll take the first 4.
         return products.slice(0, 4);
     } catch (error) {
         console.error("Error fetching featured products:", error);
@@ -22,116 +23,44 @@ export default async function Home() {
     const featuredProducts = await getFeaturedProducts();
 
     return (
-        <div className="animate-fade-in">
+        <div className="animate-fade-in relative">
+            {/* Theme Toggle (just structural for the dark mode class, though we rely on media query or system ideally) */}
+            
             {/* Hero Section */}
-            <section className="pt-24 sm:pt-32 lg:pt-[160px] pb-16 sm:pb-20 lg:pb-[100px] text-center relative max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="badge badge-success mb-6">New Generation of Tech</div>
-                <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-heading font-extrabold leading-[1.05] tracking-tight mb-6">
-                    Elevate Your <span className="text-primary text-glow">Lumina</span> Life
+            <section className="pt-28 sm:pt-36 lg:pt-44 pb-12 sm:pb-16 text-center relative max-w-[1000px] mx-auto px-4 sm:px-6 lg:px-8">
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-heading font-extrabold leading-[1.1] tracking-tight mb-4 text-foreground uppercase">
+                    The Digital<br />Monolith Series
                 </h1>
-                <p className="text-base sm:text-lg lg:text-xl text-muted max-w-[700px] mx-auto mb-8 sm:mb-12 font-normal px-2">
-                    Experience the intersection of luxury and technology. Curated premium
-                    electronics designed for the future.
+                <p className="text-sm sm:text-base lg:text-sm text-foreground font-semibold max-w-[500px] mx-auto mb-8 tracking-wide">
+                    Engineered Performance. Uncompromising Design.
                 </p>
-                <div className="flex flex-col sm:flex-row gap-3 sm:gap-5 justify-center items-center">
+                <div className="flex justify-center items-center mb-16">
                     <Link href="/products">
-                        <Button variant="primary" size="lg" glow>
-                            Explore Catalog
-                        </Button>
+                        <button className="bg-primary text-background hover:bg-foreground transition-colors duration-300 font-bold text-[11px] uppercase tracking-widest px-8 py-3.5 rounded-full border border-transparent">
+                            Explore Devices
+                        </button>
                     </Link>
-                    <Link href="/register">
-                        <Button variant="glass" size="lg">
-                            Join Lumina
-                        </Button>
-                    </Link>
+                </div>
+                
+                {/* Hero Image */}
+                <div className="relative w-full max-w-[800px] mx-auto bg-surface-elevated rounded-2xl flex items-center justify-center overflow-hidden shadow-2xl aspect-[16/9] sm:aspect-[2/1] border border-border">
+                    <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/5 dark:to-white/5 z-0" />
+                    <HeroImage 
+                      src="/images/hero-server.png" 
+                      alt="Monolith X-1" 
+                      fallbackSrc="https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&q=80&w=2000"
+                      className="w-full h-full object-cover z-10"
+                    />
                 </div>
             </section>
 
-            {/* Featured Products (Bento Style alternative) */}
-            <section className="py-12 sm:py-16 lg:py-24 bg-white/[0.01]">
-                <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-8 sm:mb-12">
-                        <div>
-                            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-heading font-extrabold leading-tight tracking-tight mb-3">
-                                Curated Picks
-                            </h2>
-                            <p className="text-muted">Hand-selected for the modern enthusiast.</p>
-                        </div>
-                        <Link href="/products" className="text-primary font-semibold hover:underline">
-                            View Showcase →
-                        </Link>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+            {/* Product Grid */}
+            <section className="py-8 sm:py-12 bg-surface-elevated/30">
+                <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                         {featuredProducts.map((product: any) => (
                             <ProductCard key={product.id} product={product} />
                         ))}
-                    </div>
-                </div>
-            </section>
-
-            {/* Why Lumina (Bento Grid Layout) */}
-            <section className="py-12 sm:py-16 lg:py-24">
-                <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
-                    <h2 className="text-2xl sm:text-3xl lg:text-4xl font-heading font-extrabold text-center mb-10 sm:mb-16">
-                        The Lumina Standard
-                    </h2>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 auto-rows-[minmax(180px,auto)]">
-                        <div className="glass-card col-span-1 sm:col-span-2 md:col-span-2 row-span-2 p-8 sm:p-10 lg:p-12 flex flex-col justify-center">
-                            <div className="text-5xl mb-6">✨</div>
-                            <h3 className="text-3xl font-heading font-bold mb-4">
-                                Impeccable Quality
-                            </h3>
-                            <p className="text-muted text-lg">
-                                Every product in our collection undergoes rigorous testing to meet
-                                the Lumina standard of excellence.
-                            </p>
-                        </div>
-
-                        <div className="glass-card p-6 sm:p-8 text-center flex flex-col items-center justify-center">
-                            <div className="text-4xl mb-4">🛡️</div>
-                            <h4 className="text-lg font-bold mb-3">Secure Core</h4>
-                            <p className="text-muted text-sm">
-                                Casdoor powered security for your peace of mind.
-                            </p>
-                        </div>
-
-                        <div className="glass-card p-6 sm:p-8 text-center flex flex-col items-center justify-center">
-                            <div className="text-4xl mb-4">🚀</div>
-                            <h4 className="text-lg font-bold mb-3">Elite Speed</h4>
-                            <p className="text-muted text-sm">
-                                Instant fulfillment and real-time tracking.
-                            </p>
-                        </div>
-
-                        <div className="glass-card col-span-1 sm:col-span-2 md:col-span-2 p-8 sm:p-10 bg-gradient-to-r from-primary to-[#00d1ff] text-white border-none flex flex-col justify-center">
-                            <h3 className="text-2xl font-bold mb-3">Lumina Prime Support</h3>
-                            <p className="opacity-90">
-                                Concierge-level customer assistance available 24/7 for our elite
-                                members.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            {/* Visual Break / Newsletter */}
-            <section className="py-12 sm:py-16 lg:py-24">
-                <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="glass-card p-10 sm:p-16 lg:p-20 text-center bg-[radial-gradient(circle_at_center,rgba(6,127,249,0.15)_0%,transparent_70%)] border-primary/50">
-                        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-heading font-extrabold mb-4 sm:mb-6">Stay Ahead</h2>
-                        <p className="text-muted text-lg max-w-[600px] mx-auto mb-10">
-                            Get exclusive access to pre-orders and limited edition Lumina drops.
-                        </p>
-                        <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-[450px] mx-auto">
-                            <input
-                                type="email"
-                                placeholder="Your electronic mail"
-                                className="flex-1 bg-white/5 border border-white/10 rounded-xl px-5 py-3 outline-none focus:border-primary/50 transition-all text-sm"
-                            />
-                            <Button variant="primary">Subscribe</Button>
-                        </div>
                     </div>
                 </div>
             </section>

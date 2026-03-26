@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-import { OrdersController } from './orders.controller';
-import { OrdersService } from './orders.service';
-import { OutboxWorker } from './outbox.worker';
+import { OrdersController } from '@/modules/orders/orders.controller';
+import { OrdersService } from '@/modules/orders/orders.service';
+import { OutboxWorker } from '@/modules/orders/outbox.worker';
 import { ConfigService } from '@nestjs/config';
 import { join } from 'path';
 

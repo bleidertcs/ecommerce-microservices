@@ -2,10 +2,9 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import Button from '../ui/Button';
-import { getCasdoorLoginUrl, getCasdoorSignupUrl } from '@/lib/casdoor-config';
+import { getCasdoorLoginUrl } from '@/lib/casdoor-config';
 import { useAuth } from '@/context/AuthContext';
-import CartButton from './CartButton';
+import CartButton from '@/components/layout/CartButton';
 
 export default function Navbar() {
   const { isAuthenticated } = useAuth();
@@ -13,25 +12,45 @@ export default function Navbar() {
 
   const navLinks = (
     <>
-      <Link href="/" className="text-muted font-semibold text-[13px] uppercase tracking-[0.05em] transition-colors hover:text-foreground" onClick={() => setMobileMenuOpen(false)}>Home</Link>
-      <Link href="/products" className="text-muted font-semibold text-[13px] uppercase tracking-[0.05em] transition-colors hover:text-foreground" onClick={() => setMobileMenuOpen(false)}>Products</Link>
-      {isAuthenticated && <Link href="/products/manage" className="text-muted font-semibold text-[13px] uppercase tracking-[0.05em] transition-colors hover:text-foreground" onClick={() => setMobileMenuOpen(false)}>Catalog</Link>}
-      {isAuthenticated && <Link href="/orders" className="text-muted font-semibold text-[13px] uppercase tracking-[0.05em] transition-colors hover:text-foreground" onClick={() => setMobileMenuOpen(false)}>Orders</Link>}
-      {isAuthenticated && <Link href="/profile" className="text-muted font-semibold text-[13px] uppercase tracking-[0.05em] transition-colors hover:text-foreground" onClick={() => setMobileMenuOpen(false)}>Profile</Link>}
+      <Link href="/products" className="text-foreground font-semibold text-[11px] uppercase tracking-[0.1em] transition-colors hover:text-muted" onClick={() => setMobileMenuOpen(false)}>Products</Link>
+      <Link href="/solutions" className="text-foreground font-semibold text-[11px] uppercase tracking-[0.1em] transition-colors hover:text-muted" onClick={() => setMobileMenuOpen(false)}>Solutions</Link>
+      <Link href="/support" className="text-foreground font-semibold text-[11px] uppercase tracking-[0.1em] transition-colors hover:text-muted" onClick={() => setMobileMenuOpen(false)}>Support</Link>
+      <Link href="/company" className="text-foreground font-semibold text-[11px] uppercase tracking-[0.1em] transition-colors hover:text-muted" onClick={() => setMobileMenuOpen(false)}>Company</Link>
     </>
   );
 
   return (
-    <nav className="fixed top-2 sm:top-4 left-1/2 -translate-x-1/2 w-[calc(100%-16px)] sm:w-[calc(100%-32px)] max-w-[1200px] min-h-14 h-auto sm:h-16 flex flex-wrap items-center justify-between gap-2 px-4 sm:px-6 py-3 sm:py-0 bg-black/60 backdrop-blur-[20px] border border-white/10 rounded-2xl z-[1000] shadow-[0_10px_30px_rgba(0,0,0,0.5)] transition-all duration-300">
-      <Link href="/" className="font-heading text-lg sm:text-xl font-extrabold text-foreground tracking-[0.1em]" onClick={() => setMobileMenuOpen(false)}>
-        LUMINA
+    <nav className="fixed top-0 left-0 w-full min-h-16 h-auto flex flex-wrap items-center justify-between gap-2 px-6 sm:px-10 py-3 sm:py-0 bg-background/90 backdrop-blur-md border-b border-border z-[1000] transition-all duration-300">
+      {/* Logo */}
+      <Link href="/" className="flex items-center gap-2 font-heading" onClick={() => setMobileMenuOpen(false)}>
+        <div className="flex gap-0.5 items-end h-[18px] pb-0.5">
+            <div className="w-[3px] bg-foreground h-1.5"></div>
+            <div className="w-[3px] bg-foreground h-2.5"></div>
+            <div className="w-[3px] bg-foreground h-3.5"></div>
+            <div className="w-[3px] bg-foreground h-[18px]"></div>
+        </div>
+        <div className="flex flex-col leading-none">
+            <span className="text-[13px] font-extrabold tracking-[0.1em] text-foreground">MONOLITH</span>
+            <span className="text-[9px] font-bold tracking-[0.2em] text-muted">TECH</span>
+        </div>
       </Link>
       
-      <div className="hidden md:flex gap-4 lg:gap-6 bg-white/[0.03] px-4 lg:px-5 py-2 rounded-full border border-white/[0.05]">
+      {/* Center Links */}
+      <div className="hidden md:flex flex-1 justify-center gap-6 lg:gap-10">
         {navLinks}
       </div>
 
-      <div className="flex gap-2 sm:gap-3 items-center">
+      {/* Right Icons */}
+      <div className="flex gap-3 sm:gap-4 items-center">
+        {/* Search */}
+        <div className="hidden md:flex items-center bg-surface-elevated border border-border rounded-full px-3 py-1.5 mr-2">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-muted mr-2">
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.35-4.35" />
+            </svg>
+            <input type="text" placeholder="Search" className="bg-transparent text-[11px] font-semibold outline-none w-20 text-foreground placeholder-muted" />
+        </div>
+
         <button
           type="button"
           className="md:hidden p-2 rounded-lg text-muted hover:text-foreground hover:bg-white/5 transition-colors"
@@ -39,49 +58,47 @@ export default function Navbar() {
           onClick={() => setMobileMenuOpen((o) => !o)}
         >
           {mobileMenuOpen ? (
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M18 6 6 18M6 6l12 12" />
             </svg>
           ) : (
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           )}
         </button>
-        {isAuthenticated ? (
-           <Link href="/logout" className="hidden sm:inline">
-             <Button variant="secondary" size="sm">Logout</Button>
-           </Link>
-        ) : (
-          <>
-            <Button variant="secondary" size="sm" className="hidden sm:inline-flex" onClick={() => window.location.href = getCasdoorLoginUrl()}>
-              Sign In
-            </Button>
-            <Button variant="primary" size="sm" className="hidden sm:inline-flex" onClick={() => window.location.href = getCasdoorSignupUrl()}>
-              Register
-            </Button>
-          </>
-        )}
+        
         <CartButton />
+
+        {isAuthenticated ? (
+            <Link href="/profile" className="text-foreground hover:text-muted transition-colors flex items-center justify-center">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                </svg>
+            </Link>
+        ) : (
+            <button onClick={() => window.location.href = getCasdoorLoginUrl()} className="text-foreground hover:text-muted transition-colors flex items-center justify-center">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                </svg>
+            </button>
+        )}
       </div>
 
       {mobileMenuOpen && (
-        <div className="md:hidden w-full pt-4 mt-2 border-t border-white/10">
+        <div className="md:hidden w-full pt-4 mt-2 border-t border-border">
           <div className="flex flex-col gap-2 py-4">
             {navLinks}
             {isAuthenticated ? (
               <Link href="/logout" onClick={() => setMobileMenuOpen(false)}>
-                <span className="text-muted font-semibold text-[13px] uppercase tracking-[0.05em] hover:text-foreground py-2 block">Logout</span>
+                <span className="text-foreground font-semibold text-[11px] uppercase tracking-[0.1em] hover:text-muted py-2 block">Logout</span>
               </Link>
             ) : (
-              <>
-                <button type="button" onClick={() => { window.location.href = getCasdoorLoginUrl(); setMobileMenuOpen(false); }} className="text-left text-muted font-semibold text-[13px] uppercase tracking-[0.05em] hover:text-foreground py-2">
-                  Sign In
-                </button>
-                <button type="button" onClick={() => { window.location.href = getCasdoorSignupUrl(); setMobileMenuOpen(false); }} className="text-left text-muted font-semibold text-[13px] uppercase tracking-[0.05em] hover:text-foreground py-2">
-                  Register
-                </button>
-              </>
+              <button type="button" onClick={() => { window.location.href = getCasdoorLoginUrl(); setMobileMenuOpen(false); }} className="text-left text-foreground font-semibold text-[11px] uppercase tracking-[0.1em] hover:text-muted py-2">
+                Sign In
+              </button>
             )}
           </div>
         </div>

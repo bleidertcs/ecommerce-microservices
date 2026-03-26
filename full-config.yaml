@@ -252,35 +252,6 @@ services:
         target: /var/lib/kong/kong.yml
         read_only: true
         bind: {}
-  nats:
-    command:
-      - -m
-      - "8222"
-    container_name: bw-nats
-    healthcheck:
-      test:
-        - CMD
-        - wget
-        - --no-verbose
-        - --tries=1
-        - --spider
-        - http://localhost:8222/varz
-      timeout: 5s
-      interval: 10s
-      retries: 3
-    image: nats:2.10-alpine
-    networks:
-      bw-network: null
-    ports:
-      - mode: ingress
-        target: 4222
-        published: "4222"
-        protocol: tcp
-      - mode: ingress
-        target: 8222
-        published: "8222"
-        protocol: tcp
-    restart: unless-stopped
   notifications-service:
     build:
       context: C:\Desarrollo\Gateway\nestjs-microservices\notifications

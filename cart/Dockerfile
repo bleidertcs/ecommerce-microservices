@@ -1,5 +1,5 @@
 # Multi-stage build for optimal image size
-FROM node:20-alpine AS base
+FROM node:22-alpine AS base
 RUN apk add --no-cache libc6-compat
 RUN npm install -g pnpm
 ENV CI=true
@@ -44,6 +44,11 @@ COPY --from=builder /app/prisma.config.js ./
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
+
+# Prune development dependencies to reduce image size
+RUN pnpm config set confirm-reinstall false
+RUN pnpm config set frozen-lockfile false
+RUN pnpm prune --prod --ignore-scripts
 
 # Set correct permissions
 RUN chown -R nestjs:nodejs /app

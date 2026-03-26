@@ -1,4 +1,4 @@
-import { otr_sdk } from './tracing';
+import { otr_sdk } from '@/tracing';
 // Start SDK before everything else
 otr_sdk.start();
 
@@ -14,7 +14,7 @@ import { OpenTelemetryTransportV3 } from '@opentelemetry/winston-transport';
 import { WinstonModule } from 'nest-winston';
 import * as winston from 'winston';
 
-import { AppModule } from './app/app.module';
+import { AppModule } from '@/app/app.module';
 
 async function bootstrap() {
     const expressInstance = express();
@@ -37,14 +37,14 @@ async function bootstrap() {
     const logger = new Logger('Bootstrap');
 
     // Basic configuration
-    const appName = configService.getOrThrow<string>('app.name');
-    const env = configService.getOrThrow<string>('app.env');
-    const port = configService.getOrThrow<number>('app.http.port');
-    const host = configService.getOrThrow<string>('app.http.host');
+    const appName = configService.get<string>('appName', 'Cart Service');
+    const env = configService.get<string>('nodeEnv', 'development');
+    const port = configService.get<number>('httpPort', 9007);
+    const host = configService.get<string>('httpHost', '0.0.0.0');
 
     // CORS
     app.enableCors({
-        origin: configService.get<string[]>('app.cors.origins', ['http://localhost:3000']),
+        origin: configService.get<string[]>('corsOrigins', ['http://localhost:3000']),
         credentials: true,
     });
 
@@ -74,17 +74,18 @@ async function bootstrap() {
         transport: Transport.RMQ,
         options: {
             urls: [configService.get<string>('rabbitmq.url')],
-            queue: 'cart_queue',
+            queue: configService.get<string>('rabbitmq.queue'),
             queueOptions: {
                 durable: true,
             },
         },
     });
 
+
     await app.startAllMicroservices();
 
     // Global Prefix
-    app.setGlobalPrefix('api', { exclude: ['health'] });
+    app.setGlobalPrefix('api', { exclude: ['/health'] });
 
     // API versioning
     app.enableVersioning({

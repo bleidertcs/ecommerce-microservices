@@ -50,10 +50,12 @@ const metricExporter = new OTLPMetricExporter({
 export const otr_sdk = new NodeSDK({
   resource,
   traceExporter,
-  metricReader: new PeriodicExportingMetricReader({
-    exporter: metricExporter,
-    exportIntervalMillis: 60_000, // export every 60s
-  }),
+  metricReaders: [
+    new PeriodicExportingMetricReader({
+      exporter: metricExporter,
+      exportIntervalMillis: 60_000, // export every 60s
+    })
+  ],
   logRecordProcessors: [new BatchLogRecordProcessor(logExporter)],
   instrumentations: [
     getNodeAutoInstrumentations({

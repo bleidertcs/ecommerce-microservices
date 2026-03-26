@@ -97,7 +97,7 @@ export default function EditProductPage() {
         <p className="text-muted text-sm">Update name, price, photos, stock, and other details.</p>
       </div>
 
-      <div className="glass-card p-4 sm:p-6 lg:p-8 rounded-xl sm:rounded-[20px] border border-white/10">
+      <div className="surface-card p-4 sm:p-6 lg:p-8 rounded-xl sm:rounded-[20px] border border-border bg-surface">
         <ProductForm
           defaultValues={initialValues}
           onSubmit={handleSubmit}

@@ -1,5 +1,5 @@
 import { registerAs } from '@nestjs/config';
-import { IDocConfig } from '../interfaces/config.interface';
+import { IDocConfig } from '@/common/interfaces/config.interface';
 
 export default registerAs(
     'doc',

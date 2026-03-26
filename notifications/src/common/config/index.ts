@@ -1,5 +1,5 @@
-import AppConfig from './app.config';
-import RabbitMQConfig from './rabbitmq.config';
-import DocConfig from './doc.config';
+import AppConfig from '@/common/config/app.config';
+import RabbitMQConfig from '@/common/config/rabbitmq.config';
+import DocConfig from '@/common/config/doc.config';
 
 export default [AppConfig, RabbitMQConfig, DocConfig];

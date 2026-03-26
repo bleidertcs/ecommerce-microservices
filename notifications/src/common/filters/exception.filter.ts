@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Request, Response } from 'express';
-import { IErrorResponse } from '../interfaces/response.interface';
+import { IErrorResponse } from '@/common/interfaces/response.interface';
 
 @Catch(HttpException)
 export class ResponseExceptionFilter implements ExceptionFilter {

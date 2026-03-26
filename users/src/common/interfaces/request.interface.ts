@@ -1,4 +1,4 @@
-import { ROLE } from '../enums/app.enum';
+import { ROLE } from '@/common/enums/app.enum';
 
 export interface IAuthUserPayload {
     id: string;

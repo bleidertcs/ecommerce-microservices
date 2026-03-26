@@ -13,13 +13,17 @@ import {
 } from '@nestjs/common';
 import { EventPattern, Payload } from '@nestjs/microservices';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
-import { CartService } from './cart.service';
-import { AddItemDto } from './dtos/add-item.dto';
-import { UpdateItemDto } from './dtos/update-item.dto';
-import { AuthUser } from '../../common/decorators/auth-user.decorator';
+import { CartService } from '@/modules/cart/cart.service';
+import { AddItemDto } from '@/modules/cart/dtos/add-item.dto';
+import { UpdateItemDto } from '@/modules/cart/dtos/update-item.dto';
+import { AuthUser } from '@/common/decorators/auth-user.decorator';
+
+import { JwtAuthGuard } from '@/common/guards/jwt.access.guard';
+import { UseGuards } from '@nestjs/common';
 
 @ApiTags('Cart')
 @ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @Controller('cart')
 export class CartController {
   private readonly logger = new Logger(CartController.name);

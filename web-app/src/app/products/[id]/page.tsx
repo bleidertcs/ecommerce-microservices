@@ -58,29 +58,29 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
             <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-16 items-start">
                 {/* Visual Side */}
                 <div className="relative">
-                    <div className="glass-card aspect-[16/10] overflow-hidden bg-radial-at-center from-[#1a1a1a] to-[#050505] flex items-center justify-center rounded-[32px] border border-white/10 shadow-2xl relative group">
+                    <div className="surface-card aspect-[16/10] overflow-hidden bg-surface-elevated flex items-center justify-center rounded-[32px] border border-border shadow-md relative group">
                         <img
                             src={image}
                             alt={product.name}
                             className="w-[80%] h-[80%] object-contain z-10 transition-transform duration-500 group-hover:scale-110"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/40 pointer-events-none"></div>
+                        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background/20 pointer-events-none"></div>
                     </div>
 
                     <div className="grid grid-cols-3 gap-4 mt-8">
-                        <div className="glass-card p-4 text-center">
+                        <div className="surface-card border-border p-4 text-center">
                             <span className="block text-[9px] uppercase text-muted mb-1.5 font-bold tracking-widest">
                                 Latency
                             </span>
                             <span className="text-sm font-bold font-heading">0.02ms</span>
                         </div>
-                        <div className="glass-card p-4 text-center">
+                        <div className="surface-card border-border p-4 text-center">
                             <span className="block text-[9px] uppercase text-muted mb-1.5 font-bold tracking-widest">
                                 Battery
                             </span>
                             <span className="text-sm font-bold font-heading">48h Elite</span>
                         </div>
-                        <div className="glass-card p-4 text-center">
+                        <div className="surface-card border-border p-4 text-center">
                             <span className="block text-[9px] uppercase text-muted mb-1.5 font-bold tracking-widest">
                                 Connection
                             </span>
@@ -91,12 +91,12 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
 
                 {/* Info Side */}
                 <div className="w-full">
-                    <div className="glass-card p-10">
+                    <div className="surface-card border-border p-10">
                         <div className="flex gap-3 mb-5 items-center">
                             <span className="text-primary font-extrabold uppercase text-[11px] tracking-[0.1em]">
                                 {product.brand || 'Lumina Elite'}
                             </span>
-                            <span className="text-muted font-semibold uppercase text-[11px] tracking-[0.1em] border-l border-white/10 pl-3">
+                            <span className="text-muted font-semibold uppercase text-[11px] tracking-[0.1em] border-l border-border pl-3">
                                 {product.category}
                             </span>
                         </div>
@@ -116,7 +116,7 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
                                         fill={
                                             s <= (product!.rating || 5)
                                                 ? '#ffcc00'
-                                                : 'rgba(255,255,255,0.1)'
+                                                : 'var(--color-border)'
                                         }
                                     >
                                         <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
@@ -128,12 +128,12 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
                             </span>
                         </div>
 
-                        <p className="text-base leading-relaxed text-white/70 mb-10">
+                        <p className="text-base leading-relaxed text-muted mb-10">
                             {product.description ||
                                 'Elevate your daily experience with the Lumina Aura. Precision-engineered for those who demand excellence in every detail. Limited availability.'}
                         </p>
 
-                        <div className="bg-white/[0.02] rounded-[20px] p-8 border border-white/10">
+                        <div className="bg-surface-elevated rounded-[20px] p-8 border border-border">
                             <div className="mb-7">
                                 <span className="block text-[10px] font-bold uppercase text-muted mb-1.5 tracking-widest">
                                     Investment

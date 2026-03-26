@@ -1,6 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { GrpcMethod } from '@nestjs/microservices';
-import { PaymentsService } from './payments.service';
+import { PaymentsService } from '@/modules/payments/payments.service';
+import { PaymentMethod } from '@/common/enums/payment-method.enum';
 
 interface PaymentRequest {
   orderId: string;
@@ -26,7 +27,7 @@ export class PaymentsGrpcController {
         orderId: data.orderId,
         total: data.amount,
         shippingAddress: {},
-        paymentMethod: data.paymentMethod
+        paymentMethod: data.paymentMethod as PaymentMethod,
       });
 
       return {

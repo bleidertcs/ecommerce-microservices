@@ -129,7 +129,7 @@ export default function CartPage() {
   if (cart.length === 0) {
     return (
       <div className="container section-padding animate-fade-in" style={{ textAlign: 'center' }}>
-        <div className="glass-card empty-cart-card">
+        <div className="surface-card border border-border empty-cart-card">
           <div className="empty-icon">🛒</div>
           <h1 className="display-small">Your Vessel is Empty</h1>
           <p className="text-muted" style={{ marginBottom: '40px' }}>
@@ -169,7 +169,7 @@ export default function CartPage() {
           <div className="items-list">
             <h2 className="section-title">Artifacts</h2>
             {cart.map((item) => (
-              <div key={item.id} className="glass-card cart-item">
+              <div key={item.id} className="surface-card border border-border cart-item">
                 <div className="item-image-wrapper">
                   <img src={item.image || 'https://via.placeholder.com/200'} alt={item.name} />
                 </div>
@@ -201,12 +201,12 @@ export default function CartPage() {
           <div className="shipping-section">
             <h2 className="section-title">Delivery Coordinates</h2>
             {!isAuthenticated ? (
-               <div className="glass-card auth-required">
+               <div className="surface-card border border-border auth-required">
                   <p>Identification required to proceed with delivery protocols.</p>
                   <Button variant="primary" onClick={() => window.location.href = getCasdoorLoginUrl()}>Sign In to Lumina</Button>
                </div>
             ) : (
-              <div className="glass-card address-form">
+              <div className="surface-card border border-border address-form">
                 <div className="form-grid">
                   <div className="form-group">
                     <label>Recipient Full Name</label>
@@ -244,7 +244,7 @@ export default function CartPage() {
         
         {/* Order Summary Sidebar */}
         <aside className="cart-sidebar">
-          <div className="glass-card summary-card sticky-sidebar">
+          <div className="surface-card border border-border summary-card sticky-sidebar">
             <h2 className="summary-title">Universal Summary</h2>
             
             <div className="summary-details">

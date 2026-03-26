@@ -4,9 +4,9 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import { RedisService } from '../../common/services/redis.service';
-import { AddItemDto } from './dtos/add-item.dto';
-import { UpdateItemDto } from './dtos/update-item.dto';
+import { RedisService } from '@/common/services/redis.service';
+import { AddItemDto } from '@/modules/cart/dtos/add-item.dto';
+import { UpdateItemDto } from '@/modules/cart/dtos/update-item.dto';
 
 export interface CartItem {
   productId: string;

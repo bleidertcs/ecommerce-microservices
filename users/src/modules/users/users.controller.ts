@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Param, NotFoundException, UnauthorizedException } from '@nestjs/common';
-import { UsersService } from './users.service';
+import { UsersService } from '@/modules/users/users.service';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { AuthUser } from '../../common/decorators/auth-user.decorator';
+import { AuthUser } from '@/common/decorators/auth-user.decorator';
 
 @ApiTags('Users')
 @Controller('users')

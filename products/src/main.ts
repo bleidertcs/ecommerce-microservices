@@ -1,4 +1,4 @@
-import { otr_sdk } from './tracing';
+import { otr_sdk } from '@/tracing';
 // Start SDK before everything else
 otr_sdk.start();
 
@@ -14,8 +14,8 @@ import * as winston from 'winston';
 import { OpenTelemetryTransportV3 } from '@opentelemetry/winston-transport';
 import { Transport } from '@nestjs/microservices';
 
-import { AppModule } from './app/app.module';
-import { setupSwagger } from './swagger';
+import { AppModule } from '@/app/app.module';
+import { setupSwagger } from '@/swagger';
 
 
 async function bootstrap() {
@@ -77,7 +77,7 @@ async function bootstrap() {
     await app.startAllMicroservices();
 
     // Global Prefix
-    app.setGlobalPrefix('api', { exclude: ['health'] });
+    app.setGlobalPrefix('api', { exclude: ['/health'] });
 
     // API versioning
     app.enableVersioning({

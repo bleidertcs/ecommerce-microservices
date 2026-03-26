@@ -1,7 +1,7 @@
 # ==================================
 # Stage 1: Build the application
 # ==================================
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 # Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
@@ -26,7 +26,7 @@ RUN pnpm build
 # ==================================
 # Stage 3: Production runner
 # ==================================
-FROM node:20-alpine AS runner
+FROM node:22-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production

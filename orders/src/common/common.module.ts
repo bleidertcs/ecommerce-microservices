@@ -1,23 +1,23 @@
 import { join } from 'path';
-import { Global, MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { Global, MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { AcceptLanguageResolver, I18nModule, QueryResolver } from 'nestjs-i18n';
 
-import configs from './config';
-import { AuthJwtAccessGuard } from './guards/jwt.access.guard';
-import { JwtStrategy } from './guards/jwt.strategy';
-import { RolesGuard } from './guards/roles.guard';
-import { ResponseInterceptor } from './interceptors/response.interceptor';
-import { HashService } from './services/hash.service';
-import { DatabaseService } from './services/database.service';
-import { ResponseExceptionFilter } from './filters/exception.filter';
-import { RequestMiddleware } from './middlewares/request.middleware';
-import { QueryBuilderService } from './services/query-builder.service';
+import configs from '@/common/config';
+import { AuthJwtAccessGuard } from '@/common/guards/jwt.access.guard';
+import { JwtStrategy } from '@/common/guards/jwt.strategy';
+import { RolesGuard } from '@/common/guards/roles.guard';
+import { ResponseInterceptor } from '@/common/interceptors/response.interceptor';
+import { HashService } from '@/common/services/hash.service';
+import { DatabaseService } from '@/common/services/database.service';
+import { ResponseExceptionFilter } from '@/common/filters/exception.filter';
+import { RequestMiddleware } from '@/common/middlewares/request.middleware';
+import { QueryBuilderService } from '@/common/services/query-builder.service';
 import Joi from 'joi';
 import { CacheModule } from '@nestjs/cache-manager';
 import { createKeyv, Keyv } from '@keyv/redis';
-import { ResilienceModule } from './resilience.module';
+import { ResilienceModule } from '@/common/resilience.module';
 import { CacheableMemory } from 'cacheable';
 import { PassportModule } from '@nestjs/passport';
 
@@ -31,39 +31,6 @@ import { PassportModule } from '@nestjs/passport';
             cache: true,
             envFilePath: ['.env'],
             expandVariables: true,
-            validationSchema: Joi.object({
-                // App Configuration
-                NODE_ENV: Joi.string()
-                    .valid('development', 'staging', 'production', 'local')
-                    .default('development'),
-                APP_NAME: Joi.string().default('NestJS Orders Service'),
-                APP_DEBUG: Joi.boolean().truthy('true').falsy('false').default(false),
-
-                // CORS Configuration
-                APP_CORS_ORIGINS: Joi.string().default('http://localhost:3000'),
-
-                // HTTP Configuration
-                HTTP_ENABLE: Joi.boolean().truthy('true').falsy('false').default(true),
-                HTTP_HOST: Joi.string().default('0.0.0.0'),
-                HTTP_PORT: Joi.number().port().default(9003),
-                HTTP_VERSIONING_ENABLE: Joi.boolean().truthy('true').falsy('false').default(false),
-                HTTP_VERSION: Joi.number().valid(1, 2).default(1),
-
-                // Monitoring
-                SENTRY_DSN: Joi.string().allow('').optional(),
-
-                // Database Configuration
-                DATABASE_URL: Joi.string().uri().required(),
-
-                // Redis Configuration
-                REDIS_URL: Joi.string().uri().default('redis://localhost:6379'),
-                REDIS_KEY_PREFIX: Joi.string().default('orders:'),
-                REDIS_TTL: Joi.number().default(3600),
-
-                // GRPC Configuration
-                GRPC_URL: Joi.string().required(),
-                GRPC_PACKAGE: Joi.string().default('orders'),
-            }),
         }),
         CacheModule.registerAsync({
             inject: [ConfigService],
@@ -127,6 +94,6 @@ import { PassportModule } from '@nestjs/passport';
 })
 export class CommonModule implements NestModule {
     configure(consumer: MiddlewareConsumer): void {
-        consumer.apply(RequestMiddleware).forRoutes('*');
+        consumer.apply(RequestMiddleware).forRoutes({ path: '*path', method: RequestMethod.ALL });
     }
 }

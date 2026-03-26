@@ -90,7 +90,7 @@ export default function OrdersPage() {
   if (!isAuthenticated) {
     return (
       <div className="container section-padding animate-fade-in" style={{ textAlign: 'center' }}>
-        <div className="glass-card auth-empty-state">
+        <div className="surface-card border border-border auth-empty-state">
            <h2 className="display-small">Acceso No Autorizado</h2>
            <p className="text-muted" style={{ marginBottom: '32px' }}>Por favor, identifícate para ver tu historial de pedidos.</p>
            <Link href="/login"><Button variant="primary" glow>Iniciar Sesión</Button></Link>
@@ -136,7 +136,7 @@ export default function OrdersPage() {
       )}
 
       {orders.length === 0 ? (
-        <div className="glass-card empty-orders">
+        <div className="surface-card border border-border empty-orders">
           <p className="text-muted" style={{ fontSize: '18px', marginBottom: '32px' }}>No se registraron transacciones en este ciclo.</p>
           <Link href="/products"><Button variant="primary" glow>Iniciar Adquisición</Button></Link>
         </div>
@@ -145,7 +145,7 @@ export default function OrdersPage() {
           {orders.map((order) => {
             const status = getStatusInfo(order.status);
             return (
-              <div key={order.id} className="glass-card order-item">
+              <div key={order.id} className="surface-card border border-border order-item">
                 <div className="order-main">
                   <div className="order-id">
                     <span className="label">Order ID</span>

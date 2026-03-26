@@ -41,7 +41,7 @@ export default function ProfilePage() {
   if (!isAuthenticated || !user) {
     return (
       <div className="container section-padding animate-fade-in" style={{ textAlign: 'center' }}>
-        <div className="glass-card" style={{ padding: '80px 48px' }}>
+        <div className="surface-card border border-border" style={{ padding: '80px 48px' }}>
           <h2 className="display-small">Access Restricted</h2>
           <p className="text-muted" style={{ marginBottom: '32px' }}>This terminal is reserved for authenticated Lumina members.</p>
           <Link href="/login"><Button variant="primary" glow>Establish Link</Button></Link>
@@ -59,7 +59,7 @@ export default function ProfilePage() {
 
       <div className="profile-grid">
         {/* Main Identity Card */}
-        <div className="glass-card identity-card bento-item-large">
+        <div className="surface-card border border-border identity-card bento-item-large">
           <div className="avatar-wrapper">
             {user.picture ? (
               <img src={user.picture} alt={user.name} className="avatar-img" />
@@ -81,7 +81,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Info Grid (Bento) */}
-        <div className="glass-card bento-info bento-item-wide">
+        <div className="surface-card border border-border bento-info bento-item-wide">
           <h3 className="section-title">Core Data</h3>
           <div className="data-rows">
             <div className="data-row">
@@ -100,7 +100,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Shortcuts */}
-        <Link href="/orders" className="glass-card bento-shortcut">
+        <Link href="/orders" className="surface-card border border-border bento-shortcut">
           <div className="icon">📦</div>
           <div className="shortcut-meta">
             <h4>Acquisitions</h4>
@@ -108,7 +108,7 @@ export default function ProfilePage() {
           </div>
         </Link>
 
-        <Link href="/cart" className="glass-card bento-shortcut">
+        <Link href="/cart" className="surface-card border border-border bento-shortcut">
           <div className="icon">🛒</div>
           <div className="shortcut-meta">
             <h4>Vessel</h4>
@@ -154,7 +154,7 @@ export default function ProfilePage() {
           object-fit: cover;
           position: relative;
           z-index: 2;
-          border: 4px solid rgba(255, 255, 255, 0.05);
+          border: 4px solid var(--color-border);
         }
 
         .avatar-placeholder {
@@ -201,7 +201,7 @@ export default function ProfilePage() {
         .section-title { font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--muted); margin-bottom: 32px; letter-spacing: 0.1em; }
         
         .data-rows { display: flex; flex-direction: column; gap: 24px; }
-        .data-row { display: flex; justify-content: space-between; align-items: center; padding-bottom: 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+        .data-row { display: flex; justify-content: space-between; align-items: center; padding-bottom: 16px; border-bottom: 1px solid var(--color-border); }
         .label { font-size: 11px; text-transform: uppercase; color: var(--muted); font-weight: 600; }
         .val { font-size: 15px; font-weight: 600; }
         .val-mono { font-family: monospace; font-size: 13px; color: rgba(255, 255, 255, 0.6); }

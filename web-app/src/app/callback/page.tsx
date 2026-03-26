@@ -72,7 +72,7 @@ function CallbackContent() {
 
   return (
     <div className="callback-container animate-fade-in">
-      <div className="glass-card callback-card">
+      <div className="surface-card border border-border callback-card">
         <div className="spinner"></div>
         <h2 className="display-small" style={{ fontSize: '24px' }}>Finalizing Session</h2>
         <p className="text-muted">Configuring your premium nexus environment...</p>
@@ -95,7 +95,7 @@ function CallbackContent() {
         .spinner {
           width: 48px;
           height: 48px;
-          border: 2px solid rgba(255, 255, 255, 0.05);
+          border: 2px solid var(--color-border);
           border-top-color: var(--primary);
           border-radius: 50%;
           animation: spin 1s linear infinite;

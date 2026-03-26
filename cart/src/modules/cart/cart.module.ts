@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
-import { CartController } from './cart.controller';
-import { CartService } from './cart.service';
-import { RedisService } from '../../common/services/redis.service';
+import { CartController } from '@/modules/cart/cart.controller';
+import { CartService } from '@/modules/cart/cart.service';
+import { RedisService } from '@/common/services/redis.service';
 
 @Module({
   controllers: [CartController],

@@ -1,22 +1,15 @@
 import type { INestApplication } from '@nestjs/common';
 import { Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import type { SwaggerCustomOptions } from '@nestjs/swagger';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 export const setupSwagger = async (app: INestApplication) => {
-    const configService = app.get(ConfigService);
     const logger = new Logger('Swagger');
 
-    const docName: string = configService.get<string>('doc.name');
-    const docDesc: string = configService.get<string>('doc.description');
-    const docVersion: string = configService.get<string>('doc.version');
-    const docPrefix: string = configService.get<string>('doc.prefix');
-
     const documentBuild = new DocumentBuilder()
-        .setTitle(docName)
-        .setDescription(docDesc)
-        .setVersion(docVersion)
+        .setTitle('Notifications API')
+        .setDescription('E-commerce Notifications microservice')
+        .setVersion('1.0')
         .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }, 'accessToken')
         .build();
 
@@ -34,10 +27,10 @@ export const setupSwagger = async (app: INestApplication) => {
             filter: true,
         },
     };
-    SwaggerModule.setup(docPrefix, app, document, {
+    SwaggerModule.setup('api/v1/notifications/docs', app, document, {
         explorer: true,
-        customSiteTitle: docName,
+        customSiteTitle: 'Notifications API',
         ...customOptions,
     });
-    logger.log(`Docs will serve on ${docPrefix}`);
+    logger.log(`Docs will serve on /api/v1/notifications/docs`);
 };

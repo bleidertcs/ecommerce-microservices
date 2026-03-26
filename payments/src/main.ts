@@ -1,4 +1,4 @@
-import { otr_sdk } from './tracing';
+import { otr_sdk } from '@/tracing';
 // Start SDK before everything else
 otr_sdk.start();
 
@@ -9,8 +9,8 @@ import { Transport } from '@nestjs/microservices';
 import { WinstonModule } from 'nest-winston';
 import * as winston from 'winston';
 import { OpenTelemetryTransportV3 } from '@opentelemetry/winston-transport';
-import { AppModule } from './app.module';
-import { setupSwagger } from './swagger';
+import { AppModule } from '@/app/app.module';
+import { setupSwagger } from '@/swagger';
 
 async function bootstrap() {
     const app = await NestFactory.create(AppModule, {
@@ -34,33 +34,23 @@ async function bootstrap() {
     const appName = configService.get<string>('APP_NAME', 'Payments Service');
     const port = configService.get<number>('HTTP_PORT', 9006);
     const env = configService.get<string>('NODE_ENV', 'development');
-    const rabbitmqUrl = configService.getOrThrow<string>('RABBITMQ_URL');
-
-    // Validation
-    app.useGlobalPipes(
-        new ValidationPipe({
-            transform: true,
-            whitelist: true,
-            forbidNonWhitelisted: true,
-        }),
-    );
-
     // Connect RabbitMQ Microservice
     app.connectMicroservice({
         transport: Transport.RMQ,
         options: {
-            urls: [rabbitmqUrl],
-            queue: 'ecommerce_events',
+            urls: [configService.get<string>('rabbitmq.url')],
+            queue: configService.get<string>('rabbitmq.queue', 'ecommerce_events'),
             queueOptions: {
                 durable: true,
             },
         },
     });
 
+
     await app.startAllMicroservices();
 
-    // Global Prefix (exclude health for Kong/load balancers)
-    app.setGlobalPrefix('api', { exclude: ['health'] });
+    // Global Prefix
+    app.setGlobalPrefix('api', { exclude: ['/health'] });
 
     // API versioning
     app.enableVersioning({

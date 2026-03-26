@@ -64,14 +64,14 @@ function ProductsContent() {
 
     const Loader = ({ message }: { message: string }) => (
         <div className="h-[400px] flex flex-col items-center justify-center gap-6">
-            <div className="w-10 h-10 border-2 border-white/10 border-t-primary rounded-full animate-spin"></div>
+            <div className="w-10 h-10 border-2 border-border border-t-primary rounded-full animate-spin"></div>
             <p className="text-muted text-sm font-medium">{message}</p>
         </div>
     );
 
     return (
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-24 animate-fade-in text-foreground">
-            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 sm:gap-6 mb-8 sm:mb-12 lg:mb-16 border-b border-white/10 pb-6 sm:pb-8">
+            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 sm:gap-6 mb-8 sm:mb-12 lg:mb-16 border-b border-border pb-6 sm:pb-8">
                 <div>
                     <h1 className="text-2xl sm:text-3xl lg:text-4xl font-heading font-extrabold tracking-tight mb-2 leading-tight">
                         Showcase
@@ -109,7 +109,7 @@ function ProductsContent() {
                             {filtersOpen ? 'Hide Filters' : 'Show Filters'}
                         </Button>
                     </div>
-                    <div className={`glass-card p-4 sm:p-6 ${!filtersOpen ? 'hidden lg:block' : ''}`}>
+                    <div className={`surface-card p-4 sm:p-6 ${!filtersOpen ? 'hidden lg:block' : ''}`}>
                         <h3 className="text-xs uppercase tracking-widest mb-8 text-muted font-bold">
                             Explore
                         </h3>
@@ -123,7 +123,7 @@ function ProductsContent() {
                                 placeholder="Universal search..."
                                 value={search}
                                 onChange={(e) => updateFilters({ search: e.target.value })}
-                                className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-primary focus:bg-white/[0.05] transition-all"
+                                className="w-full bg-surface-elevated border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:border-primary transition-all text-foreground"
                             />
                         </div>
 
@@ -134,7 +134,7 @@ function ProductsContent() {
                             <select
                                 value={category}
                                 onChange={(e) => updateFilters({ category: e.target.value })}
-                                className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-primary focus:bg-white/[0.05] transition-all appearance-none cursor-pointer"
+                                className="w-full bg-surface-elevated border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:border-primary transition-all appearance-none cursor-pointer text-foreground"
                                 style={{
                                     backgroundImage:
                                         'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'rgba(255,255,255,0.4)\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'/%3E%3C/svg%3E")',
@@ -177,9 +177,9 @@ function ProductsContent() {
                                     placeholder="Min"
                                     value={minPrice}
                                     onChange={(e) => updateFilters({ minPrice: e.target.value })}
-                                    className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-primary focus:bg-white/[0.05] transition-all"
+                                    className="w-full bg-surface-elevated border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:border-primary transition-all text-foreground"
                                 />
-                                <span className="text-muted text-xs shadow-white/10 text-center flex-shrink-0">
+                                <span className="text-muted text-xs text-center flex-shrink-0">
                                     -
                                 </span>
                                 <input
@@ -187,7 +187,7 @@ function ProductsContent() {
                                     placeholder="Max"
                                     value={maxPrice}
                                     onChange={(e) => updateFilters({ maxPrice: e.target.value })}
-                                    className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-primary focus:bg-white/[0.05] transition-all"
+                                    className="w-full bg-surface-elevated border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:border-primary transition-all text-foreground"
                                 />
                             </div>
                         </div>
@@ -202,9 +202,9 @@ function ProductsContent() {
                     {loading ? (
                         <Loader message="Scanning Lumina Database..." />
                     ) : products.length === 0 ? (
-                        <div className="glass-card py-20 px-10 text-center border-dashed border-white/10 flex flex-col items-center">
-                            <div className="text-5xl mb-6 opacity-20">∅</div>
-                            <h2 className="text-xl font-bold mb-3">No items found in this world</h2>
+                        <div className="surface-card py-20 px-10 text-center border-dashed border-border flex flex-col items-center">
+                            <div className="text-5xl mb-6 opacity-20 text-foreground">∅</div>
+                            <h2 className="text-xl font-bold mb-3 text-foreground">No items found in this world</h2>
                             <p className="text-muted text-sm max-w-[300px] mx-auto mb-8 leading-relaxed">
                                 Adjust your filters to reveal hidden treasures.
                             </p>
@@ -228,7 +228,7 @@ export default function ProductsPage() {
         <Suspense
             fallback={
                 <div className="h-[400px] flex flex-col items-center justify-center gap-6">
-                    <div className="w-10 h-10 border-2 border-white/10 border-t-primary rounded-full animate-spin"></div>
+                    <div className="w-10 h-10 border-2 border-border border-t-primary rounded-full animate-spin"></div>
                     <p className="text-muted text-sm font-medium">Initializing...</p>
                 </div>
             }

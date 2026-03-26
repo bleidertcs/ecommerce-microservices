@@ -1,6 +1,6 @@
 import { GrpcController, GrpcMethod } from 'nestjs-grpc';
 import { MessagePattern } from '@nestjs/microservices';
-import { OrdersService } from '../modules/orders/orders.service';
+import { OrdersService } from '@/modules/orders/orders.service';
 
 @GrpcController('OrdersService')
 export class OrdersGrpcController {

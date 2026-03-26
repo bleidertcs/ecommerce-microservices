@@ -1,5 +1,5 @@
 import { registerAs } from '@nestjs/config';
-import { IRedisConfig } from '../interfaces/config.interface';
+import { IRedisConfig } from '@/common/interfaces/config.interface';
 
 export default registerAs(
     'redis',

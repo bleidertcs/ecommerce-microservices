@@ -1,5 +1,5 @@
 import { GrpcController, GrpcMethod, GrpcException } from 'nestjs-grpc';
-import { ProductsService } from '../modules/products/products.service';
+import { ProductsService } from '@/modules/products/products.service';
 
 @GrpcController('ProductsService')
 export class ProductsGrpcController {

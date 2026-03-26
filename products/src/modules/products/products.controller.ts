@@ -12,13 +12,13 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { EventPattern, Payload } from '@nestjs/microservices';
-import { ProductsService } from './products.service';
+import { ProductsService } from '@/modules/products/products.service';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { SearchProductDto } from './dtos/search-product.dto';
-import { CreateProductDto } from './dtos/create-product.dto';
-import { UpdateProductDto } from './dtos/update-product.dto';
-import { PublicRoute } from '../../common/decorators/public.decorator';
-import { AuthUser } from '../../common/decorators/auth-user.decorator';
+import { SearchProductDto } from '@/modules/products/dtos/search-product.dto';
+import { CreateProductDto } from '@/modules/products/dtos/create-product.dto';
+import { UpdateProductDto } from '@/modules/products/dtos/update-product.dto';
+import { PublicRoute } from '@/common/decorators/public.decorator';
+import { AuthUser } from '@/common/decorators/auth-user.decorator';
 
 @ApiTags('Products')
 @ApiBearerAuth('accessToken')

@@ -92,7 +92,6 @@ tmp/
 temp/
 
 # Docker
-.dockerignore
 
 # Generated files
 /generated/**/*.js

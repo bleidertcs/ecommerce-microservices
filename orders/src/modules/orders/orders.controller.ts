@@ -1,9 +1,9 @@
 import { Controller, Get, Post, Body, Param, NotFoundException, Patch, BadRequestException, UseGuards, UnauthorizedException } from '@nestjs/common';
 import { EventPattern, Payload } from '@nestjs/microservices';
-import { OrdersService } from './orders.service';
+import { OrdersService } from '@/modules/orders/orders.service';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { CreateOrderDto } from './dtos/create-order.dto';
-import { AuthUser } from '../../common/decorators/auth-user.decorator';
+import { CreateOrderDto } from '@/modules/orders/dtos/create-order.dto';
+import { AuthUser } from '@/common/decorators/auth-user.decorator';
 
 @ApiTags('Orders')
 @Controller('orders')

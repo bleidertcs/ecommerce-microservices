@@ -2,18 +2,26 @@ import {
   Controller,
   Get,
   Param,
+  Query,
   NotFoundException,
   UnauthorizedException,
   Logger,
+  UseGuards,
 } from '@nestjs/common';
 import { EventPattern, Payload } from '@nestjs/microservices';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { PaymentsService } from './payments.service';
-import { AuthUser } from '../../common/decorators/auth-user.decorator';
-import type { OrderCreatedPayload } from './payments.service';
+import { PaymentsService } from '@/modules/payments/payments.service';
+import { AuthUser } from '@/common/decorators/auth-user.decorator';
+import { AllowedRoles } from '@/common/decorators/auth-roles.decorator';
+import { AuthJwtAccessGuard } from '@/common/guards/jwt.access.guard';
+import { RolesGuard } from '@/common/guards/roles.guard';
+import { IAuthUserPayload } from '@/common/interfaces/request.interface';
+import { PaymentQueryDto } from '@/modules/payments/dtos/payment-query.dto';
+import { OrderCreatedPayloadDto } from '@/modules/payments/dtos/create-payment.dto';
 
 @ApiTags('Payments')
 @Controller('payments')
+@UseGuards(AuthJwtAccessGuard, RolesGuard)
 export class PaymentsController {
   private readonly logger = new Logger(PaymentsController.name);
 
@@ -21,15 +29,16 @@ export class PaymentsController {
 
   @Get()
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get all payments' })
-  async findAll() {
-    return this.paymentsService.findAll();
+  @ApiOperation({ summary: 'Get all payments (Admin only)' })
+  @AllowedRoles(['ADMIN' as any])
+  async findAll(@Query() query: PaymentQueryDto): Promise<any> {
+    return this.paymentsService.findAll(query);
   }
 
   @Get('my-payments')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get current user payments' })
-  async findMyPayments(@AuthUser() user: { id?: string }) {
+  async findMyPayments(@AuthUser() user: IAuthUserPayload) {
     if (!user?.id) throw new UnauthorizedException('User identity not found');
     return this.paymentsService.findByUser(user.id);
   }
@@ -53,8 +62,9 @@ export class PaymentsController {
   }
 
   @EventPattern('order.created')
-  async handleOrderCreated(@Payload() data: OrderCreatedPayload) {
-    this.logger.log(`Received order.created event for Order ID: ${data.orderId}`);
+  @ApiOperation({ summary: 'Handle order.created event - process payment' })
+  async handleOrderCreated(@Payload() data: OrderCreatedPayloadDto) {
+    this.logger.log(`[EVENT] order.created - Order: ${data.orderId}`);
     await this.paymentsService.processPayment(data);
   }
 }

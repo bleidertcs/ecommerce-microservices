@@ -3,8 +3,8 @@ import { Reflector } from '@nestjs/core';
 import { I18nService } from 'nestjs-i18n';
 import { Observable } from 'rxjs';
 import { map, from, switchMap } from 'rxjs';
-import { MESSAGE_DTO_METADATA, MESSAGE_KEY_METADATA } from '../constants/response.constant';
-import { IApiResponse } from '../interfaces/response.interface';
+import { MESSAGE_DTO_METADATA, MESSAGE_KEY_METADATA } from '@/common/constants/response.constant';
+import { IApiResponse } from '@/common/interfaces/response.interface';
 import { plainToInstance } from 'class-transformer';
 
 @Injectable()

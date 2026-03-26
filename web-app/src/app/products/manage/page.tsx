@@ -57,7 +57,7 @@ export default function ManageCatalogPage() {
 
   return (
     <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-24 animate-fade-in text-foreground">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 sm:gap-6 mb-8 sm:mb-10 border-b border-white/10 pb-6 sm:pb-8">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 sm:gap-6 mb-8 sm:mb-10 border-b border-border pb-6 sm:pb-8">
         <div>
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-heading font-extrabold tracking-tight mb-2">
             Catalog Management
@@ -83,22 +83,22 @@ export default function ManageCatalogPage() {
 
       {loading ? (
         <div className="h-[300px] flex flex-col items-center justify-center gap-4">
-          <div className="w-10 h-10 border-2 border-white/10 border-t-primary rounded-full animate-spin" />
+          <div className="w-10 h-10 border-2 border-border border-t-primary rounded-full animate-spin" />
           <p className="text-muted text-sm">Loading products...</p>
         </div>
       ) : products.length === 0 ? (
-        <div className="glass-card py-16 px-8 text-center border-dashed border-white/10">
+        <div className="surface-card border border-border py-16 px-8 text-center border-dashed border-border">
           <p className="text-muted mb-6">No products yet.</p>
           <Link href="/products/manage/new">
             <Button>Add your first product</Button>
           </Link>
         </div>
       ) : (
-        <div className="glass-card overflow-hidden rounded-xl sm:rounded-[20px] border border-white/10">
+        <div className="surface-card border border-border overflow-hidden rounded-xl sm:rounded-[20px] border border-border">
           <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
             <table className="w-full text-left min-w-[600px]">
               <thead>
-                <tr className="border-b border-white/10">
+                <tr className="border-b border-border">
                   <th className="text-xs font-bold uppercase tracking-wider text-muted px-4 sm:px-6 py-3 sm:py-4">Product</th>
                   <th className="text-xs font-bold uppercase tracking-wider text-muted px-4 sm:px-6 py-3 sm:py-4">Price</th>
                   <th className="text-xs font-bold uppercase tracking-wider text-muted px-4 sm:px-6 py-3 sm:py-4 hidden md:table-cell">Stock</th>

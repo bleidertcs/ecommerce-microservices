@@ -1,7 +1,7 @@
 # Multi-stage build for optimal image size
-FROM node:20-alpine AS base
+FROM node:22-alpine AS base
 RUN apk add --no-cache libc6-compat
-RUN npm install -g pnpm@10.2.0
+RUN npm install -g pnpm
 ENV CI=true
 
 # Build the source code
@@ -35,6 +35,11 @@ RUN adduser --system --uid 1001 nestjs
 
 # Copy built application and dependencies from builder
 COPY --from=builder /app ./
+
+# Prune development dependencies to reduce image size
+RUN pnpm config set confirm-reinstall false
+RUN pnpm config set frozen-lockfile false
+RUN pnpm prune --prod --ignore-scripts
 
 # Set correct permissions
 RUN chown -R nestjs:nodejs /app

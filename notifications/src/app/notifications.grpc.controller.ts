@@ -1,6 +1,6 @@
 import { Controller } from '@nestjs/common';
 import { GrpcMethod } from '@nestjs/microservices';
-import { NotificationsService } from '../modules/notifications/notifications.service';
+import { NotificationsService } from '@/modules/notifications/notifications.service';
 
 interface NotificationRequest {
   userId: string;
@@ -23,6 +23,7 @@ export class NotificationsGrpcController {
     try {
       if (data.type === 'WELCOME') {
           await this.notificationsService.sendWelcomeEmail({
+              id: data.userId,
               email: data.email,
               firstName: data.userId, // Fallback if firstName not provided
               lastName: ''
@@ -30,6 +31,7 @@ export class NotificationsGrpcController {
       } else if (data.type === 'ORDER_CONFIRMATION') {
           await this.notificationsService.sendOrderConfirmation({
               orderId: data.message,
+              userId: data.userId,
               total: 0,
               items: []
           });

@@ -1,6 +1,6 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
-import { IAuthUserPayload } from '../interfaces/request.interface';
+import { IAuthUserPayload } from '@/common/interfaces/request.interface';
 
 @Injectable()
 export class UserIdMiddleware implements NestMiddleware {

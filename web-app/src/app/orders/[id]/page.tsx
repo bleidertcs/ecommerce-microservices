@@ -97,7 +97,7 @@ export default function OrderDetailsPage() {
   if (!isAuthenticated) {
     return (
       <div className="container section-padding" style={{ textAlign: 'center' }}>
-        <div className="glass-card" style={{ padding: '80px 48px' }}>
+        <div className="surface-card border border-border bg-surface" style={{ padding: '80px 48px' }}>
           <h2 className="display-small">Identificación Requerida</h2>
           <p className="text-muted" style={{ marginBottom: '32px' }}>Por favor, identifícate para acceder a estos registros.</p>
           <Link href="/login"><Button variant="primary" glow>Iniciar Sesión</Button></Link>
@@ -144,7 +144,7 @@ export default function OrderDetailsPage() {
       <div className="details-layout">
         <main className="main-content">
           {/* Order Info Card */}
-          <div className="glass-card info-card">
+          <div className="surface-card border border-border bg-surface info-card">
             <div className="card-header">
               <div className="id-block">
                 <span className="label">Unique Identifier</span>
@@ -178,7 +178,7 @@ export default function OrderDetailsPage() {
 
         <aside className="sidebar">
           {/* Summary Card */}
-          <div className="glass-card summary-card">
+          <div className="surface-card border border-border bg-surface summary-card">
              <h3 className="section-title">Matrix Summary</h3>
              <div className="summary-row">
                 <span className="label">Status</span>
@@ -203,7 +203,7 @@ export default function OrderDetailsPage() {
 
           {/* Shipping Card */}
           {order.shippingAddress && (
-            <div className="glass-card shipping-card">
+            <div className="surface-card border border-border bg-surface shipping-card">
               <h3 className="section-title">Relay Coordinates</h3>
               <div className="address-block">
                 <p className="recipient">{order.shippingAddress.recipientName}</p>

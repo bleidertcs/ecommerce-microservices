@@ -1,4 +1,4 @@
-import { otr_sdk } from './tracing';
+import { otr_sdk } from '@/tracing';
 // Start SDK before everything else
 otr_sdk.start();
 
@@ -6,19 +6,16 @@ import { Logger, ValidationPipe, VersioningType } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { Transport } from '@nestjs/microservices';
-import { ExpressAdapter } from '@nestjs/platform-express';
-import express from 'express';
 import helmet from 'helmet';
 import { WinstonModule } from 'nest-winston';
 import * as winston from 'winston';
 import { OpenTelemetryTransportV3 } from '@opentelemetry/winston-transport';
 
-import { AppModule } from './app/app.module';
-import { setupSwagger } from './swagger';
+import { AppModule } from '@/app/app.module';
+import { setupSwagger } from '@/swagger';
 
 async function bootstrap() {
-    const expressInstance = express();
-    const app = await NestFactory.create(AppModule, new ExpressAdapter(expressInstance), {
+    const app = await NestFactory.create(AppModule, {
         logger: WinstonModule.createLogger({
             transports: [
                 new winston.transports.Console({
@@ -34,17 +31,17 @@ async function bootstrap() {
     });
 
     const configService = app.get(ConfigService);
-    const logger = app.get(Logger);
+    const logger = new Logger('Bootstrap');
 
     // Basic configuration
-    const appName = configService.getOrThrow<string>('app.name');
-    const env = configService.getOrThrow<string>('app.env');
-    const port = configService.getOrThrow<number>('app.http.port');
-    const host = configService.getOrThrow<string>('app.http.host');
+    const appName = configService.get<string>('appName', 'Notifications Service');
+    const env = configService.get<string>('nodeEnv', 'development');
+    const port = configService.get<number>('httpPort', 9005);
+    const host = configService.get<string>('httpHost', '0.0.0.0');
 
     // CORS
     app.enableCors({
-        origin: configService.get<string[]>('app.cors.origins', ['http://localhost:3000']),
+        origin: configService.get<string[]>('corsOrigins', ['http://localhost:3000']),
         credentials: true,
     });
 
@@ -64,18 +61,19 @@ async function bootstrap() {
     app.connectMicroservice({
         transport: Transport.RMQ,
         options: {
-            urls: [configService.getOrThrow<string>('rabbitmq.url')],
-            queue: configService.getOrThrow<string>('rabbitmq.queue'),
+            urls: [configService.get<string>('rabbitmq.url')],
+            queue: configService.get<string>('rabbitmq.queue'),
             queueOptions: {
                 durable: true,
             },
         },
     });
 
+
     await app.startAllMicroservices();
 
     // Global Prefix
-    app.setGlobalPrefix('api', { exclude: ['health'] });
+    app.setGlobalPrefix('api', { exclude: ['/health'] });
 
     // API versioning
     app.enableVersioning({
@@ -106,9 +104,7 @@ async function bootstrap() {
     await app.listen(port, host);
 
     logger.log(`🚀 ${appName} started at http://${host}:${port}`);
-    logger.log(
-        `🔌 RabbitMQ listener started for queue: ${configService.get<string>('rabbitmq.queue')}`,
-    );
+    logger.log(`🔌 RabbitMQ listener started for queue: ecommerce_events`);
 
     if (env !== 'production') {
         logger.log(`📖 Swagger: http://${host}:${port}/api/docs`);
