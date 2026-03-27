@@ -229,6 +229,7 @@ services:
       POSTGRES_DB: casdoor
     volumes:
       - casdoor_database:/var/lib/postgresql/data
+    command: postgres -c log_statement=all
     networks:
       - bw-network
     healthcheck:
@@ -315,6 +316,7 @@ services:
       POSTGRES_DB: users
     volumes:
       - users_data:/var/lib/postgresql/data
+    command: postgres -c log_statement=all
     networks:
       - bw-network
     ports:
@@ -341,6 +343,8 @@ services:
     depends_on:
       products-db:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
       signoz-otel-collector:
         condition: service_started
     networks:
@@ -364,6 +368,7 @@ services:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: master123
       POSTGRES_DB: products
+    command: postgres -c log_statement=all
     volumes:
       - products_data:/var/lib/postgresql/data
     networks:
@@ -417,6 +422,7 @@ services:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: master123
       POSTGRES_DB: orders
+    command: postgres -c log_statement=all
     volumes:
       - orders_data:/var/lib/postgresql/data
     networks:
@@ -524,6 +530,7 @@ services:
       POSTGRES_DB: payments
     volumes:
       - payments_data:/var/lib/postgresql/data
+    command: postgres -c log_statement=all
     networks:
       - bw-network
     ports:
@@ -551,6 +558,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
       signoz-otel-collector:
         condition: service_started
     networks:
@@ -574,6 +583,7 @@ services:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: master123
       POSTGRES_DB: cart
+    command: postgres -c log_statement=all
     volumes:
       - cart_data:/var/lib/postgresql/data
     networks:

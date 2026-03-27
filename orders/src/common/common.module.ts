@@ -5,6 +5,7 @@ import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { AcceptLanguageResolver, I18nModule, QueryResolver } from 'nestjs-i18n';
 
 import configs from '@/common/config';
+import RabbitmqConfig from '@/common/config/rabbitmq.config';
 import { AuthJwtAccessGuard } from '@/common/guards/jwt.access.guard';
 import { JwtStrategy } from '@/common/guards/jwt.strategy';
 import { RolesGuard } from '@/common/guards/roles.guard';
@@ -26,7 +27,7 @@ import { PassportModule } from '@nestjs/passport';
     imports: [
         PassportModule.register({ defaultStrategy: 'jwt' }),
         ConfigModule.forRoot({
-            load: configs,
+            load: [...configs, RabbitmqConfig],
             isGlobal: true,
             cache: true,
             envFilePath: ['.env'],

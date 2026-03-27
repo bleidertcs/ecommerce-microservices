@@ -39,7 +39,7 @@ receivers:
           parse_from: attributes.time
           layout: "%Y-%m-%dT%H:%M:%S.%LZ"
       - type: filter
-        expr: 'attributes["docker.container.name"] == "/bw-casdoor"'
+        expr: 'attributes["docker.container.name"].startsWith("/bw-")'
   hostmetrics:
     collection_interval: 60s
     scrapers:
