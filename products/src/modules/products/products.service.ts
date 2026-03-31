@@ -1,8 +1,10 @@
 import { Injectable, Logger, OnModuleInit, NotFoundException, ConflictException } from '@nestjs/common';
 import { DatabaseService } from '@/common/services/database.service';
-import { faker } from '@faker-js/faker';
+import * as fs from 'fs';
+import * as path from 'path';
 import { CreateProductDto } from '@/modules/products/dtos/create-product.dto';
 import { UpdateProductDto } from '@/modules/products/dtos/update-product.dto';
+import { SearchProductDto } from '@/modules/products/dtos/search-product.dto';
 
 @Injectable()
 export class ProductsService implements OnModuleInit {
@@ -17,20 +19,15 @@ export class ProductsService implements OnModuleInit {
   async seedIfEmpty() {
     const count = await this.databaseService.product.count();
     if (count === 0) {
-      this.logger.log('Seeding products...');
-      const products = Array.from({ length: 20 }).map(() => ({
-        name: faker.commerce.productName(),
-        description: faker.commerce.productDescription(),
-        sku: faker.string.alphanumeric(10).toUpperCase(),
-        price: parseFloat(faker.commerce.price()),
-        stock: faker.number.int({ min: 10, max: 100 }),
-        category: faker.commerce.department(),
-        brand: faker.company.name(),
-        tags: [] as string[],
-        images: [] as string[],
-      }));
-      await this.databaseService.product.createMany({ data: products });
-      this.logger.log('Products seeded successfully');
+      this.logger.log('Seeding products from json...');
+      try {
+        const dataPath = path.join(process.cwd(), 'prisma', 'data', 'products.json');
+        const products = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
+        await this.databaseService.product.createMany({ data: products });
+        this.logger.log('Products seeded successfully');
+      } catch (error) {
+        this.logger.error('Failed to seed products automatically', error.stack);
+      }
     }
   }
 
@@ -95,7 +92,7 @@ export class ProductsService implements OnModuleInit {
     return { id };
   }
 
-  async findAll(query?: any) {
+  async findAll(query?: SearchProductDto) {
     const { category, search, minPrice, maxPrice } = query || {};
     const where: any = { isDeleted: false };
 
@@ -112,8 +109,8 @@ export class ProductsService implements OnModuleInit {
 
     if (minPrice !== undefined || maxPrice !== undefined) {
       where.price = {};
-      if (minPrice !== undefined) where.price.gte = parseFloat(minPrice);
-      if (maxPrice !== undefined) where.price.lte = parseFloat(maxPrice);
+      if (minPrice !== undefined) where.price.gte = minPrice;
+      if (maxPrice !== undefined) where.price.lte = maxPrice;
     }
 
     return this.databaseService.product.findMany({ where });

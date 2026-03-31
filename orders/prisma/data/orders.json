@@ -1,0 +1,92 @@
+[
+  {
+    "userId": "user-2",
+    "subtotal": 299.99,
+    "shippingCost": 0.00,
+    "tax": 30.00,
+    "total": 329.99,
+    "shippingAddress": {
+      "street": "123 Main St",
+      "city": "Springfield",
+      "state": "IL",
+      "zipCode": "62701",
+      "country": "US",
+      "recipientName": "John Doe",
+      "recipientPhone": "555-123-4567"
+    },
+    "paymentMethod": "Credit Card",
+    "paymentStatus": "PAID",
+    "status": "DELIVERED",
+    "trackingNumber": "TRACK-12345ABCDE",
+    "items": [
+      {
+        "productId": "prod-1",
+        "productName": "Wireless Noise-Canceling Headphones",
+        "quantity": 1,
+        "price": 299.99
+      }
+    ]
+  },
+  {
+    "userId": "user-3",
+    "subtotal": 163.99,
+    "shippingCost": 0.00,
+    "tax": 16.40,
+    "total": 180.39,
+    "shippingAddress": {
+      "street": "456 Oak Avenue",
+      "city": "Austin",
+      "state": "TX",
+      "zipCode": "73301",
+      "country": "US",
+      "recipientName": "Jane Smith",
+      "recipientPhone": "555-987-6543"
+    },
+    "paymentMethod": "PayPal",
+    "paymentStatus": "AUTHORIZED",
+    "status": "PROCESSING",
+    "trackingNumber": null,
+    "items": [
+      {
+        "productId": "prod-2",
+        "productName": "Minimalist Leather Backpack",
+        "quantity": 1,
+        "price": 145.00
+      },
+      {
+        "productId": "prod-4",
+        "productName": "Organic Arabica Coffee Beans - 1lb",
+        "quantity": 1,
+        "price": 18.99
+      }
+    ]
+  },
+  {
+    "userId": "user-2",
+    "subtotal": 45.00,
+    "shippingCost": 12.50,
+    "tax": 4.50,
+    "total": 62.00,
+    "shippingAddress": {
+      "street": "123 Main St",
+      "city": "Springfield",
+      "state": "IL",
+      "zipCode": "62701",
+      "country": "US",
+      "recipientName": "John Doe",
+      "recipientPhone": "555-123-4567"
+    },
+    "paymentMethod": "Credit Card",
+    "paymentStatus": "PENDING",
+    "status": "PENDING",
+    "trackingNumber": null,
+    "items": [
+      {
+        "productId": "prod-5",
+        "productName": "Ceramic Pour-over Coffee Maker",
+        "quantity": 1,
+        "price": 45.00
+      }
+    ]
+  }
+]

@@ -1,0 +1,101 @@
+[
+  {
+    "email": "admin@example.com",
+    "username": "admin_one",
+    "password": "$2b$10$K7L1OJ45/4Y2nIvhRVpCe.FSmhDdWoXehVzJptJ/op0lSsvqNu/1u",
+    "role": "ADMIN",
+    "firstName": "Admin",
+    "lastName": "Super",
+    "phone": "555-010-1234",
+    "avatar": "https://i.pravatar.cc/150?u=admin",
+    "shippingAddress": {
+      "street": "100 Admin Blvd",
+      "city": "Cyber City",
+      "state": "CC",
+      "zipCode": "10001",
+      "country": "US"
+    },
+    "billingAddress": {
+      "street": "100 Admin Blvd",
+      "city": "Cyber City",
+      "state": "CC",
+      "zipCode": "10001",
+      "country": "US"
+    },
+    "paymentMethods": [
+      {
+        "type": "Visa",
+        "last4": "4242",
+        "expiryMonth": 12,
+        "expiryYear": 2028,
+        "isDefault": true
+      }
+    ]
+  },
+  {
+    "email": "customer_one@example.com",
+    "username": "cust_one",
+    "password": "$2b$10$K7L1OJ45/4Y2nIvhRVpCe.FSmhDdWoXehVzJptJ/op0lSsvqNu/1u",
+    "role": "CUSTOMER",
+    "firstName": "John",
+    "lastName": "Doe",
+    "phone": "555-123-4567",
+    "avatar": "https://i.pravatar.cc/150?u=customer1",
+    "shippingAddress": {
+      "street": "123 Main St",
+      "city": "Springfield",
+      "state": "IL",
+      "zipCode": "62701",
+      "country": "US"
+    },
+    "billingAddress": {
+      "street": "123 Main St",
+      "city": "Springfield",
+      "state": "IL",
+      "zipCode": "62701",
+      "country": "US"
+    },
+    "paymentMethods": [
+      {
+        "type": "Visa",
+        "last4": "1111",
+        "expiryMonth": 10,
+        "expiryYear": 2026,
+        "isDefault": true
+      }
+    ]
+  },
+  {
+    "email": "customer_two@example.com",
+    "username": "cust_two",
+    "password": "$2b$10$K7L1OJ45/4Y2nIvhRVpCe.FSmhDdWoXehVzJptJ/op0lSsvqNu/1u",
+    "role": "CUSTOMER",
+    "firstName": "Jane",
+    "lastName": "Smith",
+    "phone": "555-987-6543",
+    "avatar": "https://i.pravatar.cc/150?u=customer2",
+    "shippingAddress": {
+      "street": "456 Oak Avenue",
+      "city": "Austin",
+      "state": "TX",
+      "zipCode": "73301",
+      "country": "US"
+    },
+    "billingAddress": {
+      "street": "456 Oak Avenue",
+      "city": "Austin",
+      "state": "TX",
+      "zipCode": "73301",
+      "country": "US"
+    },
+    "paymentMethods": [
+      {
+        "type": "Mastercard",
+        "last4": "2222",
+        "expiryMonth": 5,
+        "expiryYear": 2029,
+        "isDefault": true
+      }
+    ]
+  }
+]

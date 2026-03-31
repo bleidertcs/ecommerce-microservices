@@ -21,7 +21,6 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "@faker-js/faker": "^10.3.0",
     "@grpc/grpc-js": "^1.14.3",
     "@grpc/proto-loader": "^0.8.0",
     "@keyv/redis": "^5.1.6",

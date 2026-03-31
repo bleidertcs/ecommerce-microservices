@@ -1,21 +1,27 @@
 ---
 name: data-seeding
-description: Guidelines for creating and managing database seed data with Faker.
+description: Guidelines for managing static database seed data with JSON files.
 ---
 
 # Data Seeding Skill
 
-This skill provides instructions for generating and managing realistic test data using Faker.
+This skill provides instructions for managing static, predefined test data using structured JSON files.
 
 ## Overview
 
-Each service has its own seed script in `prisma/seed.ts` that generates realistic e-commerce data using `@faker-js/faker`.
+Each service has its own seed script in `prisma/seed.ts` that imports pre-defined JSON generic objects from `prisma/data/*.json` and populates the database.
 
-## Seed Scripts Location
+## Seed Scripts and Data Locations
 
-- **Users**: `users/prisma/seed.ts`
-- **Products**: `products/prisma/seed.ts`
-- **Orders**: `orders/prisma/seed.ts`
+- **Users**:
+  - Script: `users/prisma/seed.ts`
+  - Data: `users/prisma/data/users.json`
+- **Products**:
+  - Script: `products/prisma/seed.ts`
+  - Data: `products/prisma/data/products.json`
+- **Orders**:
+  - Script: `orders/prisma/seed.ts`
+  - Data: `orders/prisma/data/orders.json`
 
 ## Running Seeders
 
@@ -29,9 +35,9 @@ pnpm prisma:seed
 ### In Docker Containers
 
 ```bash
-docker exec bw-users-service pnpm exec ts-node prisma/seed.ts
-docker exec bw-products-service pnpm exec ts-node prisma/seed.ts
-docker exec bw-orders-service pnpm exec ts-node prisma/seed.ts
+docker exec bw-users-service pnpm run prisma:seed
+docker exec bw-products-service pnpm run prisma:seed
+docker exec bw-orders-service pnpm run prisma:seed
 ```
 
 ### Automated Script
@@ -42,127 +48,20 @@ Use the setup script in project root:
 .\setup-ecommerce.ps1
 ```
 
-## Creating a Seed Script
+## Adding new Seed Data
 
-### Basic Structure
+Instead of generating data in loops, populate the `data/*.json` files directly.
 
-```typescript
-import { PrismaClient } from "@prisma/client";
-import { faker } from "@faker-js/faker";
-
-const prisma = new PrismaClient();
-
-async function main() {
-  console.log("🌱 Seeding database...");
-
-  // Clear existing data (optional)
-  // await prisma.model.deleteMany({});
-
-  const items = [];
-
-  // Generate data
-  for (let i = 0; i < 100; i++) {
-    items.push({
-      name: faker.commerce.productName(),
-      email: faker.internet.email(),
-      // ... other fields
-    });
-  }
-
-  // Insert data
-  for (const item of items) {
-    await prisma.model.create({ data: item });
-  }
-
-  console.log(`✅ Created ${items.length} items`);
-}
-
-main()
-  .then(async () => {
-    await prisma.$disconnect();
-  })
-  .catch(async (e) => {
-    console.error(e);
-    await prisma.$disconnect();
-    process.exit(1);
-  });
-```
-
-## Useful Faker Methods
-
-### Personal Data
-
-```typescript
-faker.person.firstName();
-faker.person.lastName();
-faker.person.fullName();
-faker.internet.email();
-faker.internet.username();
-faker.phone.number();
-faker.image.avatar();
-```
-
-### Address Data
-
-```typescript
-faker.location.streetAddress();
-faker.location.city();
-faker.location.state();
-faker.location.zipCode();
-faker.location.country();
-```
-
-### Commerce Data
-
-```typescript
-faker.commerce.productName();
-faker.commerce.productDescription();
-faker.commerce.price({ min: 10, max: 1000, dec: 2 });
-faker.commerce.department();
-faker.commerce.productAdjective();
-```
-
-### Dates and Numbers
-
-```typescript
-faker.date.past();
-faker.date.recent();
-faker.number.int({ min: 0, max: 500 });
-faker.number.float({ min: 0, max: 5, fractionDigits: 1 });
-faker.datatype.boolean({ probability: 0.8 });
-```
-
-### Random Selection
-
-```typescript
-faker.helpers.arrayElement(["A", "B", "C"]);
-faker.helpers.multiple(() => item, { count: { min: 1, max: 5 } });
-```
-
-## Data Relationships
-
-When seeding data with relationships across services:
-
-```typescript
-// Option 1: Use mock IDs (simple)
-const MOCK_USER_IDS = ["user-1", "user-2", "user-3"];
-const userId = faker.helpers.arrayElement(MOCK_USER_IDS);
-
-// Option 2: Query other service via gRPC (advanced)
-// Make gRPC call to get real IDs from other service
-```
-
-## Seed Configuration in package.json
+Example `users/prisma/data/users.json`:
 
 ```json
-{
-  "scripts": {
-    "prisma:seed": "dotenv -e .env.docker -- ts-node prisma/seed.ts"
-  },
-  "prisma": {
-    "seed": "ts-node prisma/seed.ts"
+[
+  {
+    "email": "customer@example.com",
+    "username": "customer",
+    "role": "CUSTOMER"
   }
-}
+]
 ```
 
 ## Reset and Reseed
@@ -173,65 +72,25 @@ To completely reset and reseed a database:
 # Inside container
 docker exec bw-users-service sh -c "
   pnpm exec dotenv -e .env.docker -- prisma db push --force-reset --accept-data-loss &&
-  pnpm exec ts-node prisma/seed.ts
+  pnpm run prisma:seed
 "
 ```
 
-## Current Seed Data
+## Data Consistency Across Microservices
 
-### Users Service (50 users)
-
-- 10 Administrators
-- 40 Customers
-- All with addresses, payment methods, and profiles
-
-### Products Service (100 products)
-
-- 10 categories
-- Price range: $10 - $1,000
-- Stock levels: 0 - 500
-- Ratings and reviews
-
-### Orders Service (200 orders)
-
-- Linked to users and products
-- Realistic status distribution
-- Complete shipping and payment info
-
-## Best Practices
-
-1. **Idempotent Seeds**: Make seeds safe to run multiple times
-2. **Realistic Data**: Use appropriate Faker methods for each field
-3. **Unique Constraints**: Be careful with unique fields (email, SKU, username)
-4. **Performance**: Batch inserts when possible
-5. **Dependencies**: Seed services in order if there are dependencies
-6. **Documentation**: Comment seed data quantities and distributions
+- Seed IDs (like User UUIDs or Product UUIDs) are set deterministically in `users.json` and `products.json`.
+- `orders.json` refers directly to the deterministic IDs specified in those files to form valid relations.
 
 ## Troubleshooting
 
-### Unique Constraint Violations
+### Nested Database Inserts Failing
 
-```typescript
-// Use unique usernames
-const username = faker.internet.username({ firstName, lastName }).toLowerCase();
-
-// Or use UUIDs
-const sku = `${category}-${faker.string.uuid()}`;
-```
+When testing data constraints with specific IDs, check that `users.json`, `products.json` are seeded first BEFORE `orders.json`.
+Missing linked product IDs in Orders seeding could lead to Prisma foreign key violations.
 
 ### Prisma Client Not Found
 
 ```bash
 # Regenerate Prisma Client
 pnpm prisma:generate
-```
-
-### Slow Seeding
-
-```typescript
-// Use Promise.all for parallel inserts
-await Promise.all(items.map((item) => prisma.model.create({ data: item })));
-
-// Or use createMany
-await prisma.model.createMany({ data: items });
 ```

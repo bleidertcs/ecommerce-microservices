@@ -1,7 +1,8 @@
 import { Injectable, Logger, OnModuleInit, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { DatabaseService } from '@/common/services/database.service';
-import { faker } from '@faker-js/faker';
+import * as fs from 'fs';
+import * as path from 'path';
 
 @Injectable()
 export class UsersService implements OnModuleInit {
@@ -19,28 +20,15 @@ export class UsersService implements OnModuleInit {
   async seedIfEmpty() {
     const count = await this.databaseService.user.count();
     if (count === 0) {
-      this.logger.log('Seeding users...');
-      const users = Array.from({ length: 10 }).map(() => {
-        const firstName = faker.person.firstName();
-        const lastName = faker.person.lastName();
-        return {
-          email: faker.internet.email(),
-          username: faker.internet.username({ firstName, lastName }),
-          password: 'hashed_password_placeholder', // Should use bcrypt in real scenario
-          firstName,
-          lastName,
-          shippingAddress: {
-            street: faker.location.streetAddress(),
-            city: faker.location.city(),
-            state: faker.location.state(),
-            zipCode: faker.location.zipCode(),
-            country: faker.location.country(),
-          } as any,
-          phone: faker.phone.number(),
-        };
-      });
-      await this.databaseService.user.createMany({ data: users });
-      this.logger.log('Users seeded successfully');
+      this.logger.log('Seeding users from json...');
+      try {
+        const dataPath = path.join(process.cwd(), 'prisma', 'data', 'users.json');
+        const users = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
+        await this.databaseService.user.createMany({ data: users });
+        this.logger.log('Users seeded successfully');
+      } catch (error) {
+        this.logger.error('Failed to seed users automatically', error.stack);
+      }
     }
   }
 
