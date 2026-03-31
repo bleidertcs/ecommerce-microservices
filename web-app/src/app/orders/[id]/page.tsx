@@ -260,8 +260,8 @@ export default function OrderDetailsPage() {
 
         .details-layout {
           display: grid;
-          grid-template-columns: 2fr 1fr;
-          gap: 60px;
+          grid-template-columns: 1.5fr 1fr;
+          gap: 40px;
           align-items: start;
         }
 
@@ -287,13 +287,8 @@ export default function OrderDetailsPage() {
 
         .val { font-size: 14px; font-weight: 600; font-family: var(--font-heading); }
 
-        .section-title {
-          font-size: 13px;
-          text-transform: uppercase;
-          letter-spacing: 0.15em;
-          color: var(--muted);
-          margin-bottom: 24px;
-        }
+        .section-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.15em; color: rgba(255, 255, 255, 0.7); margin-bottom: 24px; display: flex; align-items: center; gap: 8px; }
+        .section-title::before { content: ''; display: block; width: 4px; height: 12px; background: var(--primary); border-radius: 2px; }
 
         .order-item-row {
           display: flex;
@@ -306,29 +301,47 @@ export default function OrderDetailsPage() {
         }
 
         .item-name { font-size: 17px; font-weight: 600; margin-bottom: 4px; }
-        .item-qty { font-size: 13px; color: var(--muted); font-weight: 500; }
+        .item-qty { font-size: 13px; color: rgba(255, 255, 255, 0.85); font-weight: 500; }
         
         .item-price { text-align: right; }
         .total-val { font-size: 18px; font-weight: 700; color: var(--foreground); }
-        .unit-val { font-size: 12px; color: var(--muted); }
+        .unit-val { font-size: 12px; color: rgba(255, 255, 255, 0.85); }
 
-        .sidebar { display: flex; flexDirection: column; gap: 24px; }
+        .sidebar { display: flex; flex-direction: column; gap: 20px; }
         
-        .summary-card, .shipping-card { padding: 32px; }
+        .summary-card, .shipping-card { padding: 36px; }
         
-        .summary-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .summary-row { display: flex; justify-content: space-between; margin-bottom: 16px; color: rgba(255, 255, 255, 0.85); font-size: 14px; }
         
         .status-pill { padding: 4px 12px; border-radius: 8px; font-size: 11px; font-weight: 700; border: 1px solid rgba(255,255,255,0.1); }
         .status-pill.paid { color: var(--success); background: rgba(0, 229, 255, 0.05); border-color: rgba(0, 229, 255, 0.2); }
         .status-pill.pending { color: var(--warning); background: rgba(255, 204, 0, 0.05); border-color: rgba(255, 204, 0, 0.2); }
 
-        .val-total { font-size: 28px; font-weight: 800; color: var(--primary); font-family: var(--font-heading); }
-        .val-method { font-size: 14px; font-weight: 600; }
+        .summary-row .val { color: var(--foreground); font-weight: 600; }
+        .summary-row .val.success { color: var(--success); }
+        
+        .total-row { border-top: 1px dashed var(--border); margin-top: 24px; padding-top: 24px; color: var(--foreground); }
+        .total-label { font-size: 18px; font-weight: 700; }
+        .total-val.large { font-size: 28px; font-weight: 800; color: var(--primary); font-family: var(--font-heading); }
+        
+        .timeline-section { margin-top: 48px; }
+        .timeline { position: relative; padding-left: 24px; }
+        .timeline::before { content: ''; display: block; position: absolute; left: 6px; top: 8px; bottom: 8px; width: 2px; background: var(--border); }
+        
+        .timeline-item { position: relative; margin-bottom: 32px; }
+        .timeline-item:last-child { margin-bottom: 0; }
+        .timeline-dot { position: absolute; left: -24px; top: 4px; width: 14px; height: 14px; border-radius: 50%; background: var(--surface); border: 2px solid var(--border); z-index: 1;}
+        .timeline-item.active .timeline-dot { background: var(--success); border-color: rgba(0,255,170,0.3); box-shadow: 0 0 10px rgba(0,255,170,0.5); }
+        
+        .timeline-content { padding-left: 8px; }
+        .timeline-title { font-size: 15px; font-weight: 600; color: var(--foreground); margin-bottom: 4px; }
+        .timeline-desc { font-size: 13px; color: rgba(255, 255, 255, 0.85); margin-bottom: 4px; }
+        .timeline-time { font-size: 11px; color: rgba(255, 255, 255, 0.6); font-family: var(--font-mono); }
         .payment-action { margin-top: 32px; }
 
         .address-block p { margin-bottom: 4px; font-size: 15px; }
         .recipient { font-weight: 700; margin-bottom: 8px !important; color: var(--foreground); }
-        .address-line { color: rgba(255,255,255,0.7); }
+        .address-line { font-size: 14px; color: rgba(255, 255, 255, 0.9); margin-bottom: 6px; line-height: 1.5; }
         .phone { margin-top: 12px !important; font-size: 13px !important; font-weight: 600; color: var(--primary); }
 
         @media (max-width: 1024px) {

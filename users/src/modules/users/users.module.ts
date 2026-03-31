@@ -15,7 +15,11 @@ import { UsersService } from '@/modules/users/users.service';
           options: {
             urls: [configService.get<string>('RABBITMQ_URL', 'amqp://rabbitmq:5672')],
             queue: 'ecommerce_events',
-            queueOptions: { durable: true },
+            queueOptions: { 
+              durable: true,
+              exchange: 'ecommerce_exchange',
+              exchangeType: 'topic',
+            },
           },
         }),
       },

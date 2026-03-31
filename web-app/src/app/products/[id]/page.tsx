@@ -171,6 +171,109 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
                     </div>
                 </div>
             </div>
+
+            {/* Testimonials Section */}
+            <div className="mt-24 border-t border-border pt-20">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-12 gap-6">
+                    <div>
+                        <h2 className="text-3xl font-heading font-extrabold mb-2 text-foreground tracking-tight">Data Logs & Testimonials</h2>
+                        <p className="text-muted text-sm">Real-world operational feedback from verified operatives.</p>
+                    </div>
+                    <Button variant="secondary" className="whitespace-nowrap">Submit Log</Button>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {/* Review 1 */}
+                    <div className="surface-card bg-surface-elevated/50 hover:bg-surface-elevated transition-colors border border-border rounded-[24px] p-8 flex flex-col justify-between">
+                        <div>
+                            <div className="flex items-center justify-between mb-6">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 rounded-full bg-[rgba(0,229,255,0.1)] border border-[rgba(0,229,255,0.2)] flex items-center justify-center text-[#00e5ff] font-bold font-heading shadow-[0_0_10px_rgba(0,229,255,0.2)]">
+                                        NX
+                                    </div>
+                                    <div>
+                                        <div className="font-bold text-foreground text-sm">Nexus Operative</div>
+                                        <div className="text-[11px] text-[#00e5ff] uppercase tracking-widest mt-0.5">Verified Sector 7</div>
+                                    </div>
+                                </div>
+                                <div className="flex gap-1">
+                                    {[1,2,3,4,5].map(s => (
+                                        <svg key={s} width="12" height="12" viewBox="0 0 24 24" fill="#ffcc00">
+                                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                                        </svg>
+                                    ))}
+                                </div>
+                            </div>
+                            <p className="text-[13px] text-[rgba(255,255,255,0.85)] leading-relaxed italic border-l-2 border-[rgba(0,229,255,0.3)] pl-4">
+                                "The synchronization rate on this unit is unprecedented. I've integrated it into my daily operations and the latency drop is exactly as advertised. Worth every credit."
+                            </p>
+                        </div>
+                        <div className="mt-8 text-[10px] text-muted text-right font-mono opacity-50">
+                            LOGGED: 24.03.2026
+                        </div>
+                    </div>
+
+                    {/* Review 2 */}
+                    <div className="surface-card bg-surface-elevated/50 hover:bg-surface-elevated transition-colors border border-border rounded-[24px] p-8 flex flex-col justify-between">
+                        <div>
+                            <div className="flex items-center justify-between mb-6">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 rounded-full bg-[rgba(0,255,170,0.1)] border border-[rgba(0,255,170,0.2)] flex items-center justify-center text-success font-bold font-heading shadow-[0_0_10px_rgba(0,255,170,0.2)]">
+                                        K9
+                                    </div>
+                                    <div>
+                                        <div className="font-bold text-foreground text-sm">Kaelen-9</div>
+                                        <div className="text-[11px] text-muted uppercase tracking-widest mt-0.5">Standard Node</div>
+                                    </div>
+                                </div>
+                                <div className="flex gap-1">
+                                    {[1,2,3,4,5].map(s => (
+                                        <svg key={s} width="12" height="12" viewBox="0 0 24 24" fill={s < 5 ? "#ffcc00" : "var(--color-border)"}>
+                                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                                        </svg>
+                                    ))}
+                                </div>
+                            </div>
+                            <p className="text-[13px] text-[rgba(255,255,255,0.85)] leading-relaxed italic border-l-2 border-[rgba(0,255,170,0.3)] pl-4">
+                                "Solid build quality and the neural connection barely drops. Battery life could be slightly longer under heavy load, but overall an exceptional piece of tech. Would recommend."
+                            </p>
+                        </div>
+                        <div className="mt-8 text-[10px] text-muted text-right font-mono opacity-50">
+                            LOGGED: 21.03.2026
+                        </div>
+                    </div>
+
+                    {/* Review 3 */}
+                    <div className="surface-card bg-surface-elevated/50 hover:bg-surface-elevated transition-colors border border-border rounded-[24px] p-8 flex flex-col justify-between">
+                        <div>
+                            <div className="flex items-center justify-between mb-6">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 rounded-full bg-[rgba(255,0,85,0.1)] border border-[rgba(255,0,85,0.2)] flex items-center justify-center text-danger font-bold font-heading shadow-[0_0_10px_rgba(255,0,85,0.2)]">
+                                        V3
+                                    </div>
+                                    <div>
+                                        <div className="font-bold text-foreground text-sm">Valkyrie-3</div>
+                                        <div className="text-[11px] text-muted uppercase tracking-widest mt-0.5">Freelancer</div>
+                                    </div>
+                                </div>
+                                <div className="flex gap-1">
+                                    {[1,2,3,4,5].map(s => (
+                                        <svg key={s} width="12" height="12" viewBox="0 0 24 24" fill="#ffcc00">
+                                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                                        </svg>
+                                    ))}
+                                </div>
+                            </div>
+                            <p className="text-[13px] text-[rgba(255,255,255,0.85)] leading-relaxed italic border-l-2 border-[rgba(255,0,85,0.3)] pl-4">
+                                "Initial recalibration took a few attempts, but once locked in, the performance is stellar. The aesthetics perfectly match the Monolith ecosystem."
+                            </p>
+                        </div>
+                        <div className="mt-8 text-[10px] text-muted text-right font-mono opacity-50">
+                            LOGGED: 15.03.2026
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 }

@@ -77,6 +77,8 @@ async function bootstrap() {
             queue: configService.get<string>('rabbitmq.queue'),
             queueOptions: {
                 durable: true,
+                exchange: 'ecommerce_exchange',
+                exchangeType: 'topic',
             },
         },
     });

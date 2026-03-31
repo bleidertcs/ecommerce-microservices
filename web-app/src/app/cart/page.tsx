@@ -104,12 +104,12 @@ export default function CartPage() {
 
       showModal({
         type: 'success',
-        title: '¡Transmisión Completada!',
-        message: orderId 
-          ? `Tu pedido con ID ${orderId} ha sido registrado en el nexo. Los artefactos están en camino.`
-          : 'Tu pedido ha sido registrado con éxito. Los artefactos han sido asegurados.',
-        confirmLabel: 'Ver mis órdenes',
-        onConfirm: () => router.push('/orders'),
+        title: '¡Orden Registrada!',
+        message: orderId
+          ? `Tu pedido #${String(orderId).slice(0, 8).toUpperCase()} fue creado con estado PENDIENTE. Ve a la orden para completar el pago.`
+          : 'Tu pedido ha sido registrado. Ve a tus órdenes para completar el pago.',
+        confirmLabel: orderId ? 'Ir a pagar →' : 'Ver mis órdenes',
+        onConfirm: () => router.push(orderId ? `/orders/${orderId}` : '/orders'),
       });
 
       clearCart();
@@ -182,19 +182,48 @@ export default function CartPage() {
                 </div>
                 
                 <div className="quantity-controls">
-                  <button className="qty-btn" onClick={() => updateQuantity(item.id, item.quantity - 1)}>−</button>
+                  <button
+                    className="qty-btn minus"
+                    aria-label="Decrease"
+                    onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                  >
+                    <svg width="12" height="2" viewBox="0 0 12 2" fill="currentColor"><rect width="12" height="2" rx="1"/></svg>
+                  </button>
                   <span className="qty-val">{item.quantity}</span>
-                  <button className="qty-btn" onClick={() => updateQuantity(item.id, item.quantity + 1)}>+</button>
+                  <button
+                    className="qty-btn plus"
+                    aria-label="Increase"
+                    onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><rect x="5" width="2" height="12" rx="1"/><rect y="5" width="12" height="2" rx="1"/></svg>
+                  </button>
                 </div>
                 
                 <div className="item-total-area">
                   <div className="item-total-price">${(item.price * item.quantity).toFixed(2)}</div>
-                  <button className="remove-link" onClick={() => removeFromCart(item.id)}>Discard</button>
+                  <button
+                    className="remove-btn"
+                    aria-label="Remove item"
+                    onClick={() => removeFromCart(item.id)}
+                    title="Remove from cart"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                    ><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+                    Remove
+                  </button>
                 </div>
               </div>
             ))}
             
-            <button className="clear-btn" onClick={clearCart}>Purge Entire Selection</button>
+            <button
+              className="clear-btn"
+              onClick={clearCart}
+              title="Remove all items from cart"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+              ><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+              Clear Cart
+            </button>
           </div>
 
           {/* Shipping Gateway */}
@@ -202,8 +231,15 @@ export default function CartPage() {
             <h2 className="section-title">Delivery Coordinates</h2>
             {!isAuthenticated ? (
                <div className="surface-card border border-border auth-required">
-                  <p>Identification required to proceed with delivery protocols.</p>
-                  <Button variant="primary" onClick={() => window.location.href = getCasdoorLoginUrl()}>Sign In to Lumina</Button>
+                  <div className="auth-icon">🔐</div>
+                  <p>You need to be signed in to complete your purchase.</p>
+                  <Button
+                    variant="primary"
+                    glow
+                    onClick={() => window.location.href = getCasdoorLoginUrl()}
+                  >
+                    Sign In to Continue
+                  </Button>
                </div>
             ) : (
               <div className="surface-card border border-border address-form">
@@ -268,13 +304,25 @@ export default function CartPage() {
               glow
               className="checkout-btn"
               onClick={handleCheckout}
-              disabled={loading}
+              disabled={loading || !isAuthenticated}
             >
-              {loading ? 'Transmitting...' : isAuthenticated ? 'Finalize Order' : 'Establish Identity'}
+              {loading ? (
+                <>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ animation: 'spin 1s linear infinite', marginRight: 8 }}><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
+                  Processing...
+                </>
+              ) : !isAuthenticated ? (
+                'Sign In to Checkout'
+              ) : (
+                <>
+                  Place Order
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ marginLeft: 8 }}><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </>
+              )}
             </Button>
             
             {!isAuthenticated && (
-              <p className="auth-hint">Session required for transaction finalization.</p>
+              <p className="auth-hint">⚠ Sign in required to place an order.</p>
             )}
           </div>
         </aside>
@@ -358,15 +406,63 @@ export default function CartPage() {
           border: 1px solid var(--border);
         }
 
-        .qty-btn { background: none; border: none; color: white; cursor: pointer; font-size: 18px; padding: 0 4px; }
-        .qty-val { font-weight: 700; min-width: 20px; text-align: center; font-family: var(--font-heading); }
+        .qty-btn {
+          background: rgba(255,255,255,0.05);
+          border: 1px solid rgba(255,255,255,0.1);
+          color: white;
+          cursor: pointer;
+          width: 32px;
+          height: 32px;
+          border-radius: 8px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.15s ease;
+          flex-shrink: 0;
+        }
+        .qty-btn:hover { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.2); transform: scale(1.05); }
+        .qty-btn:active { transform: scale(0.95); }
+        .qty-val { font-weight: 700; min-width: 28px; text-align: center; font-family: var(--font-heading); font-size: 15px; }
 
         .item-total-area { text-align: right; }
-        .item-total-price { font-size: 20px; font-weight: 800; font-family: var(--font-heading); margin-bottom: 4px; }
-        .remove-link { background: none; border: none; color: var(--danger); font-size: 12px; cursor: pointer; text-transform: uppercase; font-weight: 600; opacity: 0.6; transition: 0.3s; }
-        .remove-link:hover { opacity: 1; }
+        .item-total-price { font-size: 20px; font-weight: 800; font-family: var(--font-heading); margin-bottom: 8px; }
+        .remove-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          background: none;
+          border: 1px solid rgba(255,0,85,0.2);
+          color: var(--danger);
+          font-size: 11px;
+          cursor: pointer;
+          text-transform: uppercase;
+          font-weight: 700;
+          padding: 4px 10px;
+          border-radius: 6px;
+          opacity: 0.6;
+          transition: all 0.2s;
+          letter-spacing: 0.05em;
+        }
+        .remove-btn:hover { opacity: 1; background: rgba(255,0,85,0.08); border-color: var(--danger); }
 
-        .clear-btn { background: none; border: none; color: var(--muted); font-size: 12px; cursor: pointer; text-transform: uppercase; font-weight: 600; margin-top: 16px; }
+        .clear-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          background: none;
+          border: 1px solid rgba(255,255,255,0.08);
+          color: var(--muted);
+          font-size: 12px;
+          cursor: pointer;
+          text-transform: uppercase;
+          font-weight: 600;
+          margin-top: 20px;
+          padding: 8px 16px;
+          border-radius: 8px;
+          letter-spacing: 0.08em;
+          transition: all 0.2s;
+        }
+        .clear-btn:hover { border-color: rgba(255,0,85,0.3); color: var(--danger); background: rgba(255,0,85,0.05); }
 
         .shipping-section { margin-top: 60px; }
         
@@ -387,7 +483,8 @@ export default function CartPage() {
         }
 
         .auth-required { padding: 48px; text-align: center; }
-        .auth-required p { margin-bottom: 24px; color: var(--muted); }
+        .auth-icon { font-size: 48px; margin-bottom: 20px; opacity: 0.6; }
+        .auth-required p { margin-bottom: 28px; color: var(--muted); font-size: 15px; line-height: 1.6; }
 
         .summary-card { padding: 40px; }
         .summary-title { font-size: 20px; font-weight: 800; margin-bottom: 32px; font-family: var(--font-heading); }
@@ -401,7 +498,8 @@ export default function CartPage() {
         .total-val { font-size: 24px; font-weight: 800; color: var(--primary); font-family: var(--font-heading); }
 
         :global(.checkout-btn) { width: 100% !important; margin-top: 32px !important; justify-content: center !important; }
-        .auth-hint { font-size: 12px; color: var(--muted); text-align: center; margin-top: 16px; }
+        .auth-hint { font-size: 12px; color: var(--warning); text-align: center; margin-top: 16px; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
         .sticky-sidebar { position: sticky; top: 100px; }
 

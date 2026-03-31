@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { useToast } from '@/context/ToastContext';
 import { useModal } from '@/context/ModalContext';
+import { useCartAnimation } from '@/context/CartAnimationContext';
 
 import { API_BASE_URL } from '@/lib/config';
 
@@ -23,19 +24,24 @@ export default function ProductActions({
 }) {
     const { token, isAuthenticated } = useAuth();
     const { addToCart } = useCart();
+    const { triggerCartAnimation } = useCartAnimation();
     const { success, error: toastError } = useToast();
     const { showModal } = useModal();
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [added, setAdded] = useState(false);
 
-    const handleAddToCart = () => {
+    const handleAddToCart = (e: React.MouseEvent<HTMLButtonElement>) => {
         addToCart({
             id: productId,
             name: productName || 'Product',
-            price: price,
+            price: Number(price) || 0,
             image: productImage,
         });
+        
+        // Trigger the fly-to-cart animation
+        triggerCartAnimation(e.clientX, e.clientY, productImage);
+
         setAdded(true);
         success(`${productName || 'Producto'} añadido al carrito`);
         setTimeout(() => setAdded(false), 2000);

@@ -42,6 +42,16 @@ export class OrderCreatedPayloadDto {
     @IsOptional()
     userId?: string;
 
+    @ApiPropertyOptional({ example: 'John Doe' })
+    @IsString()
+    @IsOptional()
+    userName?: string;
+
+    @ApiPropertyOptional({ example: 'john.doe@example.com' })
+    @IsString()
+    @IsOptional()
+    userEmail?: string;
+
     @ApiProperty({ example: 299.99 })
     @IsNumber()
     @Min(0)

@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Toast as ToastType } from '@/context/ToastContext';
 
 interface ToastProps {
@@ -8,44 +8,71 @@ interface ToastProps {
   onRemove: (id: string) => void;
 }
 
-export default function Toast({ toast, onRemove }: ToastProps) {
-  const styles = {
-    success: 'border-success/30 text-success',
-    error: 'border-danger/30 text-danger',
-    warning: 'border-warning/30 text-warning',
-    info: 'border-primary/30 text-primary',
-  }[toast.type];
+const typeConfig = {
+  success: { icon: '✓', accent: '#22c55e', label: 'Success' },
+  error:   { icon: '✕', accent: '#ef4444', label: 'Error'   },
+  warning: { icon: '⚠', accent: '#f59e0b', label: 'Warning' },
+  info:    { icon: 'ℹ', accent: '#067ff9', label: 'Info'    },
+};
 
-  const icon = {
-    success: '✓',
-    error: '✕',
-    warning: '⚠',
-    info: 'ℹ',
-  }[toast.type];
+export default function Toast({ toast, onRemove }: ToastProps) {
+  const [visible, setVisible] = useState(false);
+
+  // Trigger enter animation after mount
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setVisible(true));
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  const { icon, accent } = typeConfig[toast.type];
 
   return (
     <div
-      className={`glass flex items-center gap-3 px-4 py-2.1 rounded-full border animate-fade-in shadow-lg ${styles}`}
       role="alert"
-      style={{ 
-        minWidth: '200px',
-        maxWidth: '400px',
-        background: 'rgba(10, 10, 10, 0.8)',
+      onClick={() => onRemove(toast.id)}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '10px',
+        padding: '10px 16px',
+        borderRadius: '12px',
+        border: `1px solid ${accent}40`,
+        background: 'rgba(10,10,14,0.95)',
+        backdropFilter: 'blur(16px)',
+        boxShadow: `0 4px 24px rgba(0,0,0,0.6), 0 0 0 1px ${accent}20`,
+        minWidth: '220px',
+        maxWidth: '360px',
+        cursor: 'pointer',
+        userSelect: 'none',
+        // Slide-in animation
+        transform: visible ? 'translateX(0)' : 'translateX(120%)',
+        opacity: visible ? 1 : 0,
+        transition: 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease',
       }}
     >
-      <span className="flex-shrink-0 w-5 h-5 flex items-center justify-center rounded-full bg-white/5 font-bold text-[10px]">
+      {/* Icon badge */}
+      <span
+        style={{
+          flexShrink: 0,
+          width: '22px',
+          height: '22px',
+          borderRadius: '50%',
+          background: `${accent}25`,
+          border: `1px solid ${accent}60`,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: accent,
+          fontSize: '10px',
+          fontWeight: 700,
+        }}
+      >
         {icon}
       </span>
-      <p className="text-[13px] font-medium whitespace-nowrap overflow-hidden text-ellipsis flex-1">
+      {/* Message — always white/legible */}
+      <p style={{ fontSize: '13px', fontWeight: 500, color: '#e8e8f0', flex: 1, margin: 0, lineHeight: 1.4 }}>
         {toast.message}
       </p>
-      <button
-        onClick={() => onRemove(toast.id)}
-        className="text-[10px] opacity-40 hover:opacity-100 transition-opacity p-1"
-        aria-label="Close"
-      >
-        ✕
-      </button>
     </div>
   );
 }

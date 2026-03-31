@@ -1,12 +1,14 @@
 "use client";
 
 import React, { useState, useEffect, Suspense } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import ProductCard from '@/components/products/ProductCard';
 import Button from '@/components/ui/Button';
 import { ApiService } from '@/services/api.service';
 import { useAuth } from '@/context/AuthContext';
+import { useCart } from '@/context/CartContext';
 import { Product, FilterParams } from '@/types/product.types';
 
 function ProductsContent() {
@@ -14,10 +16,16 @@ function ProductsContent() {
     const pathname = usePathname();
     const searchParams = useSearchParams();
     const { isAuthenticated } = useAuth();
+    const { cartCount, cartTotal } = useCart();
 
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
     const [filtersOpen, setFiltersOpen] = useState(false);
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     // Sync state with URL params
     const search = searchParams.get('search') || '';
@@ -219,6 +227,29 @@ function ProductsContent() {
                     )}
                 </main>
             </div>
+
+            {mounted && cartCount > 0 && typeof document !== 'undefined' && createPortal(
+                <div className="fixed bottom-0 left-0 w-full border-t border-border p-4 z-[2000]" style={{ background: 'rgba(10,10,14,0.97)', backdropFilter: 'blur(20px)', boxShadow: '0 -8px 40px rgba(0,0,0,0.9)' }}>
+                    <div className="flex items-center justify-between max-w-[1400px] mx-auto w-full px-4 sm:px-6 lg:px-8">
+                        <div>
+                            <span className="text-[10px] sm:text-xs text-muted font-semibold uppercase tracking-[0.2em] block mb-1">Active Artifacts</span>
+                            <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-3">
+                                <span className="text-xl font-heading font-extrabold text-foreground">{cartCount} {cartCount === 1 ? 'Item' : 'Items'}</span>
+                                <span className="hidden sm:inline text-primary font-heading font-bold text-lg">|</span>
+                                <span className="text-[22px] font-heading font-extrabold leading-none" style={{ color: '#067ff9' }}>${(Number.isNaN(cartTotal) ? 0 : cartTotal).toFixed(2)}</span>
+                            </div>
+                        </div>
+                        <button
+                            onClick={() => router.push('/cart')}
+                            className="px-6 py-3 text-[13px] font-heading font-bold rounded-xl transition-all duration-200 hover:-translate-y-0.5"
+                            style={{ background: '#067ff9', color: '#fff', boxShadow: '0 4px 20px rgba(6,127,249,0.5)', border: 'none' }}
+                        >
+                            Proceed to Checkout →
+                        </button>
+                    </div>
+                </div>,
+                document.body
+            )}
         </div>
     );
 }

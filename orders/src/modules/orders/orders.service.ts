@@ -134,13 +134,32 @@ export class OrdersService implements OnModuleInit {
         include: { items: true },
       });
 
-      // 4. Create Outbox Event (Consistencia de Datos)
+      // 4. Fetch User Details for Enrichment (Best-effort)
+      let userName = 'N/A';
+      let userEmail = 'N/A';
+      try {
+        const user = await this.circuitBreakerService.fire(
+          'users-service',
+          (id: string) => firstValueFrom(this.usersService.findOne({ id })),
+          userId,
+        );
+        if (user) {
+          userName = `${user.firstName} ${user.lastName}`;
+          userEmail = user.email;
+        }
+      } catch (e) {
+        this.logger.warn(`Could not fetch user details for enrichment: ${userId}`);
+      }
+
+      // 5. Create Outbox Event (Consistencia de Datos)
       await tx.outbox.create({
         data: {
           type: 'order.created',
           payload: {
             orderId: order.id,
             userId: order.userId,
+            userName,
+            userEmail,
             total: order.total,
             items: processedItems,
             shippingAddress,

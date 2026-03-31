@@ -68,9 +68,10 @@ export class ApiService {
   }
 
   static async getProductById(id: string): Promise<Product> {
-    return this.fetcher<Product>(`/api/v1/products/${id}`, {
+    const json = await this.fetcher<any>(`/api/v1/products/${id}`, {
       cache: 'no-store'
     });
+    return json.data ? json.data : json;
   }
 
   static async createProduct(data: CreateProductInput, token: string): Promise<Product> {

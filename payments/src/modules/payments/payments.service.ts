@@ -60,6 +60,9 @@ export class PaymentsService {
         this.rmqClient.emit('order.paid', {
           orderId,
           userId,
+          userName: orderData.userName,
+          userEmail: orderData.userEmail,
+          total,
           paymentStatus: PaymentStatus.PAID,
           transactionId: result.transactionId,
         });
